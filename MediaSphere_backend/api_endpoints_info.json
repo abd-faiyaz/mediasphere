@@ -1,0 +1,2037 @@
+{
+    "swagger": "2.0",
+    "basePath": "/api",
+    "paths": {
+        "/ai/analyze": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Analysis",
+                        "schema": {
+                            "$ref": "#/definitions/AIAnalysisResponse"
+                        }
+                    }
+                },
+                "summary": "Analyze characters/themes/sentiment",
+                "operationId": "post_ai_analyze",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AIAnalysisRequest"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ]
+            }
+        },
+        "/ai/prompts": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Prompts generated",
+                        "schema": {
+                            "$ref": "#/definitions/AIPromptResponse"
+                        }
+                    }
+                },
+                "summary": "Get discussion prompts",
+                "operationId": "post_ai_prompts",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AIPromptRequest"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ]
+            }
+        },
+        "/ai/quiz": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "Quiz generated",
+                        "schema": {
+                            "$ref": "#/definitions/AIQuizResponse"
+                        }
+                    }
+                },
+                "summary": "Generate quiz",
+                "operationId": "post_ai_quiz",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AIQuizRequest"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ]
+            }
+        },
+        "/ai/recommendations": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Personalized recommendations",
+                        "schema": {
+                            "$ref": "#/definitions/AIRecommendationsResponse"
+                        }
+                    }
+                },
+                "summary": "Personalized content recommendations",
+                "operationId": "get_ai_recommendations",
+                "tags": [
+                    "ai"
+                ]
+            }
+        },
+        "/ai/summarize": {
+            "post": {
+                "responses": {
+                    "200": {
+                        "description": "AI summary",
+                        "schema": {
+                            "$ref": "#/definitions/AISummaryResponse"
+                        }
+                    }
+                },
+                "summary": "Get AI summary of a chapter/episode",
+                "operationId": "post_ai_summarize",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/AISummaryRequest"
+                        }
+                    }
+                ],
+                "tags": [
+                    "ai"
+                ]
+            }
+        },
+        "/auth/login": {
+            "post": {
+                "responses": {
+                    "401": {
+                        "description": "Authentication failed"
+                    },
+                    "200": {
+                        "description": "Login successful",
+                        "schema": {
+                            "$ref": "#/definitions/Token"
+                        }
+                    }
+                },
+                "summary": "Login and receive a JWT token",
+                "operationId": "user_login",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Login"
+                        }
+                    }
+                ],
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/auth/me": {
+            "get": {
+                "responses": {
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "200": {
+                        "description": "Current user profile",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                },
+                "summary": "Get current user profile based on JWT token",
+                "operationId": "get_current_user",
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/auth/register": {
+            "post": {
+                "responses": {
+                    "400": {
+                        "description": "Invalid input"
+                    },
+                    "201": {
+                        "description": "User registered",
+                        "schema": {
+                            "$ref": "#/definitions/Token"
+                        }
+                    }
+                },
+                "summary": "Register new user and receive a JWT token",
+                "operationId": "user_register",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Register"
+                        }
+                    }
+                ],
+                "tags": [
+                    "auth"
+                ]
+            }
+        },
+        "/clubs/": {
+            "post": {
+                "responses": {
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "201": {
+                        "description": "Club created",
+                        "schema": {
+                            "$ref": "#/definitions/Club"
+                        }
+                    }
+                },
+                "summary": "Create new club",
+                "operationId": "create_club",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ClubCreate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "clubs"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List all clubs",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Club"
+                            }
+                        }
+                    }
+                },
+                "summary": "List all clubs",
+                "operationId": "list_clubs",
+                "tags": [
+                    "clubs"
+                ]
+            }
+        },
+        "/clubs/{id}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The club identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "Club not found"
+                    },
+                    "200": {
+                        "description": "Club details",
+                        "schema": {
+                            "$ref": "#/definitions/Club"
+                        }
+                    }
+                },
+                "summary": "Get club details",
+                "operationId": "get_club",
+                "tags": [
+                    "clubs"
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "Club not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to delete club"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "204": {
+                        "description": "Club deleted"
+                    }
+                },
+                "summary": "Delete club (admin/mod only)",
+                "operationId": "delete_club",
+                "tags": [
+                    "clubs"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "Club not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to update club"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "200": {
+                        "description": "Club updated",
+                        "schema": {
+                            "$ref": "#/definitions/Club"
+                        }
+                    }
+                },
+                "summary": "Edit club",
+                "operationId": "update_club",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ClubCreate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "clubs"
+                ]
+            }
+        },
+        "/clubs/{id}/events": {
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "Event scheduled",
+                        "schema": {
+                            "$ref": "#/definitions/Event"
+                        }
+                    }
+                },
+                "summary": "Schedule event",
+                "operationId": "post_club_events",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Event"
+                        }
+                    }
+                ],
+                "tags": [
+                    "clubs"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Upcoming events",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Event"
+                            }
+                        }
+                    }
+                },
+                "summary": "Get upcoming events",
+                "operationId": "get_club_events",
+                "tags": [
+                    "clubs"
+                ]
+            }
+        },
+        "/clubs/{id}/join": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The club identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "Club not found"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "200": {
+                        "description": "Joined club"
+                    }
+                },
+                "summary": "Join club",
+                "operationId": "join_club",
+                "tags": [
+                    "clubs"
+                ]
+            }
+        },
+        "/clubs/{id}/leave": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The club identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "Club not found"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "200": {
+                        "description": "Left club"
+                    }
+                },
+                "summary": "Leave club",
+                "operationId": "leave_club",
+                "tags": [
+                    "clubs"
+                ]
+            }
+        },
+        "/clubs/{id}/threads": {
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "201": {
+                        "description": "Thread created",
+                        "schema": {
+                            "$ref": "#/definitions/Thread"
+                        }
+                    }
+                },
+                "summary": "Create new thread",
+                "operationId": "post_club_threads",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Thread"
+                        }
+                    }
+                ],
+                "tags": [
+                    "clubs"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Discussion threads",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Thread"
+                            }
+                        }
+                    }
+                },
+                "summary": "Get discussion threads",
+                "operationId": "get_club_threads",
+                "tags": [
+                    "clubs"
+                ]
+            }
+        },
+        "/media/": {
+            "post": {
+                "responses": {
+                    "403": {
+                        "description": "Admin access required"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "201": {
+                        "description": "Media created",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        }
+                    }
+                },
+                "summary": "Create media (admin only)",
+                "operationId": "create_media",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        }
+                    }
+                ],
+                "tags": [
+                    "media"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List all media",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Media"
+                            }
+                        }
+                    }
+                },
+                "summary": "Search all media",
+                "operationId": "list_media",
+                "tags": [
+                    "media"
+                ]
+            }
+        },
+        "/media/{id}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The media identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "Media not found"
+                    },
+                    "200": {
+                        "description": "Media details",
+                        "schema": {
+                            "$ref": "#/definitions/Media"
+                        }
+                    }
+                },
+                "summary": "Get media details",
+                "operationId": "get_media",
+                "tags": [
+                    "media"
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "Media not found"
+                    },
+                    "403": {
+                        "description": "Admin access required"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "204": {
+                        "description": "Media deleted"
+                    }
+                },
+                "summary": "Delete media (admin only)",
+                "operationId": "delete_media",
+                "tags": [
+                    "media"
+                ]
+            }
+        },
+        "/notifications/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "User notifications",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Notification"
+                            }
+                        }
+                    }
+                },
+                "summary": "Get user notifications",
+                "operationId": "get_user_notifications",
+                "tags": [
+                    "notifications"
+                ]
+            }
+        },
+        "/notifications/{id}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The notification identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Notification details",
+                        "schema": {
+                            "$ref": "#/definitions/Notification"
+                        }
+                    }
+                },
+                "summary": "Get notification details",
+                "operationId": "get_notification_item",
+                "tags": [
+                    "notifications"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "Notification not found"
+                    },
+                    "200": {
+                        "description": "Notification updated",
+                        "schema": {
+                            "$ref": "#/definitions/Notification"
+                        }
+                    }
+                },
+                "summary": "Update a notification (mark as read, update content)",
+                "operationId": "put_notification_item",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/NotificationUpdate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "notifications"
+                ]
+            }
+        },
+        "/search/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/SearchResults"
+                        }
+                    }
+                },
+                "summary": "Search across all entities (users, media, clubs, threads)",
+                "description": "Returns relevant results across different entity types.\nDoes not require authentication.",
+                "operationId": "search_all",
+                "parameters": [
+                    {
+                        "default": 5,
+                        "in": "query",
+                        "description": "Maximum number of results per entity type",
+                        "name": "limit",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "query",
+                        "description": "Search query string",
+                        "name": "q",
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "search"
+                ]
+            }
+        },
+        "/search/clubs": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResultClub"
+                            }
+                        }
+                    }
+                },
+                "summary": "Search for clubs by name or description",
+                "description": "Returns matching club entries.\nDoes not require authentication.",
+                "operationId": "search_clubs",
+                "parameters": [
+                    {
+                        "default": 10,
+                        "in": "query",
+                        "description": "Maximum number of results",
+                        "name": "limit",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "query",
+                        "description": "Search query string",
+                        "name": "q",
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "search"
+                ]
+            }
+        },
+        "/search/media": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResultMedia"
+                            }
+                        }
+                    }
+                },
+                "summary": "Search for media by title or description",
+                "description": "Returns matching media entries.\nOptional filtering by media type.\nDoes not require authentication.",
+                "operationId": "search_media",
+                "parameters": [
+                    {
+                        "default": 10,
+                        "in": "query",
+                        "description": "Maximum number of results",
+                        "name": "limit",
+                        "type": "string"
+                    },
+                    {
+                        "required": false,
+                        "in": "query",
+                        "description": "Filter by media type (book, movie, series, anime)",
+                        "name": "type",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "query",
+                        "description": "Search query string",
+                        "name": "q",
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "search"
+                ]
+            }
+        },
+        "/search/threads": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResultThread"
+                            }
+                        }
+                    }
+                },
+                "summary": "Search for discussion threads by title or content",
+                "description": "Returns matching thread entries.\nDoes not require authentication.",
+                "operationId": "search_threads",
+                "parameters": [
+                    {
+                        "default": 10,
+                        "in": "query",
+                        "description": "Maximum number of results",
+                        "name": "limit",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "query",
+                        "description": "Search query string",
+                        "name": "q",
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "search"
+                ]
+            }
+        },
+        "/search/users": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResultUser"
+                            }
+                        }
+                    }
+                },
+                "summary": "Search for users by username or bio",
+                "description": "Returns matching user profiles.\nDoes not require authentication.",
+                "operationId": "search_users",
+                "parameters": [
+                    {
+                        "default": 10,
+                        "in": "query",
+                        "description": "Maximum number of results",
+                        "name": "limit",
+                        "type": "string"
+                    },
+                    {
+                        "required": true,
+                        "in": "query",
+                        "description": "Search query string",
+                        "name": "q",
+                        "type": "string"
+                    }
+                ],
+                "tags": [
+                    "search"
+                ]
+            }
+        },
+        "/threads/": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Thread"
+                            }
+                        }
+                    }
+                },
+                "summary": "List all threads across all clubs",
+                "description": "Returns a paginated list of threads sorted by recent activity.\nCan be filtered by query parameters.",
+                "operationId": "list_threads",
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/threads/comments/{id}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The comment identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "Comment not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to delete comment"
+                    },
+                    "204": {
+                        "description": "Comment deleted"
+                    }
+                },
+                "summary": "Delete a comment",
+                "description": "Permanently removes the comment.\nAuthor, moderators, and admins can delete comments.",
+                "operationId": "delete_comment",
+                "tags": [
+                    "threads"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "Comment not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to update comment"
+                    },
+                    "200": {
+                        "description": "Comment updated",
+                        "schema": {
+                            "$ref": "#/definitions/Comment"
+                        }
+                    }
+                },
+                "summary": "Update a comment",
+                "description": "Updates the comment content and marks it as edited.\nOnly the author can edit their comment.",
+                "operationId": "update_comment",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/CommentUpdate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/threads/trending": {
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Thread"
+                            }
+                        }
+                    }
+                },
+                "summary": "Get trending threads",
+                "description": "Returns threads with the most activity in the last 24 hours.\nCalculated based on views, comments, and recency.",
+                "operationId": "get_trending_threads",
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/threads/user/{user_id}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The user identifier",
+                    "name": "user_id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Thread"
+                            }
+                        }
+                    }
+                },
+                "summary": "Get all threads created by a specific user",
+                "description": "Returns a paginated list of threads created by the user.\nSorted by creation time (newest first).",
+                "operationId": "get_user_threads",
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/threads/{id}": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The thread identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/Thread"
+                        }
+                    }
+                },
+                "summary": "Get detailed information about a specific thread",
+                "description": "Retrieves the thread details including metadata and initial content.\nIncreases view count when accessed.",
+                "operationId": "get_thread",
+                "tags": [
+                    "threads"
+                ]
+            },
+            "delete": {
+                "responses": {
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to delete thread"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "204": {
+                        "description": "Thread deleted"
+                    }
+                },
+                "summary": "Delete a thread",
+                "description": "Permanently removes the thread and all its comments.\nOnly authorized users (thread creator, moderators, admins) can delete.",
+                "operationId": "delete_thread",
+                "tags": [
+                    "threads"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to update thread"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "200": {
+                        "description": "Thread updated",
+                        "schema": {
+                            "$ref": "#/definitions/Thread"
+                        }
+                    }
+                },
+                "summary": "Update thread details",
+                "description": "Can update title, pinned status, or lock status.\nOnly authorized users (thread creator, moderators, admins) can update.",
+                "operationId": "update_thread",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/ThreadUpdate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/threads/{id}/comments": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The thread identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "post": {
+                "responses": {
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "403": {
+                        "description": "Thread is locked"
+                    },
+                    "401": {
+                        "description": "Authentication required"
+                    },
+                    "201": {
+                        "description": "Comment created",
+                        "schema": {
+                            "$ref": "#/definitions/Comment"
+                        }
+                    }
+                },
+                "summary": "Add a new comment to a thread",
+                "description": "Creates a new comment or reply to existing comment.\nUpdates the thread's lastActivity timestamp.\nNot allowed if thread is locked.",
+                "operationId": "create_comment",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/CommentCreate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "threads"
+                ]
+            },
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Comment"
+                            }
+                        }
+                    }
+                },
+                "summary": "Get all comments for a thread",
+                "description": "Returns a paginated list of comments sorted by creation time.\nSupports nested comments/replies.",
+                "operationId": "list_comments",
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/threads/{id}/stats": {
+            "parameters": [
+                {
+                    "in": "path",
+                    "description": "The thread identifier",
+                    "name": "id",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "Thread not found"
+                    },
+                    "200": {
+                        "description": "Success",
+                        "schema": {
+                            "$ref": "#/definitions/ThreadStats"
+                        }
+                    }
+                },
+                "summary": "Get thread statistics",
+                "description": "Returns statistics like view count, comment count, \nlast activity time, and top contributors.",
+                "operationId": "get_thread_stats",
+                "tags": [
+                    "threads"
+                ]
+            }
+        },
+        "/users/{id}": {
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "200": {
+                        "description": "User profile",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                },
+                "summary": "Get user profile",
+                "operationId": "get_user_profile",
+                "tags": [
+                    "users"
+                ]
+            },
+            "put": {
+                "responses": {
+                    "404": {
+                        "description": "User not found"
+                    },
+                    "403": {
+                        "description": "Unauthorized to update profile"
+                    },
+                    "200": {
+                        "description": "Profile updated",
+                        "schema": {
+                            "$ref": "#/definitions/User"
+                        }
+                    }
+                },
+                "summary": "Update user profile",
+                "operationId": "update_user_profile",
+                "parameters": [
+                    {
+                        "name": "payload",
+                        "required": true,
+                        "in": "body",
+                        "schema": {
+                            "$ref": "#/definitions/UserProfileUpdate"
+                        }
+                    }
+                ],
+                "tags": [
+                    "users"
+                ]
+            }
+        },
+        "/users/{id}/clubs": {
+            "parameters": [
+                {
+                    "name": "id",
+                    "in": "path",
+                    "required": true,
+                    "type": "string"
+                }
+            ],
+            "get": {
+                "responses": {
+                    "200": {
+                        "description": "List of clubs",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Club"
+                            }
+                        }
+                    }
+                },
+                "summary": "List clubs user is part of",
+                "operationId": "get_user_clubs",
+                "tags": [
+                    "users"
+                ]
+            }
+        }
+    },
+    "info": {
+        "title": "MediaSphere API",
+        "version": "1.0",
+        "description": "API for MediaSphere - Discover. Discuss. Dive Deep."
+    },
+    "produces": [
+        "application/json"
+    ],
+    "consumes": [
+        "application/json"
+    ],
+    "securityDefinitions": {
+        "Bearer Auth": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "Authorization",
+            "description": "Type \"Bearer\" followed by a space and the access token"
+        }
+    },
+    "security": [
+        {
+            "Bearer Auth": []
+        }
+    ],
+    "tags": [
+        {
+            "name": "auth",
+            "description": "Authentication"
+        },
+        {
+            "name": "users",
+            "description": "User operations"
+        },
+        {
+            "name": "media",
+            "description": "Media management"
+        },
+        {
+            "name": "clubs",
+            "description": "Clubs and discussions"
+        },
+        {
+            "name": "threads",
+            "description": "Discussion threads"
+        },
+        {
+            "name": "search",
+            "description": "Search across entities"
+        },
+        {
+            "name": "ai",
+            "description": "AI-powered features"
+        },
+        {
+            "name": "notifications",
+            "description": "User notifications"
+        }
+    ],
+    "definitions": {
+        "Register": {
+            "required": [
+                "email",
+                "password",
+                "username"
+            ],
+            "properties": {
+                "username": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Token": {
+            "properties": {
+                "access_token": {
+                    "type": "string"
+                },
+                "token_type": {
+                    "type": "string"
+                },
+                "user": {
+                    "$ref": "#/definitions/User"
+                }
+            },
+            "type": "object"
+        },
+        "User": {
+            "required": [
+                "email",
+                "username"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "User ID",
+                    "readOnly": true
+                },
+                "username": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string",
+                    "description": "Avatar URL"
+                },
+                "bio": {
+                    "type": "string",
+                    "description": "User bio"
+                },
+                "mediaPreferences": {
+                    "type": "array",
+                    "description": "Preferred genres/types",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "Login": {
+            "required": [
+                "email",
+                "password"
+            ],
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "UserProfileUpdate": {
+            "properties": {
+                "username": {
+                    "type": "string"
+                },
+                "avatar": {
+                    "type": "string"
+                },
+                "bio": {
+                    "type": "string"
+                },
+                "mediaPreferences": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "Club": {
+            "required": [
+                "mediaId",
+                "name"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "mediaId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "members": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "roles": {
+                    "type": "object",
+                    "description": "Role mapping"
+                }
+            },
+            "type": "object"
+        },
+        "Media": {
+            "required": [
+                "title",
+                "type"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "title": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "book",
+                    "enum": [
+                        "book",
+                        "movie",
+                        "series",
+                        "anime"
+                    ]
+                },
+                "description": {
+                    "type": "string"
+                },
+                "releaseDate": {
+                    "type": "string"
+                },
+                "metadata": {
+                    "type": "object",
+                    "description": "Fetched from TMDB/AniList/Google Books"
+                }
+            },
+            "type": "object"
+        },
+        "ClubCreate": {
+            "required": [
+                "mediaId",
+                "name"
+            ],
+            "properties": {
+                "mediaId": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "Thread": {
+            "required": [
+                "clubId",
+                "content",
+                "title"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique thread identifier",
+                    "readOnly": true
+                },
+                "clubId": {
+                    "type": "string",
+                    "description": "ID of the club this thread belongs to"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Thread title"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Initial thread content/post"
+                },
+                "createdBy": {
+                    "type": "string",
+                    "description": "User ID of thread creator"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Thread creation timestamp"
+                },
+                "lastActivity": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last activity timestamp"
+                },
+                "isPinned": {
+                    "type": "boolean",
+                    "description": "Whether the thread is pinned",
+                    "default": false
+                },
+                "isLocked": {
+                    "type": "boolean",
+                    "description": "Whether the thread is locked",
+                    "default": false
+                },
+                "views": {
+                    "type": "integer",
+                    "description": "View count",
+                    "default": 0
+                },
+                "commentCount": {
+                    "type": "integer",
+                    "description": "Number of comments",
+                    "default": 0
+                }
+            },
+            "type": "object"
+        },
+        "Event": {
+            "required": [
+                "clubId",
+                "title"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "clubId": {
+                    "type": "string"
+                },
+                "title": {
+                    "type": "string"
+                },
+                "description": {
+                    "type": "string"
+                },
+                "scheduledAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "rsvp": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "CommentCreate": {
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "Comment content"
+                },
+                "parentId": {
+                    "type": "string",
+                    "description": "Parent comment ID for replies"
+                }
+            },
+            "type": "object"
+        },
+        "Comment": {
+            "required": [
+                "content",
+                "threadId"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Unique comment identifier",
+                    "readOnly": true
+                },
+                "threadId": {
+                    "type": "string",
+                    "description": "ID of the thread this comment belongs to"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Comment content"
+                },
+                "createdBy": {
+                    "type": "string",
+                    "description": "User ID of comment author"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Comment creation timestamp"
+                },
+                "isEdited": {
+                    "type": "boolean",
+                    "description": "Whether the comment has been edited",
+                    "default": false
+                },
+                "parentId": {
+                    "type": "string",
+                    "description": "Parent comment ID for replies"
+                }
+            },
+            "type": "object"
+        },
+        "ThreadUpdate": {
+            "properties": {
+                "title": {
+                    "type": "string",
+                    "description": "Thread title"
+                },
+                "isPinned": {
+                    "type": "boolean",
+                    "description": "Whether the thread is pinned"
+                },
+                "isLocked": {
+                    "type": "boolean",
+                    "description": "Whether the thread is locked"
+                }
+            },
+            "type": "object"
+        },
+        "CommentUpdate": {
+            "required": [
+                "content"
+            ],
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "description": "Updated comment content"
+                }
+            },
+            "type": "object"
+        },
+        "ThreadStats": {
+            "properties": {
+                "views": {
+                    "type": "integer",
+                    "description": "View count"
+                },
+                "commentCount": {
+                    "type": "integer",
+                    "description": "Number of comments"
+                },
+                "lastActivity": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last activity timestamp"
+                },
+                "topContributors": {
+                    "type": "array",
+                    "description": "User IDs of top contributors",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "SearchResults": {
+            "properties": {
+                "users": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SearchResultUser"
+                    }
+                },
+                "media": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SearchResultMedia"
+                    }
+                },
+                "clubs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SearchResultClub"
+                    }
+                },
+                "threads": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/SearchResultThread"
+                    }
+                },
+                "totalResults": {
+                    "type": "integer",
+                    "description": "Total number of results"
+                }
+            },
+            "type": "object"
+        },
+        "SearchResultUser": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "User ID"
+                },
+                "username": {
+                    "type": "string",
+                    "description": "Username"
+                },
+                "avatar": {
+                    "type": "string",
+                    "description": "Avatar URL"
+                },
+                "resultType": {
+                    "type": "string",
+                    "description": "Type of search result",
+                    "default": "user"
+                }
+            },
+            "type": "object"
+        },
+        "SearchResultMedia": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Media ID"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Media title"
+                },
+                "type": {
+                    "type": "string",
+                    "description": "Media type (book, movie, etc.)"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Media description"
+                },
+                "resultType": {
+                    "type": "string",
+                    "description": "Type of search result",
+                    "default": "media"
+                }
+            },
+            "type": "object"
+        },
+        "SearchResultClub": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Club ID"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "Club name"
+                },
+                "description": {
+                    "type": "string",
+                    "description": "Club description"
+                },
+                "mediaTitle": {
+                    "type": "string",
+                    "description": "Title of associated media"
+                },
+                "memberCount": {
+                    "type": "integer",
+                    "description": "Number of club members"
+                },
+                "resultType": {
+                    "type": "string",
+                    "description": "Type of search result",
+                    "default": "club"
+                }
+            },
+            "type": "object"
+        },
+        "SearchResultThread": {
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "description": "Thread ID"
+                },
+                "title": {
+                    "type": "string",
+                    "description": "Thread title"
+                },
+                "clubName": {
+                    "type": "string",
+                    "description": "Name of the club"
+                },
+                "createdBy": {
+                    "type": "string",
+                    "description": "Creator username"
+                },
+                "commentCount": {
+                    "type": "integer",
+                    "description": "Number of comments"
+                },
+                "lastActivity": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "Last activity timestamp"
+                },
+                "resultType": {
+                    "type": "string",
+                    "description": "Type of search result",
+                    "default": "thread"
+                }
+            },
+            "type": "object"
+        },
+        "AISummaryRequest": {
+            "required": [
+                "content",
+                "mediaId"
+            ],
+            "properties": {
+                "mediaId": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AISummaryResponse": {
+            "properties": {
+                "summaryText": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AIQuizRequest": {
+            "required": [
+                "content",
+                "mediaId"
+            ],
+            "properties": {
+                "mediaId": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AIQuizResponse": {
+            "properties": {
+                "questions": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "AIPromptRequest": {
+            "required": [
+                "content",
+                "mediaId"
+            ],
+            "properties": {
+                "mediaId": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AIPromptResponse": {
+            "properties": {
+                "prompts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "AIAnalysisRequest": {
+            "required": [
+                "content",
+                "mediaId"
+            ],
+            "properties": {
+                "mediaId": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AIAnalysisResponse": {
+            "properties": {
+                "analysis": {
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "AIRecommendationsResponse": {
+            "properties": {
+                "recommendations": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "type": "object"
+        },
+        "Notification": {
+            "required": [
+                "userId"
+            ],
+            "properties": {
+                "id": {
+                    "type": "string",
+                    "readOnly": true
+                },
+                "userId": {
+                    "type": "string"
+                },
+                "type": {
+                    "type": "string"
+                },
+                "content": {
+                    "type": "string"
+                },
+                "createdAt": {
+                    "type": "string",
+                    "format": "date-time"
+                },
+                "isRead": {
+                    "type": "boolean"
+                }
+            },
+            "type": "object"
+        },
+        "NotificationUpdate": {
+            "properties": {
+                "type": {
+                    "type": "string",
+                    "description": "Notification type"
+                },
+                "content": {
+                    "type": "string",
+                    "description": "Notification content"
+                },
+                "isRead": {
+                    "type": "boolean",
+                    "description": "Whether the notification has been read"
+                }
+            },
+            "type": "object"
+        }
+    },
+    "responses": {
+        "ParseError": {
+            "description": "When a mask can't be parsed"
+        },
+        "MaskError": {
+            "description": "When any error occurs on mask"
+        }
+    }
+}
