@@ -1,0 +1,50 @@
+# MediaSphere Database .dockerignore
+# Optimized for production builds
+
+# Git files
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+docs/
+
+# Docker Compose files (not needed in image)
+docker-compose*.yml
+docker-compose*.yaml
+
+# Backup files
+*.bak
+*.tmp
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+*.iml
+
+# Logs
+*.log
+logs/
+
+# Environment files (excluding .env which is needed)
+.env.local
+.env.development
+.env.production
+
+# Archive files
+*.zip
+*.tar.gz
+*.rar

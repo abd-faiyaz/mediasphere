@@ -1,0 +1,247 @@
+gan�-vm - Microso� Azure
+
+1 of 3
+
+h�ps://po�al.azure.com/#@buet.ac.bd/resource/subscriptions/...
+
+gantt-vm
+Virtual machine
+
+Help me copy this VM in any region
+Connect
+
+Restart
+
+Stop
+
+Capture
+
+Delete
+
+Essentials
+
+JSON View
+
+Resource group (move)
+gantt-project-rg
+
+Operating system
+Linux (ubuntu 24.04)
+
+Status
+Running
+
+Size
+Standard B2ts v2 (2 vcpus, 1 GiB memory)
+
+Location
+Central India (Zone 1)
+
+Public IP address
+98.70.40.14
+
+Subscription (move)
+Azure for Students
+
+Virtual network/subnet
+gantt-vm-vnet/default
+
+Subscription ID
+ﬀ1f254b-3cc7-4621-b446-02f765b01d6f
+
+DNS name
+Not conﬁgured
+
+Availability zone
+1
+
+Health state
+Time created
+6/24/2025, 5:59 PM UTC
+
+Tags (edit)
+Add tags
+
+Properties
+
+Monitoring
+
+Capabilities (7)
+
+Recommendations
+
+Tutorials
+
+Virtual machine
+Computer name
+
+gantt-vm
+
+Operating system Linux (ubuntu 24.04)
+VM generation
+
+V2
+
+VM architecture
+
+x64
+
+Agent status
+
+Ready
+
+Agent version
+
+2.14.0.1
+
+Hibernation
+
+Disabled
+
+Host group
+
+-
+
+Host
+
+-
+
+Proximity
+placement group
+Colocation status N/A
+Capacity
+reservation group
+
+6/25/25, 12:06 AM
+
+gan�-vm - Microso� Azure
+
+2 of 3
+
+h�ps://po�al.azure.com/#@buet.ac.bd/resource/subscriptions/...
+
+reservation group
+Disk controller
+type
+
+SCSI
+
+Azure Spot
+Azure Spot
+
+-
+
+Azure Spot
+eviction policy
+
+-
+
+Availability + scaling
+Availability zone
+(edit)
+
+1
+
+Extended zone
+
+-
+
+Availability set
+
+-
+
+Scale Set
+(attach)
+
+-
+
+Security
+Security type
+
+Standard
+
+Health monitoring
+Health monitoring Not enabled
+Extensions + applications
+Extensions
+
+-
+
+Applications
+
+-
+
+Networking
+Public IP address
+98.70.40.14 ( Network interface gantt-vm597_z1 )
+Public IP address
+(IPv6)
+
+-
+
+Private IP address 10.0.0.4
+Private IP address (IPv6)
+Virtual network/
+subnet
+
+gantt-vm-vnet/default
+
+DNS name
+
+Conﬁgure
+
+Size
+Size
+
+Standard B2ts v2
+
+vCPUs
+
+2
+
+6/25/25, 12:06 AM
+
+gan�-vm - Microso� Azure
+
+3 of 3
+
+RAM
+
+h�ps://po�al.azure.com/#@buet.ac.bd/resource/subscriptions/...
+1 GiB
+
+Source image details
+Source image
+publisher
+
+canonical
+
+Source image oﬀer ubuntu-24_04-lts
+Source image plan server
+Disk
+OS disk
+ganttvm_OsDisk_1_a99f4f72a84243fa9f5b5f31410877e7
+Encryption at host Disabled
+Azure disk
+encryption
+
+Not enabled
+
+Ephemeral OS disk N/A
+Data disks
+
+0
+
+Auto-shutdown
+Auto-shutdown
+
+Not enabled
+
+Scheduled
+shutdown
+
+-
+
+6/25/25, 12:06 AM
+
+

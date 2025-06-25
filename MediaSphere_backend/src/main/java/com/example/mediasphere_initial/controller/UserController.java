@@ -3,6 +3,7 @@ package com.example.mediasphere_initial.controller;
 
 // Import necessary classes and annotations
 import com.example.mediasphere_initial.model.User;
+import com.example.mediasphere_initial.model.Club;
 import com.example.mediasphere_initial.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,7 +12,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -63,15 +65,21 @@ public class UserController {
         return ResponseEntity.ok(savedUser);
     }
 
-    // Get a list of clubs the user is part of (stub - needs ClubService implementation)
+    // Get a list of clubs the user is part of
     @GetMapping("/{id}/clubs")
     public ResponseEntity<?> getUserClubs(@PathVariable("id") UUID id) {
-        // TODO: Implement this once Club/UserClub logic is available
-        return ResponseEntity.status(501).body("Not Implemented: Club membership logic not available yet.");
+        try {
+            List<Club> userClubs = userService.getUserClubs(id);
+            return ResponseEntity.ok(userClubs);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 
     @PostMapping("")
     public ResponseEntity<User> createUser(@RequestBody User user) {
+        user.setId(UUID.randomUUID());
+        user.setCreatedAt(LocalDateTime.now());
         User createdUser = userService.saveUser(user);
         return ResponseEntity.status(201).body(createdUser);
     }

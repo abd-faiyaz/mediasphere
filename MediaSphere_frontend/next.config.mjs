@@ -9,6 +9,11 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: 'standalone',
+  // Skip static generation for dynamic pages
+  experimental: {
+    skipMiddlewareUrlNormalize: true,
+  },
 }
 
 export default nextConfig

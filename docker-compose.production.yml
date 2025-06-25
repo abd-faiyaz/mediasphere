@@ -1,0 +1,89 @@
+# MediaSphere Production Deployment
+# Docker Compose file for Azure VM deployment
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: abdfaiyaz/mediasphere-db:latest
+    container_name: mediasphere-postgres
+    environment:
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-1234}
+      - POSTGRES_DB=${DB_NAME:-db_408}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - postgres_logs:/var/log/postgresql
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-db_408}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - mediasphere-network
+    restart: unless-stopped
+
+  # Spring Boot Backend
+  backend:
+    image: abdfaiyaz/mediasphere-backend:latest
+    container_name: mediasphere-backend
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=${DB_NAME:-db_408}
+      - DB_USER=${DB_USER:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-1234}
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - mediasphere-network
+    restart: unless-stopped
+
+  # Next.js Frontend
+  frontend:
+    image: abdfaiyaz/mediasphere-frontend:latest
+    container_name: mediasphere-frontend
+    environment:
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0}
+      - NEXT_PUBLIC_API_BASE_URL=http://${BACKEND_HOST:-localhost}:${BACKEND_PORT:-8080}
+      - NEXT_PUBLIC_APP_URL=http://${FRONTEND_HOST:-localhost}:${FRONTEND_PORT:-3000}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    networks:
+      - mediasphere-network
+    restart: unless-stopped
+
+# Volumes for persistent data
+volumes:
+  postgres_data:
+    driver: local
+  postgres_logs:
+    driver: local
+
+# Networks
+networks:
+  mediasphere-network:
+    driver: bridge

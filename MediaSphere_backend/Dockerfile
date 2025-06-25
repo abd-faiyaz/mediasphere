@@ -1,34 +1,54 @@
-# Multi-stage build optimized for Docker layer caching
-FROM maven:3-eclipse-temurin-24-alpine AS dependencies
+# MediaSphere Backend Dockerfile
+# Optimized multi-stage build for production deployment
 
-# Create app directory
-WORKDIR /home/app
-
-# Copy only pom.xml first to cache dependencies
-COPY ./pom.xml /home/app/pom.xml
-
-# Download dependencies (this layer will be cached unless pom.xml changes)
+# Stage 1: Dependencies cache
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS dependencies
+WORKDIR /app
+COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
-# Build stage
-FROM maven:3-eclipse-temurin-24-alpine AS build
-WORKDIR /home/app
+# Stage 2: Build application
+FROM maven:3.9.6-eclipse-temurin-21-alpine AS build
+WORKDIR /app
 
-# Copy pom.xml and download dependencies (reuse cache from dependencies stage)
-COPY ./pom.xml /home/app/pom.xml
-RUN mvn dependency:go-offline -B
+# Copy pom.xml and source code
+COPY pom.xml .
+COPY src ./src
 
-# Copy source code
-COPY ./src /home/app/src
-
-# Build the application (skip tests for faster builds)
+# Build the application
 RUN mvn clean package -DskipTests -B
 
-# Runtime stage
-FROM maven:3-eclipse-temurin-24-alpine
+# Stage 3: Runtime
+FROM eclipse-temurin:21-jre-alpine AS runtime
+
+# Install wget for healthcheck
+RUN apk add --no-cache wget
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S appgroup && \
+    adduser -u 1001 -S appuser -G appgroup
+
+# Set working directory
+WORKDIR /app
+
+# Copy built jar from build stage
+COPY --from=build /app/target/*.jar app.jar
+
+# Change ownership to appuser
+RUN chown -R appuser:appgroup /app
+
+# Switch to non-root user
+USER appuser
+
+# Expose port
 EXPOSE 8080
 
-# Copy the built jar
-COPY --from=build /home/app/target/*.jar backend.jar
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
-CMD ["java", "-jar", "backend.jar"]
+# Set JVM options for container environment
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC"
+
+# Run the application
+ENTRYPOINT ["sh", "-c", "exec java $JAVA_OPTS -jar app.jar"]

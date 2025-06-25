@@ -1,0 +1,127 @@
+VM name: mediasphere-vm
+VM resource group: mediasphere-rg
+Region : Central India
+zone 1
+standard security
+ubuntu server 24.04 LTS image 
+B2ts_v2 2vcpus, 1 GiB memory, $8.18/month
+
+Administrator account: abd-faiyaz-vm
+Generate new key pair
+SSH key type: RSA SSH format
+key pair name: mediasphere-vm_key
+
+
+public ip address: mediasphere-vm-ip
+virtual network: mediasphere-vm-vnet
+
+public ip address: 20.244.25.13
+
+  
+Basics
+
+
+Subscription
+Azure for Students
+Resource group
+(new) mediasphere-rg
+Virtual machine name
+mediasphere-vm
+Region
+Central India
+Availability options
+Availability zone
+Zone options
+Self-selected zone
+Availability zone
+1
+Security type
+Standard
+Image
+Ubuntu Server 24.04 LTS - Gen2
+VM architecture
+x64
+Size
+Standard B2ts v2 (2 vcpus, 1 GiB memory)
+Enable Hibernation
+No
+Authentication type
+SSH public key
+Username
+abd-faiyaz-vm
+SSH Key format
+RSA
+Key pair name
+mediasphere-vm_key
+Public inbound ports
+SSH, HTTP, HTTPS
+Azure Spot
+No
+
+Disks
+
+
+OS disk size
+Image default
+OS disk type
+Standard SSD LRS
+Use managed disks
+Yes
+Delete OS disk with VM
+Enabled
+Ephemeral OS disk
+No
+Networking
+Virtual network
+(new) mediasphere-vm-vnet
+Subnet
+(new) default (10.1.0.0/24)
+Public IP
+(new) mediasphere-vm-ip
+Accelerated networking
+On
+Place this virtual machine behind an existing load balancing solution?
+No
+Delete public IP and NIC when VM is deleted
+Disabled
+Management
+Microsoft Defender for Cloud
+Basic (free)
+System assigned managed identity
+Off
+Login with Microsoft Entra ID
+Off
+Auto-shutdown
+Off
+Backup
+Disabled
+Enable periodic assessment
+Off
+Enable hotpatch
+Off
+Patch orchestration options
+Image Default
+Monitoring
+Alerts
+Off
+Boot diagnostics
+On
+Enable OS guest diagnostics
+Off
+Enable application health monitoring
+Off
+Advanced
+Extensions
+None
+VM applications
+None
+Cloud init
+No
+User data
+No
+Disk controller type
+SCSI
+Proximity placement group
+None
+Capacity reservation group
+None

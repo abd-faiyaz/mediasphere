@@ -1,0 +1,96 @@
+# MediaSphere Database Docker Compose Configuration
+# Phase 1: Database Containerization for Azure VM Deployment
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: postgres
+    restart: unless-stopped
+    
+    # Environment configuration
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_INITDB_ARGS=${POSTGRES_INITDB_ARGS}
+      - PGDATA=${PGDATA}
+    
+    # Port mapping - using standard PostgreSQL port for simplicity
+    ports:
+      - "${DB_EXTERNAL_PORT}:${DB_INTERNAL_PORT}"
+    
+    # Volume configuration for data persistence
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - postgres_backup:/var/lib/postgresql/backup
+      - postgres_logs:/var/log/postgresql
+      - ./init:/docker-entrypoint-initdb.d:ro
+      - ./postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    
+    # Health check configuration (fixed syntax)
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check"]
+      interval: 30s
+      timeout: 10s
+      start_period: 40s
+      retries: 3
+    
+    # Network configuration - using host_network for simplicity
+    networks:
+      - host_network
+    
+    # Resource limits for Azure VM B2ts_v2 (2 vCPUs, 1 GiB memory)
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    
+    # Logging configuration
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    
+    # Labels for Azure VM management
+    labels:
+      - "com.mediasphere.service=database"
+      - "com.mediasphere.component=postgres"
+      - "com.mediasphere.environment=${ENVIRONMENT}"
+      - "com.azure.vm.managed=true"
+
+# Network configuration - using host_network to match existing setup
+networks:
+  host_network:
+    driver: bridge
+    name: host_network
+
+# Volume configuration - using same names as existing setup
+volumes:
+  postgres-data:
+    driver: local
+    name: postgres-data
+    labels:
+      - "com.mediasphere.volume=database-data"
+      - "com.azure.backup.enabled=true"
+  
+  postgres_backup:
+    driver: local
+    name: postgres_backup
+    labels:
+      - "com.mediasphere.volume=database-backup"
+      - "com.azure.backup.enabled=true"
+  
+  postgres_logs:
+    driver: local
+    name: postgres_logs
+    labels:
+      - "com.mediasphere.volume=database-logs"
