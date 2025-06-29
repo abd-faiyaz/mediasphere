@@ -1,0 +1,54 @@
+services:
+  backend:
+    build:
+      context: ./MediaSphere_backend
+      dockerfile: Dockerfile.dev
+    image: abdfaiyaz/mediasphere-backend:dev
+    container_name: mediasphere-dev-backend
+    volumes:
+      - ./MediaSphere_backend:/app
+    command: ["mvn", "spring-boot:run"]
+    
+    environment:
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=db_408
+      - DB_USER=postgres
+      - DB_PASSWORD=1234
+      - SERVER_PORT=8080
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - mediasphere-dev
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./MediaSphere_frontend
+      dockerfile: Dockerfile
+    image: abdfaiyaz/mediasphere-frontend:dev
+    container_name: mediasphere-dev-frontend
+    volumes:
+      - ./MediaSphere_frontend:/app
+      
+    
+    environment:
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ
+      - CLERK_SECRET_KEY=sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0
+      - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+      - NEXT_PUBLIC_APP_URL=http://localhost:3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - mediasphere-dev
+    restart: unless-stopped
+
+networks:
+  mediasphere-dev:
+    driver: bridge

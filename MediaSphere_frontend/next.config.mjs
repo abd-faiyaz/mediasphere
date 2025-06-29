@@ -11,9 +11,7 @@ const nextConfig = {
   },
   output: 'standalone',
   // Skip static generation for dynamic pages
-  experimental: {
-    skipMiddlewareUrlNormalize: true,
-  },
+  skipMiddlewareUrlNormalize: true,
 }
 
 export default nextConfig
