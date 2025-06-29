@@ -35,7 +35,6 @@ services:
     container_name: mediasphere-dev-backend
     volumes:
       - ./MediaSphere_backend:/app
-    command: ./mvnw spring-boot:run
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
@@ -68,7 +67,6 @@ services:
     volumes:
       - ./MediaSphere_frontend:/app
       - /app/node_modules
-    command: npm run dev
     environment:
       - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ
       - CLERK_SECRET_KEY=sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0

@@ -11,12 +11,12 @@ COPY pom.xml .
 COPY src ./src
 
 # Install wget for healthcheck (if not already present in base image)
-RUN apk add --no-cache wget
+RUN apk add --no-cache wget bash
 
 # Expose port
 EXPOSE 8080
 
 # Command to run the application in development mode with live-reloading
-RUN apk add --no-cache bash
+CMD ["mvn", "spring-boot:run"]
 
 

@@ -10,8 +10,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Brain, FileText, HelpCircle, TrendingUp, Sparkles, Upload, Download } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { AuthGuard } from "@/components/auth-guard"
 
-export default function AIServicesPage() {
+function AIServicesContent() {
   const services = [
     {
       id: "summarize",
@@ -524,5 +525,13 @@ export default function AIServicesPage() {
         </div>
       </main>
     </div>
+  )
+}
+
+export default function AIServicesPage() {
+  return (
+    <AuthGuard>
+      <AIServicesContent />
+    </AuthGuard>
   )
 }

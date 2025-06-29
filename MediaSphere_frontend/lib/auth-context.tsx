@@ -74,14 +74,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkLocalAuth = async () => {
     try {
+      const token = authService.getToken()
+      
+      if (!token) {
+        setUser(null)
+        return
+      }
+      
       const localUser = await authService.getCurrentUser()
+      
       if (localUser) {
         setUser({ ...localUser, isClerkUser: false })
       } else {
+        authService.removeToken()
         setUser(null)
       }
     } catch (error) {
       console.error('Local auth check failed:', error)
+      authService.removeToken()
       setUser(null)
     } finally {
       setIsLoading(false)
@@ -125,6 +135,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const logout = () => {
     authService.logout()
     setUser(null)
+    setIsLoading(false)
+    
+    // Force a re-check of authentication status
+    setTimeout(() => {
+      checkLocalAuth()
+    }, 100)
+    
     // If user is signed in with Clerk, we don't automatically sign them out
     // They can choose to sign out of Clerk separately
   }
@@ -139,11 +156,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = !!user
 
-  // Don't render children until we're mounted and have checked auth status
-  if (!isMounted || (isLoading && !isLoaded)) {
-    return <PageLoader text="Initializing Mediasphere..." />
-  }
-
+  // Always render children to prevent hydration issues
+  // The loading state will be handled by individual components
   return (
     <AuthContext.Provider
       value={{

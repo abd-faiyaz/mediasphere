@@ -7,6 +7,7 @@ services:
     container_name: mediasphere-dev-backend
     volumes:
       - ./MediaSphere_backend:/app
+      - /app/target
     command: ["mvn", "spring-boot:run"]
     
     environment:
@@ -33,13 +34,15 @@ services:
     container_name: mediasphere-dev-frontend
     volumes:
       - ./MediaSphere_frontend:/app
-      
+      - /app/node_modules
+    command: ["pnpm", "dev"]
     
     environment:
       - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ
       - CLERK_SECRET_KEY=sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0
       - NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
       - NEXT_PUBLIC_APP_URL=http://localhost:3000
+      - CHOKIDAR_USEPOLLING=true
     ports:
       - "3000:3000"
     depends_on:

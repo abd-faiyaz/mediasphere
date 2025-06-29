@@ -5,89 +5,268 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp } from "lucide-react"
+import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { useEffect, useState } from "react"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
+import { toast } from "@/hooks/use-toast"
+import { authService } from "@/lib/auth-service"
+
+interface Club {
+  id: string
+  name: string
+  description: string
+  mediaType: {
+    id: string
+    name: string
+    description: string
+  }
+  createdBy: {
+    id: string
+    email: string
+    username: string
+    firstName: string
+    lastName: string
+  }
+  createdAt: string
+  memberCount?: number
+}
+
+interface Thread {
+  id: string
+  title: string
+  content: string
+  createdBy: {
+    id: string
+    username: string
+    firstName: string
+    lastName: string
+  }
+  createdAt: string
+  viewCount: number
+  commentCount: number
+  isPinned: boolean
+  isLocked: boolean
+}
+
+interface Event {
+  id: string
+  title: string
+  description: string
+  date: string
+  time: string
+  location: string
+  maxAttendees: number
+  currentAttendees: number
+  createdBy: {
+    id: string
+    username: string
+  }
+  createdAt: string
+}
 
 export default function ClubDetailsPage({ params }: { params: { id: string } }) {
-  const club = {
-    id: params.id,
-    name: "Tech Innovators",
-    description:
-      "A community of technology enthusiasts discussing the latest innovations, sharing insights, and collaborating on cutting-edge projects.",
-    members: 1250,
-    category: "Technology",
-    joined: true,
-    rules: [
-      "Be respectful and constructive in all discussions",
-      "No spam or self-promotion without permission",
-      "Stay on topic - focus on technology and innovation",
-      "Share reliable sources when posting news or research",
-    ],
-    moderators: [
-      { name: "Sarah Chen", role: "Admin", avatar: "/placeholder.svg?height=32&width=32" },
-      { name: "Mike Rodriguez", role: "Moderator", avatar: "/placeholder.svg?height=32&width=32" },
-    ],
+  const [club, setClub] = useState<Club | null>(null)
+  const [threads, setThreads] = useState<Thread[]>([])
+  const [events, setEvents] = useState<Event[]>([])
+  const [isMember, setIsMember] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [threadsLoading, setThreadsLoading] = useState(false)
+  const [eventsLoading, setEventsLoading] = useState(false)
+  const { user, isAuthenticated } = useAuth()
+  const router = useRouter()
+
+  // Fetch club details
+  const fetchClubDetails = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${params.id}`)
+      
+      if (!response.ok) {
+        throw new Error('Club not found')
+      }
+
+      const clubData = await response.json()
+      setClub(clubData)
+    } catch (error) {
+      console.error('Error fetching club details:', error)
+      toast({
+        title: "Error",
+        description: "Failed to load club details",
+      })
+    } finally {
+      setLoading(false)
+    }
   }
 
-  const discussions = [
-    {
-      id: 1,
-      title: "The Future of AI in Education",
-      author: "Sarah Chen",
-      replies: 45,
-      likes: 23,
-      pinned: true,
-      time: "2 hours ago",
-    },
-    {
-      id: 2,
-      title: "Quantum Computing Breakthrough Discussion",
-      author: "Mike Johnson",
-      replies: 32,
-      likes: 18,
-      pinned: false,
-      time: "4 hours ago",
-    },
-    {
-      id: 3,
-      title: "Best Practices for Remote Development Teams",
-      author: "Emma Davis",
-      replies: 28,
-      likes: 15,
-      pinned: false,
-      time: "6 hours ago",
-    },
-    {
-      id: 4,
-      title: "Web3 and Blockchain: Hype or Reality?",
-      author: "Alex Kim",
-      replies: 67,
-      likes: 34,
-      pinned: false,
-      time: "8 hours ago",
-    },
-  ]
+  // Check membership status
+  const checkMembership = async () => {
+    if (!isAuthenticated) {
+      setIsMember(false)
+      return
+    }
 
-  const events = [
-    {
-      id: 1,
-      title: "AI Workshop: Building Chatbots",
-      date: "Dec 15",
-      time: "2:00 PM",
-      attendees: 45,
-      type: "Workshop",
-    },
-    {
-      id: 2,
-      title: "Tech Talk: Future of Web Development",
-      date: "Dec 20",
-      time: "6:00 PM",
-      attendees: 78,
-      type: "Presentation",
-    },
-    { id: 3, title: "Networking Mixer", date: "Dec 25", time: "7:00 PM", attendees: 120, type: "Social" },
-  ]
+    try {
+      const token = authService.getToken()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${params.id}/membership`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (response.ok) {
+        const membershipStatus = await response.json()
+        setIsMember(membershipStatus)
+      }
+    } catch (error) {
+      console.error('Error checking membership:', error)
+      setIsMember(false)
+    }
+  }
+
+  // Fetch club threads
+  const fetchThreads = async () => {
+    try {
+      setThreadsLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${params.id}/threads`)
+      
+      if (response.ok) {
+        const threadsData = await response.json()
+        setThreads(threadsData)
+      } else {
+        setThreads([])
+      }
+    } catch (error) {
+      console.error('Error fetching threads:', error)
+      setThreads([])
+    } finally {
+      setThreadsLoading(false)
+    }
+  }
+
+  // Fetch club events
+  const fetchEvents = async () => {
+    try {
+      setEventsLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${params.id}/events`)
+      
+      if (response.ok) {
+        const eventsData = await response.json()
+        setEvents(eventsData)
+      } else {
+        setEvents([])
+      }
+    } catch (error) {
+      console.error('Error fetching events:', error)
+      setEvents([])
+    } finally {
+      setEventsLoading(false)
+    }
+  }
+
+  // Join club
+  const joinClub = async () => {
+    if (!isAuthenticated) {
+      router.push('/sign-in')
+      return
+    }
+
+    try {
+      const token = authService.getToken()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${params.id}/join`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to join club')
+      }
+
+      toast({
+        title: "Success",
+        description: "Successfully joined the club!",
+      })
+      
+      // Refresh membership status
+      await checkMembership()
+    } catch (error) {
+      console.error('Error joining club:', error)
+      toast({
+        title: "Error",
+        description: "Failed to join club. Please try again.",
+      })
+    }
+  }
+
+  // Leave club
+  const leaveClub = async () => {
+    try {
+      const token = authService.getToken()
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${params.id}/leave`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to leave club')
+      }
+
+      toast({
+        title: "Success",
+        description: "Successfully left the club!",
+      })
+      
+      // Refresh membership status
+      await checkMembership()
+    } catch (error) {
+      console.error('Error leaving club:', error)
+      toast({
+        title: "Error",
+        description: "Failed to leave club. Please try again.",
+      })
+    }
+  }
+
+  // Load data on component mount
+  useEffect(() => {
+    fetchClubDetails()
+    checkMembership()
+    fetchThreads()
+    fetchEvents()
+  }, [params.id, isAuthenticated])
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading club details...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!club) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-gray-900 mb-4">Club Not Found</h1>
+          <p className="text-gray-600 mb-6">The club you're looking for doesn't exist.</p>
+          <Link href="/clubs">
+            <Button>Back to Clubs</Button>
+          </Link>
+        </div>
+      </div>
+    )
+  }
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -178,10 +357,10 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
                 <h1 className="text-3xl font-bold text-gray-900">{club.name}</h1>
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring" }}>
                   <Badge variant="secondary" className="text-sm">
-                    {club.category}
+                    {club.mediaType.name}
                   </Badge>
                 </motion.div>
-                {club.joined && (
+                {isMember && (
                   <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.6, type: "spring" }}>
                     <Badge variant="default" className="bg-green-100 text-green-800">
                       Member
@@ -204,7 +383,7 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
                 className="flex items-center text-gray-600"
               >
                 <Users className="h-5 w-5 mr-2" />
-                <span className="font-medium">{club.members.toLocaleString()}</span>
+                <span className="font-medium">{club.memberCount?.toLocaleString() || "Loading..."}</span>
                 <span className="ml-1">members</span>
               </motion.div>
             </div>
@@ -214,16 +393,16 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
               transition={{ delay: 0.5, duration: 0.6 }}
               className="flex gap-3"
             >
-              {!club.joined ? (
+              {!isMember ? (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700">
+                  <Button size="lg" className="bg-blue-600 hover:bg-blue-700" onClick={joinClub}>
                     <Plus className="mr-2 h-4 w-4" />
                     Join Club
                   </Button>
                 </motion.div>
               ) : (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                  <Button variant="outline" size="lg">
+                  <Button variant="outline" size="lg" onClick={leaveClub}>
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
                   </Button>
@@ -253,7 +432,7 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="discussions" className="mt-6">
+              <TabsContent value="discussions">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -269,118 +448,138 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
                   </motion.div>
                 </motion.div>
 
-                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
-                  {discussions.map((thread, index) => (
-                    <motion.div key={thread.id} variants={cardVariants} whileHover="hover">
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-2">
-                                {thread.pinned && (
-                                  <motion.div
-                                    initial={{ rotate: -45, scale: 0 }}
-                                    animate={{ rotate: 0, scale: 1 }}
-                                    transition={{ delay: 0.5 + index * 0.1, type: "spring" }}
-                                  >
-                                    <Pin className="h-4 w-4 text-blue-600" />
-                                  </motion.div>
-                                )}
-                                <CardTitle className="text-lg">
-                                  <Link href={`/threads/${thread.id}`} className="hover:text-blue-600">
-                                    {thread.title}
-                                  </Link>
-                                </CardTitle>
+                {threadsLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                    <p className="text-gray-600">Loading discussions...</p>
+                  </div>
+                ) : threads.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No discussions yet. Start the first thread!</p>
+                  </div>
+                ) : (
+                  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
+                    {threads.map((thread, index) => (
+                      <motion.div key={thread.id} variants={cardVariants} whileHover="hover">
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start justify-between">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-2">
+                                  {thread.isPinned && (
+                                    <motion.div
+                                      initial={{ rotate: -45, scale: 0 }}
+                                      animate={{ rotate: 0, scale: 1 }}
+                                      transition={{ delay: 0.5 + index * 0.1, type: "spring" }}
+                                    >
+                                      <Pin className="h-4 w-4 text-blue-600" />
+                                    </motion.div>
+                                  )}
+                                  <CardTitle className="text-lg">
+                                    <Link href={`/threads/${thread.id}`} className="hover:text-blue-600">
+                                      {thread.title}
+                                    </Link>
+                                  </CardTitle>
+                                </div>
+                                <CardDescription>
+                                  by {thread.createdBy.firstName} {thread.createdBy.lastName} • {new Date(thread.createdAt).toLocaleString()}
+                                </CardDescription>
                               </div>
-                              <CardDescription>
-                                by {thread.author} • {thread.time}
-                              </CardDescription>
+                              <div className="flex items-center gap-4">
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 0.7 + index * 0.1 }}
+                                  className="flex items-center"
+                                >
+                                  <TrendingUp className="h-4 w-4 mr-1" />
+                                  {thread.viewCount}
+                                </motion.div>
+                                <motion.div
+                                  initial={{ opacity: 0, scale: 0 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: 0.8 + index * 0.1 }}
+                                  className="flex items-center"
+                                >
+                                  <MessageSquare className="h-4 w-4 mr-1" />
+                                  {thread.commentCount}
+                                </motion.div>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.7 + index * 0.1 }}
-                                className="flex items-center"
-                              >
-                                <TrendingUp className="h-4 w-4 mr-1" />
-                                {thread.likes}
-                              </motion.div>
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.8 + index * 0.1 }}
-                                className="flex items-center"
-                              >
-                                <MessageSquare className="h-4 w-4 mr-1" />
-                                {thread.replies}
-                              </motion.div>
-                            </div>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
+                          </CardHeader>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
               </TabsContent>
 
-              <TabsContent value="events" className="mt-6">
+              <TabsContent value="events">
                 <motion.div
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6 }}
                   className="flex justify-between items-center mb-6"
                 >
-                  <h2 className="text-2xl font-bold text-gray-900">Club Events</h2>
+                  <h2 className="text-2xl font-bold text-gray-900">Upcoming Events</h2>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Button className="bg-blue-600 hover:bg-blue-700">
                       <Plus className="mr-2 h-4 w-4" />
-                      Schedule Event
+                      Create Event
                     </Button>
                   </motion.div>
                 </motion.div>
 
-                <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
-                  {events.map((event, index) => (
-                    <motion.div key={event.id} variants={cardVariants} whileHover="hover">
-                      <Card className="hover:shadow-md transition-shadow cursor-pointer">
-                        <CardHeader>
-                          <div className="flex justify-between items-start">
-                            <div>
-                              <div className="flex items-center gap-2 mb-2">
-                                <CardTitle className="text-lg">
-                                  <Link href={`/events/${event.id}`} className="hover:text-blue-600">
-                                    {event.title}
-                                  </Link>
-                                </CardTitle>
-                                <motion.div
-                                  initial={{ scale: 0 }}
-                                  animate={{ scale: 1 }}
-                                  transition={{ delay: 0.5 + index * 0.1, type: "spring" }}
-                                >
-                                  <Badge variant="outline">{event.type}</Badge>
-                                </motion.div>
-                              </div>
-                              <div className="flex items-center gap-4 text-gray-600">
-                                <div className="flex items-center">
-                                  <Calendar className="h-4 w-4 mr-1" />
-                                  {event.date} at {event.time}
+                {eventsLoading ? (
+                  <div className="text-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                    <p className="text-gray-600">Loading events...</p>
+                  </div>
+                ) : events.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-600">No upcoming events.</p>
+                  </div>
+                ) : (
+                  <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
+                    {events.map((event, index) => (
+                      <motion.div key={event.id} variants={cardVariants} whileHover="hover">
+                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                          <CardHeader>
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <div className="flex items-center gap-2 mb-2">
+                                  <CardTitle className="text-lg">
+                                    <Link href={`/events/${event.id}`} className="hover:text-blue-600">
+                                      {event.title}
+                                    </Link>
+                                  </CardTitle>
                                 </div>
-                                <div className="flex items-center">
-                                  <Users className="h-4 w-4 mr-1" />
-                                  {event.attendees} attending
+                                <div className="flex items-center gap-4 text-gray-600">
+                                  <div className="flex items-center">
+                                    <Calendar className="h-4 w-4 mr-1" />
+                                    {new Date(event.date).toLocaleDateString()} at {event.time}
+                                  </div>
+                                  <div className="flex items-center">
+                                    <Users className="h-4 w-4 mr-1" />
+                                    {event.currentAttendees} / {event.maxAttendees} attending
+                                  </div>
                                 </div>
+                                {event.location && (
+                                  <div className="text-sm text-gray-600 mt-1">
+                                    📍 {event.location}
+                                  </div>
+                                )}
                               </div>
+                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                                <Button variant="outline">RSVP</Button>
+                              </motion.div>
                             </div>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button variant="outline">RSVP</Button>
-                            </motion.div>
-                          </div>
-                        </CardHeader>
-                      </Card>
-                    </motion.div>
-                  ))}
-                </motion.div>
+                          </CardHeader>
+                        </Card>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+                )}
               </TabsContent>
             </Tabs>
           </motion.div>
@@ -392,80 +591,11 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
             transition={{ delay: 0.4, duration: 0.6 }}
             className="space-y-6"
           >
-            {/* Club Rules */}
+            {/* Club Stats */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Club Rules</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ul className="space-y-2 text-sm text-gray-600">
-                    {club.rules.map((rule, index) => (
-                      <motion.li
-                        key={index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 0.8 + index * 0.1, duration: 0.4 }}
-                        className="flex items-start"
-                      >
-                        <span className="font-medium text-gray-900 mr-2">{index + 1}.</span>
-                        {rule}
-                      </motion.li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Moderators */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.7, duration: 0.6 }}
-            >
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg">Moderators</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    {club.moderators.map((mod, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: 1 + index * 0.1, duration: 0.4 }}
-                        className="flex items-center gap-3"
-                      >
-                        <Avatar className="h-8 w-8">
-                          <AvatarImage src={mod.avatar || "/placeholder.svg"} />
-                          <AvatarFallback>
-                            {mod.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .join("")}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <div className="font-medium text-sm">{mod.name}</div>
-                          <div className="text-xs text-gray-600">{mod.role}</div>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            {/* Quick Stats */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.8, duration: 0.6 }}
             >
               <Card>
                 <CardHeader>
@@ -474,10 +604,10 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
                 <CardContent>
                   <div className="space-y-3 text-sm">
                     {[
-                      { label: "Total Members", value: club.members.toLocaleString() },
-                      { label: "Active Discussions", value: "24" },
-                      { label: "Upcoming Events", value: "3" },
-                      { label: "Founded", value: "Jan 2023" },
+                      { label: "Total Members", value: club.memberCount?.toLocaleString() || "Loading..." },
+                      { label: "Active Discussions", value: threads.length.toString() },
+                      { label: "Upcoming Events", value: events.length.toString() },
+                      { label: "Founded", value: new Date(club.createdAt).toLocaleDateString() },
                     ].map((stat, index) => (
                       <motion.div
                         key={index}
@@ -490,6 +620,33 @@ export default function ClubDetailsPage({ params }: { params: { id: string } }) 
                         <span className="font-medium">{stat.value}</span>
                       </motion.div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Club Creator */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7, duration: 0.6 }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg">Club Creator</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src="/placeholder.svg" />
+                      <AvatarFallback>
+                        {club.createdBy.firstName.charAt(0) + club.createdBy.lastName.charAt(0)}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <div className="font-medium text-sm">{club.createdBy.firstName} {club.createdBy.lastName}</div>
+                      <div className="text-xs text-gray-600">@{club.createdBy.username}</div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>

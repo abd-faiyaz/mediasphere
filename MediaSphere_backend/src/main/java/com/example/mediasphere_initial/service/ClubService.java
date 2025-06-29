@@ -40,7 +40,16 @@ public class ClubService {
         club.setId(UUID.randomUUID());
         club.setCreatedBy(creator);
         club.setCreatedAt(LocalDateTime.now());
-        return clubRepository.save(club);
+        Club savedClub = clubRepository.save(club);
+        // Add creator as a member
+        if (!userClubRepository.existsByUserAndClub(creator, savedClub)) {
+            UserClub membership = new UserClub();
+            membership.setUser(creator);
+            membership.setClub(savedClub);
+            membership.setJoinedAt(LocalDateTime.now());
+            userClubRepository.save(membership);
+        }
+        return savedClub;
     }
 
     public Club updateClub(UUID clubId, Club updatedClub, User user) {
@@ -120,5 +129,27 @@ public class ClubService {
         thread.setIsLocked(false);
         
         return threadRepository.save(thread);
+    }
+
+    // Check if a user is a member of a specific club
+    public boolean isUserMember(UUID clubId, UUID userId) {
+        Club club = clubRepository.findById(clubId).orElse(null);
+        User user = userRepository.findById(userId).orElse(null);
+        
+        if (club == null || user == null) {
+            return false;
+        }
+        
+        return userClubRepository.existsByUserAndClub(user, club);
+    }
+
+    // Get member count for a club
+    public long getMemberCount(UUID clubId) {
+        Club club = clubRepository.findById(clubId).orElse(null);
+        if (club == null) {
+            return 0;
+        }
+        
+        return userClubRepository.countByClub(club);
     }
 }

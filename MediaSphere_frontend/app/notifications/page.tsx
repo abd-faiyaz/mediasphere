@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bell, MessageSquare, Users, Calendar, Brain, Check, X, Settings } from "lucide-react"
 import Link from "next/link"
 import { motion } from "framer-motion"
+import { AuthGuard } from "@/components/auth-guard"
 
-export default function NotificationsPage() {
+function NotificationsContent() {
   const notifications = [
     {
       id: 1,
@@ -424,5 +425,13 @@ export default function NotificationsPage() {
         </motion.div>
       </main>
     </div>
+  )
+}
+
+export default function NotificationsPage() {
+  return (
+    <AuthGuard>
+      <NotificationsContent />
+    </AuthGuard>
   )
 }

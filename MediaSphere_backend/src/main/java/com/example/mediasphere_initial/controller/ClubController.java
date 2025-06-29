@@ -200,6 +200,64 @@ public class ClubController {
         }
     }
 
+    // Check if user is a member of a club
+    @GetMapping("/{id}/membership")
+    public ResponseEntity<Boolean> checkMembership(@PathVariable UUID id,
+                                                  @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.ok(false);
+            }
+            
+            boolean isMember = clubService.isUserMember(id, userOpt.get().getId());
+            return ResponseEntity.ok(isMember);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false);
+        }
+    }
+
+    // Get clubs with membership status for the authenticated user
+    @GetMapping("/with-membership")
+    public ResponseEntity<?> getClubsWithMembership(@RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            List<Club> clubs = clubService.getAllClubs();
+            
+            if (!userOpt.isPresent()) {
+                // If not authenticated, return clubs without membership info
+                return ResponseEntity.ok(clubs);
+            }
+            
+            // Create response with membership status
+            List<java.util.Map<String, Object>> clubsWithMembership = clubs.stream()
+                .map(club -> {
+                    java.util.Map<String, Object> clubData = new java.util.HashMap<>();
+                    clubData.put("id", club.getId());
+                    clubData.put("name", club.getName());
+                    clubData.put("description", club.getDescription());
+                    clubData.put("mediaType", club.getMediaType());
+                    clubData.put("createdBy", club.getCreatedBy());
+                    clubData.put("createdAt", club.getCreatedAt());
+                    
+                    // Check if user is a member
+                    boolean isMember = clubService.isUserMember(club.getId(), userOpt.get().getId());
+                    clubData.put("isMember", isMember);
+                    
+                    // Get member count
+                    long memberCount = clubService.getMemberCount(club.getId());
+                    clubData.put("memberCount", memberCount);
+                    
+                    return clubData;
+                })
+                .collect(java.util.stream.Collectors.toList());
+            
+            return ResponseEntity.ok(clubsWithMembership);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching clubs with membership");
+        }
+    }
+
     private Optional<User> getUserFromToken(String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
