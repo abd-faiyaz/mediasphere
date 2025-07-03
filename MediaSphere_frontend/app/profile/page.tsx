@@ -1,3 +1,5 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -6,404 +8,911 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Edit, MessageSquare, Calendar, Users, Trophy, Settings } from "lucide-react"
+import { Edit, MessageSquare, Calendar, Users, Trophy, Settings, Camera, Upload, Star, Heart, Eye, Sparkles, MapPin, Globe, Loader2, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { motion, AnimatePresence } from "framer-motion"
+import { useEffect, useState, useRef } from "react"
+import { apiService, type User, type Club, type Thread, type Comment, type UserStats, type Achievement } from "@/lib/api-service"
+import { authService } from "@/lib/auth-service"
+import { useToast } from "@/hooks/use-toast"
+import { useAuth } from "@/lib/auth-context"
+import { useRouter } from "next/navigation"
 
 export default function ProfilePage() {
-  const user = {
-    name: "Alex Johnson",
-    email: "alex.johnson@email.com",
-    avatar: "/placeholder.svg?height=80&width=80",
-    bio: "Technology enthusiast and lifelong learner. Passionate about AI, web development, and building communities.",
-    joinDate: "January 2023",
-    location: "San Francisco, CA",
-    website: "alexjohnson.dev",
-    stats: {
-      threadsCreated: 24,
-      commentsPosted: 156,
-      eventsAttended: 12,
-      clubsJoined: 5,
-    },
+  const [user, setUser] = useState<User | null>(null)
+  const [userStats, setUserStats] = useState<UserStats | null>(null)
+  const [clubs, setClubs] = useState<Club[]>([])
+  const [threads, setThreads] = useState<Thread[]>([])
+  const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [isEditing, setIsEditing] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [uploadingProfilePic, setUploadingProfilePic] = useState(false)
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { toast } = useToast()
+  const { isAuthenticated, isLoading: authLoading, user: authUser } = useAuth()
+  const router = useRouter()
+
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/sign-in')
+      return
+    }
+  }, [isAuthenticated, authLoading, router])
+
+  // Enhanced form state
+  const [formData, setFormData] = useState({
+    username: "",
+    email: "",
+    bio: "",
+    location: "",
+    website: ""
+  })
+
+  // Floating particles animation
+  const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
+    id: i,
+    x: Math.random() * 100,
+    y: Math.random() * 100,
+    delay: Math.random() * 5,
+    duration: 3 + Math.random() * 4
+  }))
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    )
   }
 
-  const recentThreads = [
-    {
-      id: 1,
-      title: "Best Practices for Remote Development Teams",
-      club: "Tech Innovators",
-      replies: 28,
-      likes: 15,
-      time: "2 days ago",
-    },
-    {
-      id: 2,
-      title: "Introduction to Machine Learning",
-      club: "AI Enthusiasts",
-      replies: 45,
-      likes: 32,
-      time: "1 week ago",
-    },
-    {
-      id: 3,
-      title: "React vs Vue: A Developer's Perspective",
-      club: "Web Developers",
-      replies: 67,
-      likes: 41,
-      time: "2 weeks ago",
-    },
-  ]
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
 
-  const recentComments = [
-    {
-      id: 1,
-      thread: "The Future of AI in Education",
-      club: "Tech Innovators",
-      content: "Great insights! I think AI will definitely transform how we approach personalized learning...",
-      time: "3 hours ago",
-    },
-    {
-      id: 2,
-      thread: "Quantum Computing Breakthrough",
-      club: "Science Hub",
-      content: "This is fascinating. The implications for cryptography are huge...",
-      time: "1 day ago",
-    },
-    {
-      id: 3,
-      thread: "Sustainable Tech Practices",
-      club: "Green Tech",
-      content: "We've implemented similar practices at our company with great results...",
-      time: "3 days ago",
-    },
-  ]
+  useEffect(() => {
+    loadUserData()
+  }, [])
 
-  const clubs = [
-    { id: 1, name: "Tech Innovators", role: "Member", joined: "Jan 2023" },
-    { id: 2, name: "AI Enthusiasts", role: "Moderator", joined: "Feb 2023" },
-    { id: 3, name: "Web Developers", role: "Member", joined: "Mar 2023" },
-    { id: 4, name: "Science Hub", role: "Member", joined: "Apr 2023" },
-    { id: 5, name: "Green Tech", role: "Member", joined: "May 2023" },
-  ]
+  const loadUserData = async () => {
+    try {
+      setLoading(true)
+      const currentUser = await apiService.getCurrentUser()
+      if (!currentUser) return
 
-  const achievements = [
-    { id: 1, title: "First Thread", description: "Created your first discussion thread", earned: "Jan 2023" },
-    { id: 2, title: "Community Builder", description: "Joined 5 different clubs", earned: "May 2023" },
-    { id: 3, title: "Active Participant", description: "Posted 100+ comments", earned: "Aug 2023" },
-    { id: 4, title: "Event Enthusiast", description: "Attended 10+ events", earned: "Nov 2023" },
-  ]
+      const [userData, statsData, clubsData, threadsData, achievementsData] = await Promise.all([
+        apiService.getUserProfile(currentUser.id),
+        apiService.getUserStats(currentUser.id),
+        apiService.getUserClubs(currentUser.id),
+        apiService.getUserThreads(currentUser.id),
+        Promise.resolve(apiService.getUserAchievements(currentUser.id))
+      ])
+
+      setUser(userData)
+      setUserStats(statsData)
+      setClubs(clubsData || [])
+      setThreads(threadsData || [])
+      setAchievements(achievementsData || [])
+      
+      if (userData) {
+        setFormData({
+          username: userData.username || "",
+          email: userData.email || "",
+          bio: userData.bio || "",
+          location: "", // Add these when available in API
+          website: ""
+        })
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleProfilePicSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file type",
+        description: "Please select an image file",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Validate file size (5MB limit)
+    if (file.size > 5 * 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Please select an image smaller than 5MB",
+        variant: "destructive"
+      })
+      return
+    }
+
+    // Create preview
+    const reader = new FileReader()
+    reader.onload = (e) => {
+      setProfilePicPreview(e.target?.result as string)
+    }
+    reader.readAsDataURL(file)
+
+    handleProfilePicUpload(file)
+  }
+
+  const handleProfilePicUpload = async (file: File) => {
+    try {
+      setUploadingProfilePic(true)
+      
+      const formData = new FormData()
+      formData.append("profilePicture", file)
+      
+      // For now, we'll use updateUserProfile with the profilePic field
+      const updatedUser = await apiService.updateUserProfile(user!.id, { profilePic: URL.createObjectURL(file) })
+      if (updatedUser) {
+        setUser(updatedUser)
+      }
+      setProfilePicPreview(null)
+      
+      toast({
+        title: "Success",
+        description: "Profile picture updated successfully!"
+      })
+    } catch (error) {
+      console.error("Error uploading profile picture:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update profile picture",
+        variant: "destructive"
+      })
+      setProfilePicPreview(null)
+    } finally {
+      setUploadingProfilePic(false)
+    }
+  }
+
+  const handleSaveProfile = async () => {
+    try {
+      if (!user) return
+
+      const updatedUser = await apiService.updateUserProfile(user.id, {
+        username: formData.username,
+        email: formData.email,
+        bio: formData.bio
+      })
+      
+      if (updatedUser) {
+        setUser(updatedUser)
+        setIsEditing(false)
+        
+        toast({
+          title: "Success",
+          description: "Profile updated successfully!"
+        })
+      }
+    } catch (error) {
+      console.error("Error updating profile:", error)
+      toast({
+        title: "Error",
+        description: "Failed to update profile",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 24
+      }
+    }
+  }
+
+  const cardVariants = {
+    hidden: { 
+      scale: 0.8, 
+      opacity: 0,
+      rotateX: -15
+    },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        stiffness: 300,
+        damping: 20
+      }
+    },
+    hover: {
+      scale: 1.05,
+      rotateY: 5,
+      transition: {
+        type: "spring",
+        stiffness: 400,
+        damping: 25
+      }
+    }
+  }
+
+  const profileHeaderVariants = {
+    hidden: { 
+      scale: 0.5, 
+      opacity: 0,
+      y: -50
+    },
+    visible: {
+      scale: 1,
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        stiffness: 200,
+        damping: 20,
+        delay: 0.3
+      }
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <motion.div
+          animate={{
+            rotate: 360,
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+            scale: { duration: 1, repeat: Infinity }
+          }}
+          className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full"
+        />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="text-center text-white"
+        >
+          <h2 className="text-3xl font-bold mb-4">Profile Not Available</h2>
+          <p className="text-purple-200 mb-6">Please log in to view your profile.</p>
+          <Link href="/sign-in">
+            <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+              Sign In
+            </Button>
+          </Link>
+        </motion.div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-gray-900">
-              Mediasphere
-            </Link>
-            <nav className="flex items-center space-x-4">
-              <Link href="/clubs">
-                <Button variant="ghost">Clubs</Button>
-              </Link>
-              <Link href="/ai-services">
-                <Button variant="ghost">AI Services</Button>
-              </Link>
-              <Link href="/notifications">
-                <Button variant="ghost">Notifications</Button>
-              </Link>
-              <Link href="/profile">
-                <Button variant="ghost">Profile</Button>
-              </Link>
-            </nav>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      {/* Back Button - Floating */}
+      <motion.div
+        initial={{ opacity: 0, x: -50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="fixed top-6 left-6 z-50"
+      >
+        <motion.button
+          onClick={() => router.push('/')}
+          className="flex items-center gap-2 bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-xl shadow-2xl border border-white/30 transition-all duration-300 hover:bg-white/30"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+          <span className="font-medium">Back</span>
+        </motion.button>
+      </motion.div>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Animated Background Elements */}
+      <div className="absolute inset-0 overflow-hidden">
+        {/* Floating Particles */}
+        {floatingParticles.map((particle) => (
+          <motion.div
+            key={particle.id}
+            className="absolute w-2 h-2 bg-white/20 rounded-full"
+            initial={{
+              x: `${particle.x}vw`,
+              y: `${particle.y}vh`,
+              scale: 0
+            }}
+            animate={{
+              y: [`${particle.y}vh`, `${particle.y - 20}vh`, `${particle.y}vh`],
+              scale: [0, 1, 0],
+              opacity: [0, 0.6, 0]
+            }}
+            transition={{
+              duration: particle.duration,
+              repeat: Infinity,
+              delay: particle.delay,
+              ease: "easeInOut"
+            }}
+          />
+        ))}
+
+        {/* Gradient Orbs */}
+        <motion.div
+          className="absolute top-20 left-20 w-96 h-96 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full blur-3xl"
+          animate={{
+            scale: [1, 1.2, 1],
+            rotate: [0, 180, 360]
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+        <motion.div
+          className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-blue-500/30 to-cyan-500/30 rounded-full blur-3xl"
+          animate={{
+            scale: [1.2, 1, 1.2],
+            rotate: [360, 180, 0]
+          }}
+          transition={{
+            duration: 15,
+            repeat: Infinity,
+            ease: "linear"
+          }}
+        />
+      </div>
+
+      {/* Content */}
+      <motion.div 
+        className="relative z-10 container mx-auto px-4 py-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {/* Profile Header */}
-        <Card className="mb-8">
-          <CardContent className="p-8">
-            <div className="flex flex-col md:flex-row gap-8">
-              <div className="flex flex-col items-center md:items-start">
-                <Avatar className="h-20 w-20 mb-4">
-                  <AvatarImage src={user.avatar || "/placeholder.svg"} />
-                  <AvatarFallback className="text-2xl">
-                    {user.name
-                      .split(" ")
-                      .map((n) => n[0])
-                      .join("")}
-                  </AvatarFallback>
-                </Avatar>
-                <Button variant="outline" size="sm">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Edit Photo
-                </Button>
-              </div>
+        <motion.div 
+          className="text-center mb-12"
+          variants={profileHeaderVariants}
+        >
+          <div className="relative inline-block group perspective-1000">
+            <motion.div
+              className="relative"
+              whileHover={{ 
+                rotateY: 10,
+                scale: 1.05
+              }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Avatar className="w-40 h-40 mx-auto mb-6 border-4 border-white/20 shadow-2xl group-hover:shadow-purple-500/50 transition-shadow duration-300">
+                <AvatarImage 
+                  src={profilePicPreview || user?.profilePic || "/placeholder-user.jpg"} 
+                  alt={user?.username || "User"} 
+                />
+                <AvatarFallback className="text-6xl bg-gradient-to-br from-purple-500 to-pink-500 text-white">
+                  {user?.username?.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              
+              {/* Profile Picture Upload Overlay */}
+              <motion.button
+                className="absolute bottom-6 right-4 bg-gradient-to-r from-purple-500 to-pink-500 p-3 rounded-full text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploadingProfilePic}
+                whileHover={{ scale: 1.1, rotate: 15 }}
+                whileTap={{ scale: 0.9 }}
+              >
+                {uploadingProfilePic ? (
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                  >
+                    <Upload className="w-5 h-5" />
+                  </motion.div>
+                ) : (
+                  <Camera className="w-5 h-5" />
+                )}
+              </motion.button>
+              
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleProfilePicSelect}
+                className="hidden"
+              />
+            </motion.div>
 
-              <div className="flex-1">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4">
-                  <div>
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">{user.name}</h1>
-                    <p className="text-gray-600 mb-4">{user.bio}</p>
-                  </div>
-                  <Button>
-                    <Settings className="mr-2 h-4 w-4" />
+            {/* Sparkle Effects */}
+            <motion.div
+              className="absolute -top-4 -right-4 text-yellow-400"
+              animate={{
+                rotate: [0, 360],
+                scale: [1, 1.2, 1]
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                ease: "easeInOut"
+              }}
+            >
+              <Sparkles className="w-8 h-8" />
+            </motion.div>
+            <motion.div
+              className="absolute -bottom-4 -left-4 text-pink-400"
+              animate={{
+                rotate: [360, 0],
+                scale: [1, 1.3, 1]
+              }}
+              transition={{
+                duration: 4,
+                repeat: Infinity,
+                ease: "easeInOut",
+                delay: 1
+              }}
+            >
+              <Star className="w-6 h-6" />
+            </motion.div>
+          </div>
+
+          <motion.h1 
+            className="text-6xl font-bold bg-gradient-to-r from-white via-purple-200 to-pink-200 bg-clip-text text-transparent mb-4"
+            animate={{
+              backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"]
+            }}
+            transition={{
+              duration: 5,
+              repeat: Infinity,
+              ease: "linear"
+            }}
+          >
+            {user?.username}
+          </motion.h1>
+          
+          <motion.p 
+            className="text-xl text-purple-200 mb-6 max-w-2xl mx-auto"
+            variants={itemVariants}
+          >
+            {user?.bio || "Welcome to my MediaSphere profile! 🚀"}
+          </motion.p>
+
+          {/* User Details */}
+          <motion.div 
+            className="flex flex-wrap items-center justify-center gap-6 mb-8 text-purple-200"
+            variants={itemVariants}
+          >
+            <div className="flex items-center gap-2">
+              <Calendar className="w-4 h-4" />
+              <span>Member since {user?.createdAt ? new Date(user.createdAt).getFullYear() : 'Unknown'}</span>
+            </div>
+          </motion.div>
+
+          {/* Action Buttons */}
+          <motion.div 
+            className="flex gap-4 justify-center"
+            variants={itemVariants}
+          >
+            <AnimatePresence mode="wait">
+              {isEditing ? (
+                <motion.div
+                  key="editing"
+                  className="flex gap-4"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <Button
+                    onClick={handleSaveProfile}
+                    className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    Save Changes
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setIsEditing(false)}
+                    className="border-white/20 text-white hover:bg-white/10"
+                  >
+                    Cancel
+                  </Button>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="view"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                >
+                  <Button
+                    onClick={() => setIsEditing(true)}
+                    className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
                     Edit Profile
                   </Button>
-                </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div>
+        </motion.div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{user.stats.threadsCreated}</div>
-                    <div className="text-sm text-gray-600">Threads</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{user.stats.commentsPosted}</div>
-                    <div className="text-sm text-gray-600">Comments</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{user.stats.eventsAttended}</div>
-                    <div className="text-sm text-gray-600">Events</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-900">{user.stats.clubsJoined}</div>
-                    <div className="text-sm text-gray-600">Clubs</div>
-                  </div>
-                </div>
+        {/* Stats Cards */}
+        <motion.div 
+          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-12"
+          variants={itemVariants}
+        >
+          {[
+            { label: "Threads", value: userStats?.threadsCreated || 0, icon: MessageSquare, gradient: "from-blue-500 to-cyan-500" },
+            { label: "Comments", value: userStats?.commentsPosted || 0, icon: Heart, gradient: "from-pink-500 to-rose-500" },
+            { label: "Events", value: userStats?.eventsAttended || 0, icon: Calendar, gradient: "from-purple-500 to-indigo-500" },
+            { label: "Clubs", value: userStats?.clubsJoined || 0, icon: Users, gradient: "from-emerald-500 to-teal-500" }
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              variants={cardVariants}
+              whileHover="hover"
+              className="perspective-1000"
+            >
+              <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl">
+                <CardContent className="p-6 text-center">
+                  <motion.div
+                    className={`w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-r ${stat.gradient} flex items-center justify-center shadow-lg`}
+                    whileHover={{ scale: 1.1, rotate: 15 }}
+                  >
+                    <stat.icon className="w-6 h-6 text-white" />
+                  </motion.div>
+                  <motion.div
+                    className="text-3xl font-bold text-white mb-2"
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: index * 0.1 + 0.5, type: "spring" }}
+                  >
+                    {stat.value}
+                  </motion.div>
+                  <div className="text-purple-200">{stat.label}</div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </motion.div>
 
-                <div className="flex flex-wrap gap-4 text-sm text-gray-600">
-                  <div>📍 {user.location}</div>
-                  <div>🌐 {user.website}</div>
-                  <div>📅 Joined {user.joinDate}</div>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content Tabs */}
+        <motion.div variants={itemVariants}>
+          <Tabs defaultValue="profile" className="w-full">
+            <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-md border-white/20">
+              <TabsTrigger value="profile" className="data-[state=active]:bg-white/20 text-white">
+                Profile
+              </TabsTrigger>
+              <TabsTrigger value="threads" className="data-[state=active]:bg-white/20 text-white">
+                Threads
+              </TabsTrigger>
+              <TabsTrigger value="clubs" className="data-[state=active]:bg-white/20 text-white">
+                Clubs
+              </TabsTrigger>
+              <TabsTrigger value="achievements" className="data-[state=active]:bg-white/20 text-white">
+                Achievements
+              </TabsTrigger>
+            </TabsList>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-2">
-            <Tabs defaultValue="activity" className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="activity">Activity</TabsTrigger>
-                <TabsTrigger value="threads">Threads</TabsTrigger>
-                <TabsTrigger value="comments">Comments</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="activity" className="mt-6">
-                <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">Recent Activity</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0">
-                          <div className="bg-blue-100 p-2 rounded-lg">
-                            <MessageSquare className="h-4 w-4 text-blue-600" />
+            {/* Profile Tab */}
+            <TabsContent value="profile" className="mt-8">
+              <AnimatePresence mode="wait">
+                {isEditing ? (
+                  <motion.div
+                    key="edit-form"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center gap-2">
+                          <Settings className="w-5 h-5" />
+                          Edit Profile
+                        </CardTitle>
+                        <CardDescription className="text-purple-200">
+                          Update your profile information
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-6">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="username" className="text-white">Username</Label>
+                            <Input
+                              id="username"
+                              value={formData.username}
+                              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-purple-200"
+                              placeholder="Enter username"
+                            />
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900">
-                              Commented on{" "}
-                              <Link href="/threads/1" className="font-medium text-blue-600 hover:underline">
-                                "The Future of AI in Education"
-                              </Link>
-                            </p>
-                            <p className="text-xs text-gray-500">3 hours ago</p>
+                          <div className="space-y-2">
+                            <Label htmlFor="email" className="text-white">Email</Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              value={formData.email}
+                              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                              className="bg-white/10 border-white/20 text-white placeholder:text-purple-200"
+                              placeholder="Enter email"
+                            />
                           </div>
                         </div>
-                        <div className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0">
-                          <div className="bg-green-100 p-2 rounded-lg">
-                            <Users className="h-4 w-4 text-green-600" />
+                        <div className="space-y-2">
+                          <Label htmlFor="bio" className="text-white">Bio</Label>
+                          <Textarea
+                            id="bio"
+                            value={formData.bio}
+                            onChange={(e) => setFormData({ ...formData, bio: e.target.value })}
+                            className="bg-white/10 border-white/20 text-white placeholder:text-purple-200 min-h-[100px]"
+                            placeholder="Tell us about yourself..."
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="view-profile"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                  >
+                    <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+                      <CardHeader>
+                        <CardTitle className="text-white">Profile Information</CardTitle>
+                        <CardDescription className="text-purple-200">
+                          Your personal information and settings
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <Label className="text-purple-200">Username</Label>
+                            <p className="text-white text-lg">{user.username}</p>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900">
-                              Joined{" "}
-                              <Link href="/clubs/5" className="font-medium text-blue-600 hover:underline">
-                                Green Tech
-                              </Link>{" "}
-                              club
-                            </p>
-                            <p className="text-xs text-gray-500">2 days ago</p>
+                          <div>
+                            <Label className="text-purple-200">Email</Label>
+                            <p className="text-white text-lg">{user.email}</p>
                           </div>
                         </div>
-                        <div className="flex items-start gap-3 pb-4 border-b border-gray-200 last:border-0">
-                          <div className="bg-purple-100 p-2 rounded-lg">
-                            <Calendar className="h-4 w-4 text-purple-600" />
+                        {user.bio && (
+                          <div>
+                            <Label className="text-purple-200">Bio</Label>
+                            <p className="text-white text-lg leading-relaxed">{user.bio}</p>
                           </div>
-                          <div className="flex-1">
-                            <p className="text-sm text-gray-900">
-                              Attended{" "}
-                              <Link href="/events/2" className="font-medium text-blue-600 hover:underline">
-                                "Tech Talk: Future of Web Development"
-                              </Link>
-                            </p>
-                            <p className="text-xs text-gray-500">1 week ago</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-              </TabsContent>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </TabsContent>
 
-              <TabsContent value="threads" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Your Threads</CardTitle>
-                    <CardDescription>Discussion threads you've created</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentThreads.map((thread) => (
-                        <div key={thread.id} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
-                          <h3 className="font-medium text-gray-900 mb-2">
-                            <Link href={`/threads/${thread.id}`} className="hover:text-blue-600">
-                              {thread.title}
-                            </Link>
-                          </h3>
-                          <div className="flex justify-between items-center text-sm text-gray-600">
-                            <span>in {thread.club}</span>
-                            <div className="flex items-center gap-4">
-                              <span>{thread.replies} replies</span>
-                              <span>{thread.likes} likes</span>
-                              <span>{thread.time}</span>
+            {/* Threads Tab */}
+            <TabsContent value="threads" className="mt-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-6"
+              >
+                {threads.length > 0 ? (
+                  threads.map((thread, index) => (
+                    <motion.div
+                      key={thread.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.02, x: 10 }}
+                    >
+                      <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl">
+                        <CardContent className="p-6">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <h3 className="text-xl font-semibold text-white mb-2">
+                                {thread.title}
+                              </h3>
+                              <p className="text-purple-200 mb-4 line-clamp-2">
+                                {thread.content}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm text-purple-300">
+                                <span className="flex items-center gap-1">
+                                  <MessageSquare className="w-4 h-4" />
+                                  {thread.replies || 0} replies
+                                </span>
+                                <span className="flex items-center gap-1">
+                                  <Eye className="w-4 h-4" />
+                                  {thread.likes || 0} likes
+                                </span>
+                                <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+                              </div>
                             </div>
+                            <Badge 
+                              variant="secondary" 
+                              className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border-white/20"
+                            >
+                              Discussion
+                            </Badge>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="text-center py-12"
+                  >
+                    <MessageSquare className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No threads yet</h3>
+                    <p className="text-purple-200 mb-6">Start creating threads to share your thoughts!</p>
+                    <Link href="/threads">
+                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                        Create Thread
+                      </Button>
+                    </Link>
+                  </motion.div>
+                )}
+              </motion.div>
+            </TabsContent>
 
-              <TabsContent value="comments" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Your Comments</CardTitle>
-                    <CardDescription>Recent comments you've posted</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {recentComments.map((comment) => (
-                        <div key={comment.id} className="border-b border-gray-200 last:border-0 pb-4 last:pb-0">
-                          <div className="mb-2">
-                            <Link href={`/threads/${comment.id}`} className="font-medium text-blue-600 hover:underline">
-                              {comment.thread}
-                            </Link>
-                            <span className="text-sm text-gray-600 ml-2">in {comment.club}</span>
+            {/* Clubs Tab */}
+            <TabsContent value="clubs" className="mt-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {clubs.length > 0 ? (
+                  clubs.map((club, index) => (
+                    <motion.div
+                      key={club.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.05, rotateY: 5 }}
+                      className="perspective-1000"
+                    >
+                      <Link href={`/clubs/${club.id}`}>
+                        <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl h-full">
+                          <CardContent className="p-6">
+                            <div className="text-center mb-4">
+                              <motion.div
+                                className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
+                                whileHover={{ scale: 1.1, rotate: 15 }}
+                              >
+                                <Users className="w-8 h-8 text-white" />
+                              </motion.div>
+                              <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">
+                                {club.name}
+                              </h3>
+                              <p className="text-purple-200 text-sm line-clamp-2 mb-4">
+                                {club.description}
+                              </p>
+                              <div className="flex items-center justify-center gap-4 text-xs text-purple-300">
+                                <span className="flex items-center gap-1">
+                                  <Users className="w-3 h-3" />
+                                  {club.role || 'Member'}
+                                </span>
+                                <Badge 
+                                  variant="secondary" 
+                                  className="bg-white/10 text-white border-white/20 text-xs"
+                                >
+                                  Club
+                                </Badge>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </Link>
+                    </motion.div>
+                  ))
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="col-span-full text-center py-12"
+                  >
+                    <Users className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No clubs joined</h3>
+                    <p className="text-purple-200 mb-6">Join clubs to connect with people who share your interests!</p>
+                    <Link href="/clubs">
+                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
+                        Explore Clubs
+                      </Button>
+                    </Link>
+                  </motion.div>
+                )}
+              </motion.div>
+            </TabsContent>
+
+            {/* Achievements Tab */}
+            <TabsContent value="achievements" className="mt-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              >
+                {achievements.length > 0 ? (
+                  achievements.map((achievement, index) => (
+                    <motion.div
+                      key={achievement.id}
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: index * 0.1 }}
+                      whileHover={{ scale: 1.05, rotateY: 5 }}
+                      className="perspective-1000"
+                    >
+                      <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl">
+                        <CardContent className="p-6 text-center">
+                          <motion.div
+                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg"
+                            whileHover={{ scale: 1.1, rotate: 15 }}
+                          >
+                            <Trophy className="w-8 h-8 text-white" />
+                          </motion.div>
+                          <h3 className="text-lg font-semibold text-white mb-2">
+                            {achievement.title}
+                          </h3>
+                          <p className="text-purple-200 text-sm mb-4">
+                            {achievement.description}
+                          </p>
+                          <div className="text-xs text-purple-300">
+                            {achievement.earned}
                           </div>
-                          <p className="text-sm text-gray-700 mb-2">{comment.content}</p>
-                          <span className="text-xs text-gray-500">{comment.time}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="settings" className="mt-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg">Profile Settings</CardTitle>
-                    <CardDescription>Update your profile information</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="firstName">First Name</Label>
-                          <Input id="firstName" defaultValue="Alex" />
-                        </div>
-                        <div>
-                          <Label htmlFor="lastName">Last Name</Label>
-                          <Input id="lastName" defaultValue="Johnson" />
-                        </div>
-                      </div>
-                      <div>
-                        <Label htmlFor="email">Email</Label>
-                        <Input id="email" type="email" defaultValue={user.email} />
-                      </div>
-                      <div>
-                        <Label htmlFor="bio">Bio</Label>
-                        <Textarea id="bio" defaultValue={user.bio} />
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="location">Location</Label>
-                          <Input id="location" defaultValue={user.location} />
-                        </div>
-                        <div>
-                          <Label htmlFor="website">Website</Label>
-                          <Input id="website" defaultValue={user.website} />
-                        </div>
-                      </div>
-                      <Button className="bg-blue-600 hover:bg-blue-700">Save Changes</Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              </TabsContent>
-            </Tabs>
-          </div>
-
-          {/* Sidebar */}
-          <div className="space-y-6">
-            {/* Clubs */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Your Clubs</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {clubs.map((club) => (
-                    <div key={club.id} className="flex justify-between items-center">
-                      <div>
-                        <Link href={`/clubs/${club.id}`} className="font-medium text-sm hover:text-blue-600">
-                          {club.name}
-                        </Link>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Badge variant="outline" className="text-xs">
-                            {club.role}
-                          </Badge>
-                          <span className="text-xs text-gray-500">{club.joined}</span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Achievements */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Trophy className="h-5 w-5 text-yellow-600" />
-                  Achievements
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {achievements.map((achievement) => (
-                    <div key={achievement.id} className="flex items-start gap-3">
-                      <div className="bg-yellow-100 p-1 rounded">
-                        <Trophy className="h-3 w-3 text-yellow-600" />
-                      </div>
-                      <div>
-                        <div className="font-medium text-sm">{achievement.title}</div>
-                        <div className="text-xs text-gray-600">{achievement.description}</div>
-                        <div className="text-xs text-gray-500">{achievement.earned}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))
+                ) : (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="col-span-full text-center py-12"
+                  >
+                    <Trophy className="w-16 h-16 text-purple-300 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">No achievements yet</h3>
+                    <p className="text-purple-200 mb-6">Start participating to unlock achievements!</p>
+                  </motion.div>
+                )}
+              </motion.div>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+      </motion.div>
     </div>
   )
 }

@@ -137,6 +137,11 @@ export class AuthService {
   removeToken(): void {
     if (typeof window !== 'undefined') {
       localStorage.removeItem('auth_token')
+      // Also clear any other auth-related items that might exist
+      localStorage.removeItem('user_data')
+      // Clear session storage as well
+      sessionStorage.removeItem('auth_token')
+      sessionStorage.removeItem('user_data')
     }
   }
 
@@ -167,6 +172,14 @@ export class AuthService {
   // Logout
   logout(): void {
     this.removeToken()
+    // Force any cached data to be cleared
+    if (typeof window !== 'undefined') {
+      // Clear any cached user data or other auth-related storage
+      const authKeys = Object.keys(localStorage).filter(key => 
+        key.includes('auth') || key.includes('user') || key.includes('token')
+      )
+      authKeys.forEach(key => localStorage.removeItem(key))
+    }
   }
 
   // Check if user is authenticated

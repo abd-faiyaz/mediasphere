@@ -18,7 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 @Service
 public class ClubService {
-    
+
     @Autowired
     private UserClubRepository userClubRepository;
     @Autowired
@@ -54,8 +54,8 @@ public class ClubService {
 
     public Club updateClub(UUID clubId, Club updatedClub, User user) {
         Club existingClub = clubRepository.findById(clubId)
-            .orElseThrow(() -> new RuntimeException("Club not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Club not found"));
+
         // Check if user is the creator or admin
         if (!existingClub.getCreatedBy().getId().equals(user.getId()) && !"admin".equals(user.getRole())) {
             throw new RuntimeException("Unauthorized to update club");
@@ -64,14 +64,14 @@ public class ClubService {
         existingClub.setName(updatedClub.getName());
         existingClub.setDescription(updatedClub.getDescription());
         existingClub.setMediaType(updatedClub.getMediaType());
-        
+
         return clubRepository.save(existingClub);
     }
 
     public boolean deleteClub(UUID clubId, User user) {
         Club club = clubRepository.findById(clubId)
-            .orElseThrow(() -> new RuntimeException("Club not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Club not found"));
+
         // Check if user is the creator or admin
         if (!club.getCreatedBy().getId().equals(user.getId()) && !"admin".equals(user.getRole())) {
             return false;
@@ -95,9 +95,15 @@ public class ClubService {
         return false;
     }
 
-    public boolean leaveClub(UUID clubId, UUID userId) {
+    public boolean leaveClub(UUID clubId, UUID userId, String reason) {
         Club club = clubRepository.findById(clubId).orElseThrow();
         User user = userRepository.findById(userId).orElseThrow();
+
+        // Log the leave reason for analytics (you could also save this to a separate
+        // table)
+        System.out.println(
+                "User " + user.getUsername() + " is leaving club " + club.getName() + " for reason: " + reason);
+
         return userClubRepository.findByUserAndClub(user, club).map(membership -> {
             userClubRepository.delete(membership);
             return true;
@@ -106,14 +112,14 @@ public class ClubService {
 
     public List<Thread> getClubThreads(UUID clubId) {
         Club club = clubRepository.findById(clubId)
-            .orElseThrow(() -> new RuntimeException("Club not found"));
+                .orElseThrow(() -> new RuntimeException("Club not found"));
         return threadRepository.findByClub(club);
     }
 
     public Thread createThread(UUID clubId, Thread thread, User creator) {
         Club club = clubRepository.findById(clubId)
-            .orElseThrow(() -> new RuntimeException("Club not found"));
-        
+                .orElseThrow(() -> new RuntimeException("Club not found"));
+
         // Check if user is a member of the club
         if (!userClubRepository.existsByUserAndClub(creator, club) && !"admin".equals(creator.getRole())) {
             throw new RuntimeException("Must be a member of the club to create threads");
@@ -127,7 +133,7 @@ public class ClubService {
         thread.setCommentCount(0);
         thread.setIsPinned(false);
         thread.setIsLocked(false);
-        
+
         return threadRepository.save(thread);
     }
 
@@ -135,11 +141,11 @@ public class ClubService {
     public boolean isUserMember(UUID clubId, UUID userId) {
         Club club = clubRepository.findById(clubId).orElse(null);
         User user = userRepository.findById(userId).orElse(null);
-        
+
         if (club == null || user == null) {
             return false;
         }
-        
+
         return userClubRepository.existsByUserAndClub(user, club);
     }
 
@@ -149,7 +155,7 @@ public class ClubService {
         if (club == null) {
             return 0;
         }
-        
+
         return userClubRepository.countByClub(club);
     }
 }

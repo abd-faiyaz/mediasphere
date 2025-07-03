@@ -86,3 +86,21 @@
 .cl-socialButtonsBlockButton:hover {
   background-color: rgb(249 250 251) !important;
 }
+
+/* Custom utilities for club cards */
+@layer utilities {
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  .transform-gpu {
+    transform: translateZ(0);
+  }
+}

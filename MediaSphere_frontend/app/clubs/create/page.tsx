@@ -9,9 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Loader2, Plus } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Sparkles, Users, Globe, Star, CheckCircle } from "lucide-react"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -39,8 +39,46 @@ export default function CreateClubPage() {
   const [mediaTypes, setMediaTypes] = useState<MediaType[]>([])
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [currentStep, setCurrentStep] = useState(1)
+  const [focusedField, setFocusedField] = useState<string | null>(null)
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
+
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      }
+    }
+  }
+
+  const floatingVariants = {
+    animate: {
+      y: [-10, 10, -10],
+      rotate: [0, 5, -5, 0],
+      transition: {
+        duration: 6,
+        repeat: Infinity,
+        ease: "easeInOut"
+      }
+    }
+  }
 
   // Fetch media types on component mount
   useEffect(() => {
@@ -81,6 +119,14 @@ export default function CreateClubPage() {
       ...prev,
       [field]: value
     }))
+
+    // Update current step based on filled fields
+    const newFormData = { ...formData, [field]: value }
+    let step = 1
+    if (newFormData.name.trim()) step = 2
+    if (newFormData.description.trim()) step = 3
+    if (newFormData.mediaTypeId) step = 4
+    setCurrentStep(step)
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -165,170 +211,465 @@ export default function CreateClubPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading...</p>
-        </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6 }}
+          className="text-center"
+        >
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+            className="relative mb-6"
+          >
+            <div className="w-16 h-16 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+              <Sparkles className="h-8 w-8 text-white" />
+            </div>
+          </motion.div>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-gray-600 text-lg"
+          >
+            Loading media types...
+          </motion.p>
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+      {/* Animated Background Elements */}
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-20 blur-xl"
+      />
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        style={{ animationDelay: "2s" }}
+        className="absolute top-1/3 right-20 w-32 h-32 bg-gradient-to-r from-pink-400 to-red-500 rounded-full opacity-15 blur-xl"
+      />
+      <motion.div
+        variants={floatingVariants}
+        animate="animate"
+        style={{ animationDelay: "4s" }}
+        className="absolute bottom-1/4 left-1/4 w-24 h-24 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full opacity-20 blur-xl"
+      />
+
       {/* Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-white border-b border-gray-200 sticky top-0 z-50"
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-gray-900">
-              Mediasphere
-            </Link>
+            <motion.div
+              whileHover={{ scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Mediasphere
+              </Link>
+            </motion.div>
             <nav className="flex items-center space-x-4">
-              <Link href="/clubs">
-                <Button variant="ghost">Clubs</Button>
-              </Link>
-              <Link href="/ai-services">
-                <Button variant="ghost">AI Services</Button>
-              </Link>
-              <Link href="/notifications">
-                <Button variant="ghost">Notifications</Button>
-              </Link>
-              <Link href="/profile">
-                <Button variant="ghost">Profile</Button>
-              </Link>
+              {[
+                { href: "/clubs", label: "Clubs" },
+                { href: "/ai-services", label: "AI Services" },
+                { href: "/notifications", label: "Notifications" },
+                { href: "/profile", label: "Profile" }
+              ].map((item, index) => (
+                <motion.div
+                  key={item.href}
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.1 * index, duration: 0.6 }}
+                >
+                  <Link href={item.href}>
+                    <Button variant="ghost" className="hover:bg-white/50 transition-all duration-300">
+                      {item.label}
+                    </Button>
+                  </Link>
+                </motion.div>
+              ))}
             </nav>
           </div>
         </div>
       </motion.header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10"
+      >
         {/* Back Button */}
         <motion.div
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.6 }}
+          variants={itemVariants}
           className="mb-6"
         >
           <Link href="/clubs">
-            <Button variant="ghost" className="flex items-center gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Back to Clubs
-            </Button>
+            <motion.div
+              whileHover={{ x: -5 }}
+              transition={{ type: "spring", stiffness: 300 }}
+            >
+              <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/50 transition-all duration-300">
+                <ArrowLeft className="h-4 w-4" />
+                Back to Clubs
+              </Button>
+            </motion.div>
           </Link>
+        </motion.div>
+
+        {/* Progress Indicator */}
+        <motion.div
+          variants={itemVariants}
+          className="mb-8"
+        >
+          <div className="flex items-center justify-center space-x-4">
+            {[1, 2, 3, 4].map((step) => (
+              <motion.div
+                key={step}
+                className={`flex items-center ${step < 4 ? 'flex-1' : ''}`}
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: step * 0.1, duration: 0.6 }}
+              >
+                <motion.div
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
+                    currentStep >= step
+                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
+                      : 'bg-white text-gray-400 border-2 border-gray-200'
+                  }`}
+                  whileHover={{ scale: 1.1 }}
+                  animate={currentStep >= step ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  {currentStep > step ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    step
+                  )}
+                </motion.div>
+                {step < 4 && (
+                  <motion.div
+                    className={`flex-1 h-1 mx-2 rounded transition-all duration-500 ${
+                      currentStep > step ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-200'
+                    }`}
+                    initial={{ scaleX: 0 }}
+                    animate={{ scaleX: currentStep > step ? 1 : 0 }}
+                    style={{ transformOrigin: 'left' }}
+                  />
+                )}
+              </motion.div>
+            ))}
+          </div>
+          <motion.div
+            className="text-center mt-2"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6 }}
+          >
+            <p className="text-sm text-gray-500">
+              Step {currentStep} of 4: {
+                currentStep === 1 ? 'Club Name' :
+                currentStep === 2 ? 'Description' :
+                currentStep === 3 ? 'Media Type' :
+                'Review & Create'
+              }
+            </p>
+          </motion.div>
         </motion.div>
 
         {/* Page Header */}
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          variants={itemVariants}
           className="text-center mb-8"
         >
-          <h1 className="text-3xl font-bold text-gray-900">Create a New Club</h1>
-          <p className="text-gray-600 mt-2">Start a community around your favorite media</p>
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4"
+          >
+            <Sparkles className="h-8 w-8 text-white" />
+          </motion.div>
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+            Create a New Club
+          </h1>
+          <motion.p
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.6 }}
+            className="text-gray-600 mt-2 text-lg"
+          >
+            Start a community around your favorite media
+          </motion.p>
         </motion.div>
 
         {/* Create Club Form */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          variants={itemVariants}
+          className="relative"
         >
-          <Card className="max-w-2xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Plus className="h-5 w-5" />
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-2xl blur-xl"
+            animate={{
+              scale: [1, 1.02, 1],
+              opacity: [0.5, 0.8, 0.5]
+            }}
+            transition={{
+              duration: 4,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+          />
+          <Card className="max-w-2xl mx-auto relative bg-white/80 backdrop-blur-md border-0 shadow-2xl rounded-2xl overflow-hidden">
+            <motion.div
+              className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+              initial={{ scaleX: 0 }}
+              animate={{ scaleX: (currentStep - 1) / 3 }}
+              transition={{ duration: 0.5, ease: "easeOut" }}
+            />
+            <CardHeader className="text-center pb-6">
+              <CardTitle className="flex items-center justify-center gap-3 text-2xl">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                  className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg"
+                >
+                  <Plus className="h-6 w-6 text-white" />
+                </motion.div>
                 Club Information
               </CardTitle>
-              <CardDescription>
-                Fill in the details below to create your new club
+              <CardDescription className="text-gray-600 text-base">
+                Fill in the details below to create your new club and start building your community
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit} className="space-y-6">
+            <CardContent className="px-8 pb-8">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {/* Club Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name">Club Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="Enter club name..."
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    required
-                  />
-                </div>
+                <motion.div
+                  className="space-y-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2, duration: 0.6 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Label htmlFor="name" className="text-lg font-medium text-gray-700 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-blue-500" />
+                    Club Name *
+                  </Label>
+                  <motion.div
+                    animate={focusedField === 'name' ? { scale: 1.02 } : { scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Input
+                      id="name"
+                      placeholder="Enter an awesome club name..."
+                      value={formData.name}
+                      onChange={(e) => handleInputChange('name', e.target.value)}
+                      onFocus={() => setFocusedField('name')}
+                      onBlur={() => setFocusedField(null)}
+                      className="text-lg p-4 border-2 focus:border-blue-500 transition-all duration-300 rounded-xl"
+                      required
+                    />
+                  </motion.div>
+                  <AnimatePresence>
+                    {formData.name && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 text-green-600"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="text-sm">Great choice!</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
 
                 {/* Club Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Describe what your club is about..."
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    rows={4}
-                    required
-                  />
-                </div>
+                <motion.div
+                  className="space-y-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.3, duration: 0.6 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Label htmlFor="description" className="text-lg font-medium text-gray-700 flex items-center gap-2">
+                    <Globe className="h-5 w-5 text-purple-500" />
+                    Description *
+                  </Label>
+                  <motion.div
+                    animate={focusedField === 'description' ? { scale: 1.02 } : { scale: 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <Textarea
+                      id="description"
+                      placeholder="Describe what makes your club special and what members can expect..."
+                      value={formData.description}
+                      onChange={(e) => handleInputChange('description', e.target.value)}
+                      onFocus={() => setFocusedField('description')}
+                      onBlur={() => setFocusedField(null)}
+                      rows={4}
+                      className="text-lg p-4 border-2 focus:border-purple-500 transition-all duration-300 rounded-xl resize-none"
+                      required
+                    />
+                  </motion.div>
+                  <AnimatePresence>
+                    {formData.description && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 text-green-600"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="text-sm">Perfect description!</span>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </motion.div>
 
                 {/* Media Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="mediaType">Media Type *</Label>
-                  <Select
-                    value={formData.mediaTypeId}
-                    onValueChange={(value) => handleInputChange('mediaTypeId', value)}
+                <motion.div
+                  className="space-y-3"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.4, duration: 0.6 }}
+                  whileHover={{ scale: 1.02 }}
+                >
+                  <Label htmlFor="mediaType" className="text-lg font-medium text-gray-700 flex items-center gap-2">
+                    <Star className="h-5 w-5 text-pink-500" />
+                    Media Type *
+                  </Label>
+                  <motion.div
+                    animate={focusedField === 'mediaType' ? { scale: 1.02 } : { scale: 1 }}
+                    transition={{ duration: 0.2 }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a media type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {mediaTypes.map((mediaType) => (
-                        <SelectItem key={mediaType.id} value={mediaType.id}>
-                          <div className="flex flex-col">
-                            <span className="font-medium">{mediaType.name}</span>
-                            <span className="text-sm text-gray-500">{mediaType.description}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Submit Button */}
-                <div className="flex gap-4 pt-4">
-                  <Link href="/clubs" className="flex-1">
-                    <Button type="button" variant="outline" className="w-full">
-                      Cancel
-                    </Button>
-                  </Link>
-                  <Button 
-                    type="submit" 
-                    className="flex-1 bg-blue-600 hover:bg-blue-700"
-                    disabled={submitting}
-                  >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Creating...
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Club
-                      </>
+                    <Select
+                      value={formData.mediaTypeId}
+                      onValueChange={(value) => handleInputChange('mediaTypeId', value)}
+                    >
+                      <SelectTrigger 
+                        className="text-lg p-4 border-2 focus:border-pink-500 transition-all duration-300 rounded-xl"
+                        onFocus={() => setFocusedField('mediaType')}
+                        onBlur={() => setFocusedField(null)}
+                      >
+                        <SelectValue placeholder="Select the perfect media type for your club" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-2">
+                        {mediaTypes.map((mediaType, index) => (
+                          <motion.div
+                            key={mediaType.id}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                          >
+                            <SelectItem value={mediaType.id} className="p-4 rounded-lg">
+                              <div className="flex flex-col">
+                                <span className="font-medium text-lg">{mediaType.name}</span>
+                                <span className="text-sm text-gray-500">{mediaType.description}</span>
+                              </div>
+                            </SelectItem>
+                          </motion.div>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </motion.div>
+                  <AnimatePresence>
+                    {formData.mediaTypeId && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="flex items-center gap-2 text-green-600"
+                      >
+                        <CheckCircle className="h-4 w-4" />
+                        <span className="text-sm">Excellent choice!</span>
+                      </motion.div>
                     )}
-                  </Button>
-                </div>
+                  </AnimatePresence>
+                </motion.div>
+
+                {/* Submit Buttons */}
+                <motion.div
+                  className="flex gap-4 pt-6"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5, duration: 0.6 }}
+                >
+                  <Link href="/clubs" className="flex-1">
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className="w-full"
+                    >
+                      <Button 
+                        type="button" 
+                        variant="outline" 
+                        className="w-full h-14 text-lg font-medium border-2 hover:bg-gray-50 transition-all duration-300 rounded-xl"
+                      >
+                        Cancel
+                      </Button>
+                    </motion.div>
+                  </Link>
+                  <motion.div
+                    className="flex-1"
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                  >
+                    <Button 
+                      type="submit" 
+                      className="w-full h-14 text-lg font-medium bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 rounded-xl shadow-lg"
+                      disabled={submitting}
+                    >
+                      <AnimatePresence mode="wait">
+                        {submitting ? (
+                          <motion.div
+                            key="submitting"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="flex items-center gap-3"
+                          >
+                            <motion.div
+                              animate={{ rotate: 360 }}
+                              transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            >
+                              <Loader2 className="h-5 w-5" />
+                            </motion.div>
+                            Creating Your Club...
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="create"
+                            initial={{ opacity: 0, scale: 0.8 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.8 }}
+                            className="flex items-center gap-3"
+                          >
+                            <Plus className="h-5 w-5" />
+                            Create Club
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    </Button>
+                  </motion.div>
+                </motion.div>
               </form>
             </CardContent>
           </Card>
         </motion.div>
-      </main>
+      </motion.main>
     </div>
   )
 } 

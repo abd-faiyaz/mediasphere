@@ -6,12 +6,15 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bell, MessageSquare, Users, Calendar, Brain, Check, X, Settings } from "lucide-react"
+import { Bell, MessageSquare, Users, Calendar, Brain, Check, X, Settings, ArrowLeft } from "lucide-react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { AuthGuard } from "@/components/auth-guard"
 
 function NotificationsContent() {
+  const router = useRouter()
+  
   const notifications = [
     {
       id: 1,
@@ -156,9 +159,30 @@ function NotificationsContent() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            <Link href="/" className="text-2xl font-bold text-gray-900">
-              Mediasphere
-            </Link>
+            <div className="flex items-center gap-4">
+              <Link href="/" className="text-2xl font-bold text-gray-900">
+                Mediasphere
+              </Link>
+              
+              {/* Back Button */}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => router.back()}
+                  className="flex items-center gap-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 rounded-xl px-3 py-2"
+                >
+                  <ArrowLeft className="h-4 w-4" />
+                  <span className="font-medium">Back</span>
+                </Button>
+              </motion.div>
+            </div>
             <nav className="flex items-center space-x-4">
               <Link href="/clubs">
                 <Button variant="ghost">Clubs</Button>

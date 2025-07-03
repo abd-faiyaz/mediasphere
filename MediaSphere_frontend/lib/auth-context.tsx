@@ -133,17 +133,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const logout = () => {
+    // Clear all auth data immediately
     authService.logout()
     setUser(null)
     setIsLoading(false)
     
-    // Force a re-check of authentication status
+    // Force a complete re-check of authentication status to ensure clean state
     setTimeout(() => {
       checkLocalAuth()
-    }, 100)
+    }, 50)
     
     // If user is signed in with Clerk, we don't automatically sign them out
     // They can choose to sign out of Clerk separately
+    
+    // Note: Navigation should be handled by the calling component
+    // This allows for more flexible logout behavior
   }
 
   const syncWithBackend = async () => {

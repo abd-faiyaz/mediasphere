@@ -4,6 +4,7 @@ import com.example.mediasphere_initial.model.Club;
 import com.example.mediasphere_initial.model.User;
 import com.example.mediasphere_initial.model.Thread;
 import com.example.mediasphere_initial.model.Event;
+import com.example.mediasphere_initial.dto.LeaveClubRequest;
 import com.example.mediasphere_initial.service.ClubService;
 import com.example.mediasphere_initial.service.AuthService;
 import com.example.mediasphere_initial.service.EventService;
@@ -38,14 +39,14 @@ public class ClubController {
 
     // Create new club
     @PostMapping("/")
-    public ResponseEntity<?> createClub(@RequestBody Club club, 
-                                       @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> createClub(@RequestBody Club club,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
+
             Club createdClub = clubService.createClub(club, userOpt.get());
             return ResponseEntity.status(201).body(createdClub);
         } catch (RuntimeException e) {
@@ -55,23 +56,51 @@ public class ClubController {
 
     // Get club details
     @GetMapping("/{id}")
-    public ResponseEntity<Club> getClub(@PathVariable UUID id) {
-        Optional<Club> club = clubService.getClubById(id);
-        return club.map(ResponseEntity::ok)
-                  .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<?> getClub(@PathVariable UUID id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Optional<Club> clubOpt = clubService.getClubById(id);
+        if (!clubOpt.isPresent()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Club club = clubOpt.get();
+
+        // Create enhanced response with member count
+        java.util.Map<String, Object> clubData = new java.util.HashMap<>();
+        clubData.put("id", club.getId());
+        clubData.put("name", club.getName());
+        clubData.put("description", club.getDescription());
+        clubData.put("mediaType", club.getMediaType());
+        clubData.put("createdBy", club.getCreatedBy());
+        clubData.put("createdAt", club.getCreatedAt());
+
+        // Get member count
+        long memberCount = clubService.getMemberCount(club.getId());
+        clubData.put("memberCount", memberCount);
+
+        // If user is authenticated, check membership status
+        Optional<User> userOpt = getUserFromToken(authHeader);
+        if (userOpt.isPresent()) {
+            boolean isMember = clubService.isUserMember(club.getId(), userOpt.get().getId());
+            clubData.put("isMember", isMember);
+        } else {
+            clubData.put("isMember", false);
+        }
+
+        return ResponseEntity.ok(clubData);
     }
 
     // Update club
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateClub(@PathVariable UUID id, 
-                                       @RequestBody Club club,
-                                       @RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> updateClub(@PathVariable UUID id,
+            @RequestBody Club club,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
+
             Club updatedClub = clubService.updateClub(id, club, userOpt.get());
             return ResponseEntity.ok(updatedClub);
         } catch (RuntimeException e) {
@@ -82,13 +111,13 @@ public class ClubController {
     // Delete club
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteClub(@PathVariable UUID id,
-                                       @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
+
             boolean deleted = clubService.deleteClub(id, userOpt.get());
             if (deleted) {
                 return ResponseEntity.noContent().build();
@@ -103,13 +132,13 @@ public class ClubController {
     // Join club
     @PostMapping("/{id}/join")
     public ResponseEntity<?> joinClub(@PathVariable UUID id,
-                                     @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
+
             boolean joined = clubService.joinClub(id, userOpt.get().getId());
             if (joined) {
                 return ResponseEntity.ok("Joined club successfully");
@@ -124,14 +153,18 @@ public class ClubController {
     // Leave club
     @PostMapping("/{id}/leave")
     public ResponseEntity<?> leaveClub(@PathVariable UUID id,
-                                      @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader,
+            @RequestBody LeaveClubRequest leaveRequest) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
-            boolean left = clubService.leaveClub(id, userOpt.get().getId());
+
+            // Use the provided reason or empty string if not provided
+            String reason = leaveRequest.getReason() != null ? leaveRequest.getReason().trim() : "";
+
+            boolean left = clubService.leaveClub(id, userOpt.get().getId(), reason);
             if (left) {
                 return ResponseEntity.ok("Left club successfully");
             } else {
@@ -156,14 +189,14 @@ public class ClubController {
     // Create new thread in a club
     @PostMapping("/{id}/threads")
     public ResponseEntity<?> createThread(@PathVariable UUID id,
-                                         @RequestBody Thread thread,
-                                         @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Thread thread,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
+
             Thread createdThread = clubService.createThread(id, thread, userOpt.get());
             return ResponseEntity.status(201).body(createdThread);
         } catch (RuntimeException e) {
@@ -185,14 +218,14 @@ public class ClubController {
     // Schedule event for a club
     @PostMapping("/{id}/events")
     public ResponseEntity<?> createEvent(@PathVariable UUID id,
-                                        @RequestBody Event event,
-                                        @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Event event,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.status(401).body("Authentication required");
             }
-            
+
             Event createdEvent = eventService.createEvent(id, event, userOpt.get());
             return ResponseEntity.status(201).body(createdEvent);
         } catch (RuntimeException e) {
@@ -203,13 +236,13 @@ public class ClubController {
     // Check if user is a member of a club
     @GetMapping("/{id}/membership")
     public ResponseEntity<Boolean> checkMembership(@PathVariable UUID id,
-                                                  @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
                 return ResponseEntity.ok(false);
             }
-            
+
             boolean isMember = clubService.isUserMember(id, userOpt.get().getId());
             return ResponseEntity.ok(isMember);
         } catch (Exception e) {
@@ -223,35 +256,35 @@ public class ClubController {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             List<Club> clubs = clubService.getAllClubs();
-            
+
             if (!userOpt.isPresent()) {
                 // If not authenticated, return clubs without membership info
                 return ResponseEntity.ok(clubs);
             }
-            
+
             // Create response with membership status
             List<java.util.Map<String, Object>> clubsWithMembership = clubs.stream()
-                .map(club -> {
-                    java.util.Map<String, Object> clubData = new java.util.HashMap<>();
-                    clubData.put("id", club.getId());
-                    clubData.put("name", club.getName());
-                    clubData.put("description", club.getDescription());
-                    clubData.put("mediaType", club.getMediaType());
-                    clubData.put("createdBy", club.getCreatedBy());
-                    clubData.put("createdAt", club.getCreatedAt());
-                    
-                    // Check if user is a member
-                    boolean isMember = clubService.isUserMember(club.getId(), userOpt.get().getId());
-                    clubData.put("isMember", isMember);
-                    
-                    // Get member count
-                    long memberCount = clubService.getMemberCount(club.getId());
-                    clubData.put("memberCount", memberCount);
-                    
-                    return clubData;
-                })
-                .collect(java.util.stream.Collectors.toList());
-            
+                    .map(club -> {
+                        java.util.Map<String, Object> clubData = new java.util.HashMap<>();
+                        clubData.put("id", club.getId());
+                        clubData.put("name", club.getName());
+                        clubData.put("description", club.getDescription());
+                        clubData.put("mediaType", club.getMediaType());
+                        clubData.put("createdBy", club.getCreatedBy());
+                        clubData.put("createdAt", club.getCreatedAt());
+
+                        // Check if user is a member
+                        boolean isMember = clubService.isUserMember(club.getId(), userOpt.get().getId());
+                        clubData.put("isMember", isMember);
+
+                        // Get member count
+                        long memberCount = clubService.getMemberCount(club.getId());
+                        clubData.put("memberCount", memberCount);
+
+                        return clubData;
+                    })
+                    .collect(java.util.stream.Collectors.toList());
+
             return ResponseEntity.ok(clubsWithMembership);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error fetching clubs with membership");

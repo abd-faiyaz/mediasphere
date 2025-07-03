@@ -1,14 +1,37 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Textarea } from "@/components/ui/textarea"
-import { MessageSquare, Share, MoreHorizontal, Pin, ThumbsUp, Reply } from "lucide-react"
+import { MessageSquare, Share, MoreHorizontal, Pin, ThumbsUp, Reply, ArrowLeft, Heart, Bookmark, Eye, Star, Sparkles, TrendingUp } from "lucide-react"
 import Link from "next/link"
+import { use, useState, useRef } from "react"
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 
-export default function ThreadDetailsPage({ params }: { params: { id: string } }) {
+export default function ThreadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = use(params)
+  const [newComment, setNewComment] = useState("")
+  const [liked, setLiked] = useState(false)
+  const [bookmarked, setBookmarked] = useState(false)
+  const [showReplies, setShowReplies] = useState<{ [key: number]: boolean }>({})
+  const containerRef = useRef(null)
+  const { scrollYProgress } = useScroll({ target: containerRef })
+  
+  // Parallax effects
+  const headerY = useTransform(scrollYProgress, [0, 1], ['0%', '50%'])
+  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.8])
+
+  // Floating icons for background animation
+  const floatingIcons = [
+    { icon: Star, delay: 0.5, x: -20, y: -30 },
+    { icon: Heart, delay: 0.8, x: 30, y: -25 },
+    { icon: Sparkles, delay: 1.1, x: -25, y: 20 },
+    { icon: TrendingUp, delay: 1.4, x: 25, y: 30 },
+  ]
   const thread = {
-    id: params.id,
+    id: resolvedParams.id,
     title: "The Future of AI in Education",
     content:
       "I've been thinking about how artificial intelligence is transforming the education sector. From personalized learning paths to automated grading systems, AI is revolutionizing how we teach and learn.\n\nWhat are your thoughts on the ethical implications? How do we ensure AI enhances rather than replaces human connection in education?\n\nI'd love to hear your experiences and predictions for the next 5-10 years.",
@@ -26,7 +49,98 @@ export default function ThreadDetailsPage({ params }: { params: { id: string } }
     tags: ["AI", "Education", "Ethics"],
   }
 
-  const comments = [
+  const toggleReply = (commentId: number) => {
+    setShowReplies(prev => ({
+      ...prev,
+      [commentId]: !prev[commentId]
+    }))
+  }
+
+  const handleLike = () => {
+    setLiked(!liked)
+  }
+
+  const handleBookmark = () => {
+    setBookmarked(!bookmarked)
+  }
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2,
+      },
+    },
+  }
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20, scale: 0.95 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      transition: {
+        duration: 0.5,
+        ease: "easeOut"
+      },
+    },
+  }
+
+  const cardVariants = {
+    hidden: { opacity: 0, x: -30, rotateY: -10 },
+    visible: {
+      opacity: 1,
+      x: 0,
+      rotateY: 0,
+      transition: {
+        duration: 0.6,
+        ease: "easeOut"
+      },
+    },
+    hover: {
+      scale: 1.02,
+      rotateY: 2,
+      y: -5,
+      transition: {
+        duration: 0.3,
+        ease: "easeInOut"
+      },
+    },
+  }
+
+  return (
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 relative overflow-hidden">
+      {/* Floating Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {floatingIcons.map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+            animate={{
+              opacity: [0, 0.2, 0],
+              scale: [0, 1.2, 0],
+              x: [0, item.x, item.x * 2],
+              y: [0, item.y, item.y * 2],
+              rotate: [0, 180, 360],
+            }}
+            transition={{
+              duration: 12,
+              delay: item.delay,
+              repeat: Infinity,
+              ease: "easeInOut",
+            }}
+            className="absolute"
+            style={{
+              left: `${Math.random() * 100}%`,
+              top: `${Math.random() * 100}%`,
+            }}
+          >
+            <item.icon className="w-6 h-6 text-purple-300/20" />
+          </motion.div>
+        ))}
+      </div>
     {
       id: 1,
       author: {
