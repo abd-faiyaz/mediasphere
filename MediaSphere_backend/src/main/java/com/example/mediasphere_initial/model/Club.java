@@ -1,4 +1,3 @@
-
 package com.example.mediasphere_initial.model;
 
 import jakarta.persistence.*;
@@ -29,8 +28,15 @@ public class Club {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "last_activity_at")
+    private LocalDateTime lastActivityAt;
+
+    @Column(name = "last_thread_created_at")
+    private LocalDateTime lastThreadCreatedAt;
+
     // Constructors
-    public Club() {}
+    public Club() {
+    }
 
     public Club(UUID id, String name, String description, User createdBy, MediaType mediaType) {
         this.id = id;
@@ -88,6 +94,22 @@ public class Club {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public LocalDateTime getLastActivityAt() {
+        return lastActivityAt;
+    }
+
+    public void setLastActivityAt(LocalDateTime lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
+    }
+
+    public LocalDateTime getLastThreadCreatedAt() {
+        return lastThreadCreatedAt;
+    }
+
+    public void setLastThreadCreatedAt(LocalDateTime lastThreadCreatedAt) {
+        this.lastThreadCreatedAt = lastThreadCreatedAt;
     }
 
 }

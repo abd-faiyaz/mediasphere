@@ -70,6 +70,8 @@ CREATE TABLE IF NOT EXISTS threads (
     content TEXT,
     view_count INTEGER NOT NULL DEFAULT 0,
     comment_count INTEGER NOT NULL DEFAULT 0,
+    like_count INTEGER NOT NULL DEFAULT 0,
+    dislike_count INTEGER NOT NULL DEFAULT 0,
     is_pinned BOOLEAN NOT NULL DEFAULT FALSE,
     is_locked BOOLEAN NOT NULL DEFAULT FALSE,
     created_at TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -118,6 +120,19 @@ CREATE TABLE IF NOT EXISTS user_clubs (
     joined_at TIMESTAMP NOT NULL DEFAULT NOW(),
     PRIMARY KEY (user_id, club_id)
 );
+
+CREATE TABLE IF NOT EXISTS club_leave_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    club_id UUID NOT NULL REFERENCES clubs(id) ON DELETE CASCADE,
+    reason TEXT,
+    left_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for better performance on club_leave_logs
+CREATE INDEX IF NOT EXISTS idx_club_leave_logs_club_id ON club_leave_logs (club_id);
+CREATE INDEX IF NOT EXISTS idx_club_leave_logs_user_id ON club_leave_logs (user_id);
+CREATE INDEX IF NOT EXISTS idx_club_leave_logs_left_at ON club_leave_logs (left_at);
 
 -- Insert default media types
 INSERT INTO media_types (id, name, description) VALUES

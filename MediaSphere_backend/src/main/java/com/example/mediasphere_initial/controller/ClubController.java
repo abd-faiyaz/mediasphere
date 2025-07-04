@@ -11,6 +11,7 @@ import com.example.mediasphere_initial.service.EventService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Optional;
@@ -154,7 +155,7 @@ public class ClubController {
     @PostMapping("/{id}/leave")
     public ResponseEntity<?> leaveClub(@PathVariable UUID id,
             @RequestHeader("Authorization") String authHeader,
-            @RequestBody LeaveClubRequest leaveRequest) {
+            @RequestBody(required = false) LeaveClubRequest leaveRequest) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -162,7 +163,10 @@ public class ClubController {
             }
 
             // Use the provided reason or empty string if not provided
-            String reason = leaveRequest.getReason() != null ? leaveRequest.getReason().trim() : "";
+            String reason = "";
+            if (leaveRequest != null && leaveRequest.getReason() != null) {
+                reason = leaveRequest.getReason().trim();
+            }
 
             boolean left = clubService.leaveClub(id, userOpt.get().getId(), reason);
             if (left) {
@@ -177,29 +181,74 @@ public class ClubController {
 
     // Get discussion threads for a club
     @GetMapping("/{id}/threads")
-    public ResponseEntity<List<Thread>> getClubThreads(@PathVariable UUID id) {
+    public ResponseEntity<?> getClubThreads(@PathVariable UUID id,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
         try {
+            // Check if user is authenticated
+            if (authHeader == null || authHeader.isEmpty()) {
+                return ResponseEntity.status(401).body("Authentication required to view club discussions");
+            }
+
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Invalid authentication token");
+            }
+
+            User user = userOpt.get();
+
+            // Check if user is a member of the club
+            boolean isMember = clubService.isUserMemberOfClub(id, user.getId());
+            if (!isMember) {
+                return ResponseEntity.status(403).body("Access denied: You must be a club member to view discussions");
+            }
+
+            // User is authenticated and is a member, proceed to get threads
             List<Thread> threads = clubService.getClubThreads(id);
             return ResponseEntity.ok(threads);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(404).body("Club not found");
         }
     }
 
     // Create new thread in a club
     @PostMapping("/{id}/threads")
     public ResponseEntity<?> createThread(@PathVariable UUID id,
-            @RequestBody Thread thread,
+            @RequestParam("title") String title,
+            @RequestParam("content") String content,
+            @RequestParam(value = "images", required = false) MultipartFile[] images,
             @RequestHeader("Authorization") String authHeader) {
+
+        System.out.println("=== DEBUG: Thread Creation Request ===");
+        System.out.println("Club ID: " + id);
+        System.out.println("Title: " + title);
+        System.out.println("Content: " + content);
+        System.out.println("Images count: " + (images != null ? images.length : 0));
+        System.out.println("Auth header present: " + (authHeader != null));
+
         try {
+            System.out.println("Step 1: Getting user from token");
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
+                System.out.println("ERROR: Authentication failed");
                 return ResponseEntity.status(401).body("Authentication required");
             }
+            System.out.println("Step 2: User authenticated: " + userOpt.get().getEmail());
 
-            Thread createdThread = clubService.createThread(id, thread, userOpt.get());
+            // Create thread object
+            Thread thread = new Thread();
+            thread.setTitle(title);
+            thread.setContent(content);
+            System.out.println("Step 3: Thread object created");
+
+            // Use the new method that handles images
+            System.out.println("Step 4: Calling createThreadWithImages service");
+            Thread createdThread = clubService.createThreadWithImages(id, thread, userOpt.get(), images);
+            System.out.println("Step 5: Thread created successfully with ID: " + createdThread.getId());
+
             return ResponseEntity.status(201).body(createdThread);
         } catch (RuntimeException e) {
+            System.out.println("ERROR: " + e.getMessage());
+            e.printStackTrace();
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -288,6 +337,63 @@ public class ClubController {
             return ResponseEntity.ok(clubsWithMembership);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Error fetching clubs with membership");
+        }
+    }
+
+    // Get club activities
+    @GetMapping("/{clubId}/activities")
+    public ResponseEntity<?> getClubActivities(@PathVariable UUID clubId) {
+        try {
+            // For now, return empty list since ActivityLog might not have all required
+            // relationships
+            // In the future, you can implement: List<ActivityLog> activities =
+            // clubService.getClubActivities(clubId);
+            return ResponseEntity.ok(java.util.Collections.emptyList());
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching club activities");
+        }
+    }
+
+    // Get club members
+    @GetMapping("/{clubId}/members")
+    public ResponseEntity<?> getClubMembers(@PathVariable UUID clubId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        try {
+            // Get current user for mutual clubs calculation
+            Optional<User> currentUserOpt = Optional.empty();
+            if (authHeader != null) {
+                currentUserOpt = getUserFromToken(authHeader);
+            }
+
+            List<java.util.Map<String, Object>> members = clubService.getClubMembers(clubId);
+
+            // If user is authenticated, calculate mutual clubs
+            if (currentUserOpt.isPresent()) {
+                User currentUser = currentUserOpt.get();
+                for (java.util.Map<String, Object> memberData : members) {
+                    @SuppressWarnings("unchecked")
+                    java.util.Map<String, Object> userData = (java.util.Map<String, Object>) memberData.get("user");
+                    UUID memberId = (UUID) userData.get("id");
+
+                    if (!memberId.equals(currentUser.getId())) {
+                        List<java.util.Map<String, Object>> mutualClubs = clubService.getMutualClubs(
+                                currentUser.getId(), memberId, clubId);
+                        memberData.put("mutualClubs", mutualClubs);
+                    } else {
+                        // For current user, show empty mutual clubs
+                        memberData.put("mutualClubs", java.util.Collections.emptyList());
+                    }
+                }
+            } else {
+                // For unauthenticated users, show empty mutual clubs
+                for (java.util.Map<String, Object> memberData : members) {
+                    memberData.put("mutualClubs", java.util.Collections.emptyList());
+                }
+            }
+
+            return ResponseEntity.ok(members);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Error fetching club members");
         }
     }
 

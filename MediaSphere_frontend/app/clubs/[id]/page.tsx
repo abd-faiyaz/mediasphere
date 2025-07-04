@@ -5,10 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
-import { Textarea } from "@/components/ui/textarea"
-import { Label } from "@/components/ui/label"
-import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp, Loader2, Star, Heart, Eye, Globe, Zap, Award, Sparkles, Crown, Trophy, Activity, ArrowLeft, LogOut, AlertTriangle } from "lucide-react"
+import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp, Loader2, Star, Heart, Eye, Globe, Zap, Award, Sparkles, Crown, Trophy, Activity, ArrowLeft, X, BarChart3 } from "lucide-react"
 import Link from "next/link"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useEffect, useState, use, useRef } from "react"
@@ -16,6 +13,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth-service"
+import CreateThreadModal from "@/components/CreateThreadModal"
 
 interface Club {
   id: string
@@ -51,8 +49,16 @@ interface Thread {
   createdAt: string
   viewCount: number
   commentCount: number
+  likeCount: number
+  dislikeCount: number
   isPinned: boolean
   isLocked: boolean
+  images?: Array<{
+    id: string
+    fileName: string
+    fileUrl: string
+    uploadedAt: string
+  }>
 }
 
 interface Event {
@@ -71,22 +77,38 @@ interface Event {
   createdAt: string
 }
 
+interface ClubMember {
+  id: string
+  user: {
+    id: string
+    username: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+  joinedAt: string
+  mutualClubs: {
+    id: string
+    name: string
+  }[]
+}
+
 export default function ClubDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const [club, setClub] = useState<Club | null>(null)
   const [threads, setThreads] = useState<Thread[]>([])
   const [events, setEvents] = useState<Event[]>([])
+  const [members, setMembers] = useState<ClubMember[]>([])
   const [isMember, setIsMember] = useState(false)
   const [loading, setLoading] = useState(true)
   const [threadsLoading, setThreadsLoading] = useState(false)
   const [eventsLoading, setEventsLoading] = useState(false)
+  const [membersLoading, setMembersLoading] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
-  
-  // Leave club modal states
-  const [showLeaveModal, setShowLeaveModal] = useState(false)
-  const [leaveReason, setLeaveReason] = useState("")
-  const [isLeavingClub, setIsLeavingClub] = useState(false)
-  
+  const [showSidePanel, setShowSidePanel] = useState(false)
+  const [showMembersPanel, setShowMembersPanel] = useState(false)
+  const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
+  const [showCreateThreadModal, setShowCreateThreadModal] = useState(false)
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const containerRef = useRef(null)
@@ -186,7 +208,20 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       setThreadsLoading(true)
       console.log('Fetching threads for club:', resolvedParams.id)
       
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/threads`)
+      const headers: { [key: string]: string } = {
+        'Content-Type': 'application/json'
+      }
+      
+      if (isAuthenticated) {
+        const token = authService.getToken()
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+      }
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/threads`, {
+        headers
+      })
       
       console.log('Threads response status:', response.status)
       
@@ -194,15 +229,38 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         const threadsData = await response.json()
         console.log('Threads loaded:', threadsData.length, 'threads')
         setThreads(threadsData)
+      } else if (response.status === 401) {
+        console.log('Authentication required for viewing threads')
+        setThreads([])
+        if (isAuthenticated) {
+          toast({
+            title: "Authentication Error",
+            description: "Please log in again to view discussions",
+            variant: "destructive"
+          })
+        }
+      } else if (response.status === 403) {
+        console.log('Access denied - not a club member')
+        setThreads([])
+        toast({
+          title: "Access Denied",
+          description: "You must be a club member to view discussions",
+          variant: "destructive"
+        })
       } else {
         console.log('No threads found or error occurred')
         setThreads([])
+        toast({
+          title: "Warning", 
+          description: "Could not load discussion threads",
+          variant: "destructive"
+        })
       }
     } catch (error) {
       console.error('Error fetching threads:', error)
       setThreads([])
       toast({
-        title: "Warning",
+        title: "Error",
         description: "Could not load discussion threads",
         variant: "destructive"
       })
@@ -239,6 +297,47 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       })
     } finally {
       setEventsLoading(false)
+    }
+  }
+
+  // Fetch club members with mutual clubs
+  const fetchMembers = async () => {
+    try {
+      setMembersLoading(true)
+      console.log('Fetching members for club:', resolvedParams.id)
+      
+      const headers: { [key: string]: string } = {}
+      if (isAuthenticated) {
+        const token = authService.getToken()
+        if (token) {
+          headers['Authorization'] = `Bearer ${token}`
+        }
+      }
+      
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/members`, {
+        headers
+      })
+      
+      console.log('Members response status:', response.status)
+      
+      if (response.ok) {
+        const membersData = await response.json()
+        console.log('Members loaded:', membersData.length, 'members')
+        setMembers(membersData)
+      } else {
+        console.log('No members found or error occurred')
+        setMembers([])
+      }
+    } catch (error) {
+      console.error('Error fetching members:', error)
+      setMembers([])
+      toast({
+        title: "Warning",
+        description: "Could not load club members",
+        variant: "destructive"
+      })
+    } finally {
+      setMembersLoading(false)
     }
   }
 
@@ -283,10 +382,9 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  // Leave club with reason
-  const leaveClub = async (reason: string) => {
+  // Leave club
+  const leaveClub = async () => {
     try {
-      setIsLeavingClub(true)
       const token = authService.getToken()
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/leave`, {
         method: 'POST',
@@ -295,7 +393,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          reason: reason
+          reason: ""
         })
       })
 
@@ -305,12 +403,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
 
       toast({
         title: "Success",
-        description: "You have successfully left the club.",
+        description: "Successfully left the club!",
       })
-      
-      // Close modal and reset state
-      setShowLeaveModal(false)
-      setLeaveReason("")
       
       // Refresh membership status
       await checkMembership()
@@ -319,24 +413,25 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       toast({
         title: "Error",
         description: "Failed to leave club. Please try again.",
-        variant: "destructive"
       })
-    } finally {
-      setIsLeavingClub(false)
     }
   }
 
   // Handle leave club confirmation
   const handleLeaveClub = () => {
-    if (leaveReason.trim().length < 10) {
-      toast({
-        title: "Please provide a reason",
-        description: "Please tell us why you're leaving (at least 10 characters).",
-        variant: "destructive"
-      })
-      return
-    }
-    leaveClub(leaveReason.trim())
+    setShowLeaveConfirmation(true)
+  }
+
+  // Confirm leave club
+  const confirmLeaveClub = async () => {
+    setShowLeaveConfirmation(false)
+    setShowSidePanel(false)
+    await leaveClub()
+  }
+
+  // Cancel leave club
+  const cancelLeaveClub = () => {
+    setShowLeaveConfirmation(false)
   }
 
   // Load data on component mount
@@ -350,6 +445,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     checkMembership()
     fetchThreads()
     fetchEvents()
+    fetchMembers()
   }, [resolvedParams.id, isAuthenticated])
 
   if (loading) {
@@ -446,7 +542,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingIcons.map((item, index) => (
           <motion.div
-            key={index}
+            key={`floating-icon-${index}`}
             initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
             animate={{
               opacity: [0, 0.3, 0],
@@ -483,7 +579,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           >
             {Array.from({ length: 50 }).map((_, i) => (
               <motion.div
-                key={i}
+                key={`confetti-${i}`}
                 initial={{
                   opacity: 1,
                   y: -100,
@@ -633,7 +729,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             <div className="absolute inset-0">
               {Array.from({ length: 8 }).map((_, i) => (
                 <motion.div
-                  key={i}
+                  key={`hero-particle-${i}`}
                   animate={{
                     y: [0, -20, 0],
                     x: [0, Math.random() * 10 - 5, 0],
@@ -830,38 +926,52 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     whileTap={{ scale: 0.95 }}
                     className="relative"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-red-500 to-orange-500 rounded-2xl blur-lg opacity-20" />
                     <Button 
                       variant="outline" 
                       size="lg" 
-                      className="relative bg-white/90 backdrop-blur-sm shadow-2xl border-2 border-red-200 hover:border-red-300 hover:bg-red-50 px-10 py-4 text-xl rounded-2xl transition-all duration-300 text-red-600 hover:text-red-700"
-                      onClick={() => setShowLeaveModal(true)}
+                      className="bg-white/80 backdrop-blur-sm shadow-2xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-xl rounded-2xl transition-all duration-300 hover:bg-white/90"
+                      onClick={() => setShowSidePanel(true)}
                     >
-                      <motion.div
-                        animate={{ rotate: [0, -10, 10, 0] }}
-                        transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                        className="mr-3"
-                      >
-                        <LogOut className="h-6 w-6" />
-                      </motion.div>
-                      Leave Club
+                      <BarChart3 className="mr-3 h-6 w-6" />
+                      Club Info
                     </Button>
                   </motion.div>
                 )}
                 
-                <motion.div 
-                  whileHover={{ scale: 1.05, y: -3 }} 
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Button 
-                    variant="outline"
-                    size="lg" 
-                    className="bg-white/60 backdrop-blur-sm shadow-xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-lg rounded-2xl transition-all duration-300"
+                {/* Info button for non-members */}
+                {!isMember && (
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -3 }} 
+                    whileTap={{ scale: 0.95 }}
                   >
-                    <Heart className="mr-3 h-5 w-5" />
-                    Follow Updates
-                  </Button>
-                </motion.div>
+                    <Button 
+                      variant="outline"
+                      size="lg" 
+                      className="bg-white/60 backdrop-blur-sm shadow-xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-lg rounded-2xl transition-all duration-300"
+                      onClick={() => setShowSidePanel(true)}
+                    >
+                      <BarChart3 className="mr-3 h-5 w-5" />
+                      View Info
+                    </Button>
+                  </motion.div>
+                )}
+                
+                {/* Follow Updates button for members */}
+                {isMember && (
+                  <motion.div 
+                    whileHover={{ scale: 1.05, y: -3 }} 
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Button 
+                      variant="outline"
+                      size="lg" 
+                      className="bg-white/60 backdrop-blur-sm shadow-xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-lg rounded-2xl transition-all duration-300"
+                    >
+                      <Heart className="mr-3 h-5 w-5" />
+                      Follow Updates
+                    </Button>
+                  </motion.div>
+                )}
               </motion.div>
             </div>
           </div>
@@ -879,7 +989,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
               <Tabs defaultValue="discussions" className="w-full">
                 <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6">
-                  <TabsList className="grid w-full grid-cols-2 bg-white/50 backdrop-blur-sm rounded-2xl p-2">
+                  <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm rounded-2xl p-2">
                     <TabsTrigger 
                       value="discussions" 
                       className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl py-3"
@@ -893,6 +1003,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     >
                       <Calendar className="h-5 w-5" />
                       <span className="font-medium">Events</span>
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="members" 
+                      className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl py-3"
+                    >
+                      <Users className="h-5 w-5" />
+                      <span className="font-medium">Members</span>
                     </TabsTrigger>
                   </TabsList>
                 </div>
@@ -914,7 +1031,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       whileHover={{ scale: 1.05, y: -2 }} 
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg rounded-2xl px-6 py-3">
+                      <Button 
+                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg rounded-2xl px-6 py-3"
+                        onClick={() => setShowCreateThreadModal(true)}
+                        disabled={!isMember}
+                      >
                         <Plus className="mr-2 h-5 w-5" />
                         New Thread
                       </Button>
@@ -953,10 +1074,32 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         }}
                         className="mb-4"
                       >
-                        <MessageSquare className="h-16 w-16 mx-auto text-gray-400" />
+                        {!isMember ? (
+                          <Users className="h-16 w-16 mx-auto text-gray-400" />
+                        ) : (
+                          <MessageSquare className="h-16 w-16 mx-auto text-gray-400" />
+                        )}
                       </motion.div>
-                      <h3 className="text-xl font-semibold text-gray-700 mb-2">No discussions yet</h3>
-                      <p className="text-gray-600">Be the first to start a conversation!</p>
+                      {!isMember ? (
+                        <>
+                          <h3 className="text-xl font-semibold text-gray-700 mb-2">Join to View Discussions</h3>
+                          <p className="text-gray-600 mb-4">You need to be a club member to view and participate in discussions.</p>
+                          {isAuthenticated && (
+                            <Button 
+                              onClick={joinClub}
+                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                            >
+                              <Users className="mr-2 h-4 w-4" />
+                              Join Club
+                            </Button>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <h3 className="text-xl font-semibold text-gray-700 mb-2">No discussions yet</h3>
+                          <p className="text-gray-600">Be the first to start a conversation!</p>
+                        </>
+                      )}
                     </motion.div>
                   ) : (
                     <motion.div 
@@ -995,12 +1138,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                       </motion.div>
                                     )}
                                     <CardTitle className="text-2xl group-hover:text-blue-600 transition-colors duration-300 font-bold">
-                                      <Link href={`/threads/${thread.id}`} className="hover:underline">
-                                        {thread.title}
-                                      </Link>
+                                      {thread.title}
                                     </CardTitle>
                                   </div>
-                                  <CardDescription className="text-base flex items-center gap-2">
+                                  <CardDescription className="text-base flex items-center gap-2 mb-4">
                                     <Avatar className="w-6 h-6">
                                       <AvatarFallback className="text-xs">
                                         {thread.createdBy.firstName?.[0]}{thread.createdBy.lastName?.[0]}
@@ -1010,7 +1151,54 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                     <span className="text-gray-400">•</span>
                                     <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
                                   </CardDescription>
+                                  
+                                  {/* Thread Content */}
+                                  <div className="mb-4">
+                                    {thread.content && (
+                                      <p className="text-gray-700 text-base leading-relaxed line-clamp-3 mb-3">
+                                        {thread.content}
+                                      </p>
+                                    )}
+                                    
+                                    {/* Thread Images */}
+                                    {thread.images && thread.images.length > 0 && (
+                                      <div className="mt-3">
+                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                          {thread.images.slice(0, 4).map((image, imgIndex) => (
+                                            <motion.div
+                                              key={image.id}
+                                              initial={{ opacity: 0, scale: 0.8 }}
+                                              animate={{ opacity: 1, scale: 1 }}
+                                              transition={{ delay: 0.2 + imgIndex * 0.1 }}
+                                              className="relative group cursor-pointer"
+                                            >
+                                              <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
+                                                <img
+                                                  src={image.fileUrl}
+                                                  alt={image.fileName}
+                                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                                  onError={(e) => {
+                                                    const target = e.target as HTMLImageElement;
+                                                    target.src = "/placeholder.svg";
+                                                  }}
+                                                />
+                                              </div>
+                                              {/* Overlay for image count if more than 4 */}
+                                              {imgIndex === 3 && thread.images!.length > 4 && (
+                                                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
+                                                  <span className="text-white font-semibold text-sm">
+                                                    +{thread.images!.length - 4}
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </motion.div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
+                                
                                 <div className="flex items-center gap-6">
                                   <motion.div
                                     initial={{ opacity: 0, scale: 0 }}
@@ -1022,19 +1210,80 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                     <Eye className="h-4 w-4" />
                                     <span className="font-semibold">{thread.viewCount}</span>
                                   </motion.div>
-                                  <motion.div
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.8 + index * 0.1 }}
-                                    whileHover={{ scale: 1.2, y: -2 }}
-                                    className="flex items-center gap-2 text-gray-600 hover:text-green-600 transition-colors bg-green-50 rounded-lg px-3 py-2"
-                                  >
-                                    <MessageSquare className="h-4 w-4" />
-                                    <span className="font-semibold">{thread.commentCount}</span>
-                                  </motion.div>
                                 </div>
                               </div>
                             </CardHeader>
+                            
+                            {/* Thread Actions */}
+                            <div className="px-6 pb-4">
+                              <div className="flex items-center justify-between border-t pt-4">
+                                <div className="flex items-center gap-4">
+                                  {/* Like/Dislike */}
+                                  <div className="flex items-center gap-2">
+                                    <motion.button
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors group"
+                                    >
+                                      <motion.div
+                                        whileHover={{ y: -2 }}
+                                        className="text-gray-600 group-hover:text-green-600"
+                                      >
+                                        👍
+                                      </motion.div>
+                                      <span className="text-sm font-medium text-gray-600 group-hover:text-green-600">
+                                        {thread.likeCount || 0}
+                                      </span>
+                                    </motion.button>
+                                    
+                                    <motion.button
+                                      whileHover={{ scale: 1.1 }}
+                                      whileTap={{ scale: 0.9 }}
+                                      className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors group"
+                                    >
+                                      <motion.div
+                                        whileHover={{ y: -2 }}
+                                        className="text-gray-600 group-hover:text-red-600"
+                                      >
+                                        👎
+                                      </motion.div>
+                                      <span className="text-sm font-medium text-gray-600 group-hover:text-red-600">
+                                        {thread.dislikeCount || 0}
+                                      </span>
+                                    </motion.button>
+                                  </div>
+                                  
+                                  {/* Comments */}
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
+                                  >
+                                    <MessageSquare className="h-4 w-4 text-gray-600 group-hover:text-blue-600" />
+                                    <span className="text-sm font-medium text-gray-600 group-hover:text-blue-600">
+                                      {thread.commentCount || 0} Comments
+                                    </span>
+                                  </motion.button>
+                                  
+                                  {/* Share */}
+                                  <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors group"
+                                  >
+                                    <motion.div
+                                      whileHover={{ rotate: 15 }}
+                                      className="text-gray-600 group-hover:text-purple-600"
+                                    >
+                                      🔗
+                                    </motion.div>
+                                    <span className="text-sm font-medium text-gray-600 group-hover:text-purple-600">
+                                      Share
+                                    </span>
+                                  </motion.button>
+                                </div>
+                              </div>
+                            </div>
                             
                             {/* Enhanced Decorative elements */}
                             <motion.div
@@ -1170,196 +1419,871 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     </motion.div>
                   )}
                 </TabsContent>
+
+                <TabsContent value="members" className="p-8">
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                    className="flex justify-between items-center mb-8"
+                  >
+                    <div>
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-green-600 bg-clip-text text-transparent mb-2">
+                        Club Members
+                      </h2>
+                      <p className="text-gray-600">Connect with fellow club members</p>
+                    </div>
+                    <div className="flex items-center gap-2 text-gray-600">
+                      <Users className="h-5 w-5" />
+                      <span className="font-semibold">{members.length} member{members.length !== 1 ? 's' : ''}</span>
+                    </div>
+                  </motion.div>
+
+                  {membersLoading ? (
+                    <motion.div 
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      className="text-center py-12"
+                    >
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      >
+                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-green-600" />
+                      </motion.div>
+                      <p className="text-gray-600 text-lg">Loading members...</p>
+                    </motion.div>
+                  ) : members.length === 0 ? (
+                    <motion.div 
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center py-16 bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl"
+                    >
+                      <motion.div
+                        animate={{ 
+                          y: [0, -10, 0],
+                          rotate: [0, 5, -5, 0] 
+                        }}
+                        transition={{ 
+                          duration: 3, 
+                          repeat: Infinity, 
+                          ease: "easeInOut" 
+                        }}
+                        className="mb-4"
+                      >
+                        <Users className="h-16 w-16 mx-auto text-gray-400" />
+                      </motion.div>
+                      <h3 className="text-xl font-semibold text-gray-700 mb-2">No members yet</h3>
+                      <p className="text-gray-600">Be the first to join this club!</p>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      variants={containerVariants} 
+                      initial="hidden" 
+                      animate="visible" 
+                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                    >
+                      {members.map((member, index) => (
+                        <motion.div 
+                          key={member.id} 
+                          variants={cardVariants} 
+                          whileHover="hover"
+                          className="perspective-1000"
+                        >
+                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/90 backdrop-blur-sm border-0 h-full">
+                            {/* Enhanced Background gradient overlay */}
+                            <div 
+                              className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
+                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
+                            />
+                            
+                            <CardHeader className="relative z-10 pb-4">
+                              <div className="flex items-start gap-4">
+                                <motion.div
+                                  whileHover={{ scale: 1.1 }}
+                                  transition={{ duration: 0.2 }}
+                                >
+                                  <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
+                                    <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                      {member.user.firstName?.[0]}{member.user.lastName?.[0]}
+                                    </AvatarFallback>
+                                  </Avatar>
+                                </motion.div>
+                                
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <h3 className="text-xl font-bold text-gray-900 truncate">
+                                      {member.user.firstName} {member.user.lastName}
+                                    </h3>
+                                    {member.user.id === club?.createdBy.id && (
+                                      <motion.div
+                                        initial={{ scale: 0 }}
+                                        animate={{ scale: 1 }}
+                                        transition={{ delay: 0.3 + index * 0.1 }}
+                                      >
+                                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
+                                          <Crown className="w-3 h-3 mr-1" />
+                                          Owner
+                                        </Badge>
+                                      </motion.div>
+                                    )}
+                                  </div>
+                                  
+                                  <p className="text-gray-600 font-medium mb-3">
+                                    @{member.user.username}
+                                  </p>
+                                  
+                                  <div className="text-sm text-gray-500 mb-3">
+                                    Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                  </div>
+                                  
+                                  {/* Mutual Clubs */}
+                                  {member.mutualClubs && member.mutualClubs.length > 0 && (
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: 0.4 + index * 0.1 }}
+                                      className="mt-4"
+                                    >
+                                      <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+                                        Mutual Clubs
+                                      </p>
+                                      <div className="flex flex-wrap gap-1">
+                                        {member.mutualClubs.slice(0, 3).map((mutualClub, clubIndex) => (
+                                          <motion.div
+                                            key={mutualClub.id}
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.5 + index * 0.1 + clubIndex * 0.05 }}
+                                            whileHover={{ scale: 1.05 }}
+                                          >
+                                            <Badge 
+                                              variant="secondary" 
+                                              className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 cursor-pointer"
+                                            >
+                                              {mutualClub.name}
+                                            </Badge>
+                                          </motion.div>
+                                        ))}
+                                        {member.mutualClubs.length > 3 && (
+                                          <motion.div
+                                            initial={{ opacity: 0, scale: 0.8 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{ delay: 0.5 + index * 0.1 + 0.15 }}
+                                          >
+                                            <Badge 
+                                              variant="outline" 
+                                              className="text-xs text-gray-500 border-gray-300"
+                                            >
+                                              +{member.mutualClubs.length - 3} more
+                                            </Badge>
+                                          </motion.div>
+                                        )}
+                                      </div>
+                                    </motion.div>
+                                  )}
+                                </div>
+                              </div>
+                            </CardHeader>
+                            
+                            {/* Decorative elements */}
+                            <motion.div
+                              initial={{ scale: 0, rotate: 0 }}
+                              animate={{ scale: 1, rotate: 360 }}
+                              transition={{ delay: 0.6 + index * 0.1, duration: 2, ease: "easeOut" }}
+                              className="absolute top-4 right-4 w-2 h-2 rounded-full opacity-30 group-hover:opacity-60 transition-opacity"
+                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
+                            />
+                          </Card>
+                        </motion.div>
+                      ))}
+                    </motion.div>
+                  )}
+                </TabsContent>
               </Tabs>
             </div>
           </motion.div>
 
-          {/* Enhanced Sidebar */}
-          <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.4, duration: 0.8 }}
-            className="space-y-6"
-          >
-            {/* Club Stats Card */}
-            <motion.div
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20"
-            >
-              <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                Club Statistics
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { label: "Total Members", value: club?.memberCount?.toLocaleString() || "0", icon: "👥", color: "from-blue-500 to-blue-600" },
-                  { label: "Active Discussions", value: threads.length.toString(), icon: "💬", color: "from-green-500 to-green-600" },
-                  { label: "Upcoming Events", value: events.length.toString(), icon: "📅", color: "from-purple-500 to-purple-600" },
-                  { label: "Founded", value: club ? new Date(club.createdAt).getFullYear().toString() : "", icon: "🏆", color: "from-yellow-500 to-yellow-600" },
-                ].map((stat, index) => (
-                  <motion.div
-                    key={stat.label}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 1.6 + index * 0.1 }}
-                    whileHover={{ scale: 1.05, x: 10 }}
-                    className="flex items-center justify-between p-4 bg-gradient-to-r from-gray-50 to-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300"
-                  >
-                    <div className="flex items-center gap-3">
-                      <motion.div
-                        whileHover={{ scale: 1.3, rotate: 15 }}
-                        className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg shadow-lg`}
-                      >
-                        <span className="text-lg">{stat.icon}</span>
-                      </motion.div>
-                      <span className="font-medium text-gray-700">{stat.label}</span>
-                    </div>
-                    <span className="font-bold text-xl text-gray-900">{stat.value}</span>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-
-            
-            {/* Activity Feed */}
-            <motion.div
-              whileHover={{ scale: 1.02, y: -5 }}
-              className="bg-white/80 backdrop-blur-xl rounded-2xl p-6 shadow-xl border border-white/20"
-            >
-              <h3 className="text-xl font-bold mb-6 bg-gradient-to-r from-gray-900 to-purple-600 bg-clip-text text-transparent">
-                Recent Activity
-              </h3>
-              <div className="space-y-4">
-                {[
-                  { action: "New member joined", time: "2 hours ago", icon: Users },
-                  { action: "Discussion started", time: "5 hours ago", icon: MessageSquare },
-                  { action: "Event created", time: "1 day ago", icon: Calendar },
-                ].map((activity, index) => (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 2 + index * 0.1 }}
-                    whileHover={{ scale: 1.02, x: 5 }}
-                    className="flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-white rounded-lg hover:shadow-md transition-all duration-300"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 10 }}
-                      className="p-2 bg-gradient-to-br from-blue-100 to-purple-100 rounded-lg"
-                    >
-                      <activity.icon className="h-4 w-4 text-blue-600" />
-                    </motion.div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-700">{activity.action}</p>
-                      <p className="text-xs text-gray-500">{activity.time}</p>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        </div>
-      </main>
-
-      {/* Leave Club Confirmation Modal */}
-      <AnimatePresence>
-        {showLeaveModal && (
-          <Dialog open={showLeaveModal} onOpenChange={setShowLeaveModal}>
-            <DialogContent className="sm:max-w-[500px] bg-white/95 backdrop-blur-xl border border-white/20 shadow-2xl">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                transition={{ duration: 0.3, ease: "easeOut" }}
-              >
-                <DialogHeader className="text-center">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                    className="mx-auto mb-4 p-3 bg-gradient-to-br from-red-100 to-orange-100 rounded-full w-fit"
-                  >
-                    <AlertTriangle className="h-8 w-8 text-red-600" />
-                  </motion.div>
-                  <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-                    Leave {club?.name}?
-                  </DialogTitle>
-                  <DialogDescription className="text-lg text-gray-600 mt-2">
-                    Are you sure you want to leave this club? You'll lose access to all discussions and events.
-                  </DialogDescription>
-                </DialogHeader>
-
+          {/* Sliding Side Panel for Club Info */}
+          <AnimatePresence>
+            {showSidePanel && (
+              <>
+                {/* Backdrop */}
                 <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="space-y-6 mt-6"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                  onClick={() => setShowSidePanel(false)}
+                />
+                
+                {/* Side Panel */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="fixed right-0 top-0 h-full w-96 bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
                 >
-                  <div className="space-y-3">
-                    <Label htmlFor="leaveReason" className="text-base font-semibold text-gray-700">
-                      Why are you leaving? <span className="text-red-500">*</span>
-                    </Label>
-                    <Textarea
-                      id="leaveReason"
-                      placeholder="Please tell us why you're leaving this club. Your feedback helps us improve the community experience..."
-                      value={leaveReason}
-                      onChange={(e) => setLeaveReason(e.target.value)}
-                      className="min-h-[120px] bg-white/80 backdrop-blur-sm border-2 border-gray-200 focus:border-red-300 rounded-xl transition-all duration-300 text-base"
-                      disabled={isLeavingClub}
-                    />
-                    <p className="text-sm text-gray-500">
-                      Minimum 10 characters required ({leaveReason.length}/10)
-                    </p>
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                        Club Information
+                      </h2>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setShowSidePanel(false)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </motion.button>
+                    </div>
+
+                    {/* Club Statistics */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 shadow-lg mb-6"
+                    >
+                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                        Club Statistics
+                      </h3>
+                      <div className="space-y-4">
+                        {[
+                          { 
+                            label: "Total Members", 
+                            value: club?.memberCount?.toLocaleString() || "0", 
+                            icon: "👥", 
+                            color: "from-blue-500 to-blue-600",
+                            clickable: true,
+                            onClick: () => setShowMembersPanel(true)
+                          },
+                          { label: "Active Discussions", value: threads.length.toString(), icon: "💬", color: "from-green-500 to-green-600" },
+                          { label: "Upcoming Events", value: events.length.toString(), icon: "📅", color: "from-purple-500 to-purple-600" },
+                          { label: "Founded", value: club ? new Date(club.createdAt).getFullYear().toString() : "", icon: "🏆", color: "from-yellow-500 to-yellow-600" },
+                        ].map((stat, index) => (
+                          <motion.div
+                            key={stat.label}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 + index * 0.1 }}
+                            whileHover={{ scale: stat.clickable ? 1.05 : 1.02, x: 5 }}
+                            onClick={stat.clickable ? stat.onClick : undefined}
+                            className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ${stat.clickable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 10 }}
+                                className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg shadow-lg`}
+                              >
+                                <span className="text-lg">{stat.icon}</span>
+                              </motion.div>
+                              <span className="font-medium text-gray-700">{stat.label}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xl text-gray-900">{stat.value}</span>
+                              {stat.clickable && (
+                                <motion.div
+                                  animate={{ x: [0, 3, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                >
+                                  <ArrowLeft className="h-4 w-4 text-blue-600 rotate-180" />
+                                </motion.div>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* Recent Activity */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg"
+                    >
+                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-purple-600 bg-clip-text text-transparent">
+                        Recent Activity
+                      </h3>
+                      <div className="space-y-4">
+                        {[
+                          { action: "New member joined", time: "2 hours ago", icon: Users },
+                          { action: "Discussion started", time: "5 hours ago", icon: MessageSquare },
+                          { action: "Event created", time: "1 day ago", icon: Calendar },
+                        ].map((activity, index) => (
+                          <motion.div
+                            key={index}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 + index * 0.1 }}
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all duration-300"
+                          >
+                            <motion.div
+                              whileHover={{ scale: 1.2, rotate: 10 }}
+                              className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg"
+                            >
+                              <activity.icon className="h-4 w-4 text-purple-600" />
+                            </motion.div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-700">{activity.action}</p>
+                              <p className="text-xs text-gray-500">{activity.time}</p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* Member Actions */}
+                    {isMember && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mt-6 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl border border-red-100"
+                      >
+                        <h4 className="font-semibold text-gray-800 mb-3">Member Actions</h4>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleLeaveClub}
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                        >
+                          Leave Club
+                        </motion.button>
+                      </motion.div>
+                    )}
                   </div>
                 </motion.div>
+              </>
+            )}
+          </AnimatePresence>
 
-                <DialogFooter className="flex gap-3 mt-8">
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1"
-                  >
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setShowLeaveModal(false)
-                        setLeaveReason("")
-                      }}
-                      disabled={isLeavingClub}
-                      className="w-full py-3 text-base border-2 border-gray-200 hover:border-gray-300 rounded-xl transition-all duration-300"
-                    >
-                      Cancel
-                    </Button>
-                  </motion.div>
-                  <motion.div
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="flex-1"
-                  >
-                    <Button
-                      onClick={handleLeaveClub}
-                      disabled={isLeavingClub || leaveReason.trim().length < 10}
-                      className="w-full py-3 text-base bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 shadow-lg rounded-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      {isLeavingClub ? (
+          {/* Sliding Members Panel */}
+          <AnimatePresence>
+            {showMembersPanel && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                  onClick={() => setShowMembersPanel(false)}
+                />
+                
+                {/* Members Panel */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="fixed right-0 top-0 h-full w-[500px] bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
+                >
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                          Club Members
+                        </h2>
+                        <p className="text-gray-600 mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setShowMembersPanel(false)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </motion.button>
+                    </div>
+
+                    {/* Members List */}
+                    {membersLoading ? (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-12"
+                      >
                         <motion.div
                           animate={{ rotate: 360 }}
                           transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                          className="mr-2"
                         >
-                          <Loader2 className="h-5 w-5" />
+                          <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
                         </motion.div>
-                      ) : (
-                        <LogOut className="mr-2 h-5 w-5" />
-                      )}
-                      {isLeavingClub ? "Leaving..." : "Leave Club"}
-                    </Button>
-                  </motion.div>
-                </DialogFooter>
-              </motion.div>
-            </DialogContent>
-          </Dialog>
+                        <p className="text-gray-600">Loading members...</p>
+                      </motion.div>
+                    ) : members.length === 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl"
+                      >
+                        <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No members yet</h3>
+                        <p className="text-gray-600">Be the first to join this club!</p>
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-4"
+                      >
+                        {members.map((member, index) => (
+                          <motion.div
+                            key={member.id}
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.02 }}
+                            className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                          >
+                            <div className="flex items-center gap-4">
+                              <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                                <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                  {member.user.firstName?.[0]}{member.user.lastName?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="text-lg font-bold text-gray-900">
+                                    {member.user.firstName} {member.user.lastName}
+                                  </h3>
+                                  {member.user.id === club?.createdBy.id && (
+                                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
+                                      <Crown className="w-3 h-3 mr-1" />
+                                      Owner
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                <p className="text-gray-600 text-sm">@{member.user.username}</p>
+                                
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                </p>
+                                
+                                {/* Mutual Clubs */}
+                                {member.mutualClubs && member.mutualClubs.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                                      Mutual Clubs ({member.mutualClubs.length})
+                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {member.mutualClubs.slice(0, 2).map((mutualClub) => (
+                                        <Badge 
+                                          key={mutualClub.id}
+                                          variant="secondary" 
+                                          className="text-xs bg-blue-50 text-blue-700"
+                                        >
+                                          {mutualClub.name}
+                                        </Badge>
+                                      ))}
+                                      {member.mutualClubs.length > 2 && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className="text-xs text-gray-500 border-gray-300"
+                                        >
+                                          +{member.mutualClubs.length - 2}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Sliding Side Panel for Club Info */}
+          <AnimatePresence>
+            {showSidePanel && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                  onClick={() => setShowSidePanel(false)}
+                />
+                
+                {/* Side Panel */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="fixed right-0 top-0 h-full w-96 bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
+                >
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                      <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                        Club Information
+                      </h2>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setShowSidePanel(false)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </motion.button>
+                    </div>
+
+                    {/* Club Statistics */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 shadow-lg mb-6"
+                    >
+                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                        Club Statistics
+                      </h3>
+                      <div className="space-y-4">
+                        {[
+                          { 
+                            label: "Total Members", 
+                            value: club?.memberCount?.toLocaleString() || "0", 
+                            icon: "👥", 
+                            color: "from-blue-500 to-blue-600",
+                            clickable: true,
+                            onClick: () => setShowMembersPanel(true)
+                          },
+                          { label: "Active Discussions", value: threads.length.toString(), icon: "💬", color: "from-green-500 to-green-600" },
+                          { label: "Upcoming Events", value: events.length.toString(), icon: "📅", color: "from-purple-500 to-purple-600" },
+                          { label: "Founded", value: club ? new Date(club.createdAt).getFullYear().toString() : "", icon: "🏆", color: "from-yellow-500 to-yellow-600" },
+                        ].map((stat, index) => (
+                          <motion.div
+                            key={`stat-${stat.label}-${index}`}
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.2 + index * 0.1 }}
+                            whileHover={{ scale: stat.clickable ? 1.05 : 1.02, x: 5 }}
+                            onClick={stat.clickable ? stat.onClick : undefined}
+                            className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ${stat.clickable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                          >
+                            <div className="flex items-center gap-3">
+                              <motion.div
+                                whileHover={{ scale: 1.2, rotate: 10 }}
+                                className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg shadow-lg`}
+                              >
+                                <span className="text-lg">{stat.icon}</span>
+                              </motion.div>
+                              <span className="font-medium text-gray-700">{stat.label}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xl text-gray-900">{stat.value}</span>
+                              {stat.clickable && (
+                                <motion.div
+                                  animate={{ x: [0, 3, 0] }}
+                                  transition={{ duration: 2, repeat: Infinity }}
+                                >
+                                  <ArrowLeft className="h-4 w-4 text-blue-600 rotate-180" />
+                                </motion.div>
+                              )}
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* Recent Activity */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg"
+                    >
+                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-purple-600 bg-clip-text text-transparent">
+                        Recent Activity
+                      </h3>
+                      <div className="space-y-4">
+                        {[
+                          { action: "New member joined", time: "2 hours ago", icon: Users },
+                          { action: "Discussion started", time: "5 hours ago", icon: MessageSquare },
+                          { action: "Event created", time: "1 day ago", icon: Calendar },
+                        ].map((activity, index) => (
+                          <motion.div
+                            key={`activity-${activity.action}-${index}`}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.4 + index * 0.1 }}
+                            whileHover={{ scale: 1.02, x: 5 }}
+                            className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all duration-300"
+                          >
+                            <motion.div
+                              whileHover={{ scale: 1.2, rotate: 10 }}
+                              className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg"
+                            >
+                              <activity.icon className="h-4 w-4 text-purple-600" />
+                            </motion.div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium text-gray-700">{activity.action}</p>
+                              <p className="text-xs text-gray-500">{activity.time}</p>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </div>
+                    </motion.div>
+
+                    {/* Member Actions */}
+                    {isMember && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="mt-6 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl border border-red-100"
+                      >
+                        <h4 className="font-semibold text-gray-800 mb-3">Member Actions</h4>
+                        <motion.button
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          onClick={handleLeaveClub}
+                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
+                        >
+                          Leave Club
+                        </motion.button>
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Sliding Members Panel */}
+          <AnimatePresence>
+            {showMembersPanel && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                  onClick={() => setShowMembersPanel(false)}
+                />
+                
+                {/* Members Panel */}
+                <motion.div
+                  initial={{ x: "100%" }}
+                  animate={{ x: 0 }}
+                  exit={{ x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                  className="fixed right-0 top-0 h-full w-[500px] bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
+                >
+                  <div className="p-6">
+                    {/* Header */}
+                    <div className="flex justify-between items-center mb-6">
+                      <div>
+                        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                          Club Members
+                        </h2>
+                        <p className="text-gray-600 mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+                      </div>
+                      <motion.button
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => setShowMembersPanel(false)}
+                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                      >
+                        <X className="h-5 w-5" />
+                      </motion.button>
+                    </div>
+
+                    {/* Members List */}
+                    {membersLoading ? (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="text-center py-12"
+                      >
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                        >
+                          <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
+                        </motion.div>
+                        <p className="text-gray-600">Loading members...</p>
+                      </motion.div>
+                    ) : members.length === 0 ? (
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        className="text-center py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl"
+                      >
+                        <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
+                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No members yet</h3>
+                        <p className="text-gray-600">Be the first to join this club!</p>
+                      </motion.div>
+                    ) : (
+                      <motion.div 
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="space-y-4"
+                      >
+                        {members.map((member, index) => (
+                          <motion.div
+                            key={`member-${member.id}`}
+                            initial={{ opacity: 0, x: 50 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            whileHover={{ scale: 1.02 }}
+                            className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
+                          >
+                            <div className="flex items-center gap-4">
+                              <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                                <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                                  {member.user.firstName?.[0]}{member.user.lastName?.[0]}
+                                </AvatarFallback>
+                              </Avatar>
+                              
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h3 className="text-lg font-bold text-gray-900">
+                                    {member.user.firstName} {member.user.lastName}
+                                  </h3>
+                                  {member.user.id === club?.createdBy.id && (
+                                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
+                                      <Crown className="w-3 h-3 mr-1" />
+                                      Owner
+                                    </Badge>
+                                  )}
+                                </div>
+                                
+                                <p className="text-gray-600 text-sm">@{member.user.username}</p>
+                                
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Joined {new Date(member.joinedAt).toLocaleDateString()}
+                                </p>
+                                
+                                {/* Mutual Clubs */}
+                                {member.mutualClubs && member.mutualClubs.length > 0 && (
+                                  <div className="mt-2">
+                                    <p className="text-xs font-semibold text-gray-600 mb-1">
+                                      Mutual Clubs ({member.mutualClubs.length})
+                                    </p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {member.mutualClubs.slice(0, 2).map((mutualClub) => (
+                                        <Badge 
+                                          key={`mutual-${mutualClub.id}`}
+                                          variant="secondary" 
+                                          className="text-xs bg-blue-50 text-blue-700"
+                                        >
+                                          {mutualClub.name}
+                                        </Badge>
+                                      ))}
+                                      {member.mutualClubs.length > 2 && (
+                                        <Badge 
+                                          variant="outline" 
+                                          className="text-xs text-gray-500 border-gray-300"
+                                        >
+                                          +{member.mutualClubs.length - 2}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          </motion.div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+      </main>
+
+      {/* Leave Club Confirmation Dialog */}
+      <AnimatePresence>
+        {showLeaveConfirmation && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={cancelLeaveClub}
+            />
+            
+            {/* Confirmation Dialog */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            >
+              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100">
+                <div className="text-center">
+                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+                    <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    Are you sure you want to leave this club?
+                  </h3>
+                  <p className="text-gray-600 mb-6">
+                    You will no longer have access to club discussions, events, and member content.
+                  </p>
+                  <div className="flex gap-3 justify-center">
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={cancelLeaveClub}
+                      className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors duration-200"
+                    >
+                      No, Cancel
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={confirmLeaveClub}
+                      className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200"
+                    >
+                      Yes, Leave Club
+                    </motion.button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
+      
+      {/* Create Thread Modal */}
+      <CreateThreadModal
+        isOpen={showCreateThreadModal}
+        onClose={() => setShowCreateThreadModal(false)}
+        clubId={resolvedParams.id}
+        clubName={club?.name || ""}
+        onThreadCreated={() => {
+          fetchThreads() // Refresh the threads list
+          setShowCreateThreadModal(false)
+        }}
+      />
     </div>
   )
 }

@@ -1,8 +1,11 @@
 package com.example.mediasphere_initial.model;
 
 import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "threads")
@@ -31,6 +34,12 @@ public class Thread {
     @Column(name = "comment_count", nullable = false)
     private Integer commentCount = 0;
 
+    @Column(name = "like_count", nullable = false)
+    private Integer likeCount = 0;
+
+    @Column(name = "dislike_count", nullable = false)
+    private Integer dislikeCount = 0;
+
     @Column(name = "is_pinned", nullable = false)
     private Boolean isPinned = false;
 
@@ -43,8 +52,13 @@ public class Thread {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonManagedReference
+    private List<ThreadImage> images = new ArrayList<>();
+
     // Constructors
-    public Thread() {}
+    public Thread() {
+    }
 
     public Thread(UUID id, String title, String content, Club club, User createdBy) {
         this.id = id;
@@ -112,6 +126,22 @@ public class Thread {
         this.commentCount = commentCount;
     }
 
+    public Integer getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(Integer likeCount) {
+        this.likeCount = likeCount;
+    }
+
+    public Integer getDislikeCount() {
+        return dislikeCount;
+    }
+
+    public void setDislikeCount(Integer dislikeCount) {
+        this.dislikeCount = dislikeCount;
+    }
+
     public Boolean getIsPinned() {
         return isPinned;
     }
@@ -142,5 +172,13 @@ public class Thread {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public List<ThreadImage> getImages() {
+        return images;
+    }
+
+    public void setImages(List<ThreadImage> images) {
+        this.images = images;
     }
 }

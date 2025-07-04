@@ -11,7 +11,8 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ThreadRepository extends JpaRepository<Thread, UUID> {
-    List<Thread> findByClub(Club club);
+    @Query("SELECT DISTINCT t FROM Thread t LEFT JOIN FETCH t.images WHERE t.club = :club ORDER BY t.createdAt DESC")
+    List<Thread> findByClub(@Param("club") Club club);
 
     List<Thread> findByCreatedBy(User user);
 

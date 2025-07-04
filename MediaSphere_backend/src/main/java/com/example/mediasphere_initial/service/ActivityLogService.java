@@ -9,7 +9,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -153,5 +152,28 @@ public class ActivityLogService {
     public long getClubActivityCount(UUID clubId) {
         Optional<Club> club = clubRepository.findById(clubId);
         return club.map(activityLogRepository::countByClub).orElse(0L);
+    }
+
+    // Log activity when user leaves a club
+    public void logMemberLeft(UUID userId, UUID clubId, String reason) {
+        Optional<User> user = userRepository.findById(userId);
+        Optional<Club> club = clubRepository.findById(clubId);
+
+        if (user.isPresent() && club.isPresent()) {
+            String description = user.get().getFirstName() + " " + user.get().getLastName() + " left the club";
+            if (reason != null && !reason.trim().isEmpty()) {
+                description += " (Reason: " + reason.substring(0, Math.min(reason.length(), 50)) +
+                        (reason.length() > 50 ? "..." : "") + ")";
+            }
+
+            ActivityLog activity = new ActivityLog(
+                    user.get(),
+                    club.get(),
+                    "member_left",
+                    description,
+                    null,
+                    "membership");
+            activityLogRepository.save(activity);
+        }
     }
 }
