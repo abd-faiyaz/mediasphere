@@ -209,7 +209,7 @@ export default function SignInPage() {
                   socialButtonsVariant: "blockButton",
                 },
               }}
-              redirectUrl="/dashboard"
+              redirectUrl="/profile"
               signUpUrl="/sign-up"
             />
           </motion.div>

@@ -14,6 +14,9 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
+import com.example.mediasphere_initial.repository.ThreadLikeRepository;
+import com.example.mediasphere_initial.repository.ThreadDislikeRepository;
+import com.example.mediasphere_initial.repository.CommentLikeRepository;
 
 @RestController
 @RequestMapping("/threads")
@@ -25,6 +28,15 @@ public class ThreadController {
 
     @Autowired
     private AuthService authService;
+
+    @Autowired
+    private ThreadLikeRepository threadLikeRepository;
+
+    @Autowired
+    private ThreadDislikeRepository threadDislikeRepository;
+
+    @Autowired
+    private CommentLikeRepository commentLikeRepository;
 
     // List all threads across all clubs
     @GetMapping("/")
@@ -61,8 +73,8 @@ public class ThreadController {
     // Update thread details
     @PutMapping("/{id}")
     public ResponseEntity<?> updateThread(@PathVariable UUID id,
-                                         @RequestBody Thread thread,
-                                         @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Thread thread,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -79,7 +91,7 @@ public class ThreadController {
     // Delete a thread
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteThread(@PathVariable UUID id,
-                                         @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -118,8 +130,8 @@ public class ThreadController {
     // Add a new comment to a thread
     @PostMapping("/{id}/comments")
     public ResponseEntity<?> addComment(@PathVariable UUID id,
-                                       @RequestBody Comment comment,
-                                       @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Comment comment,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -136,8 +148,8 @@ public class ThreadController {
     // Update a comment
     @PutMapping("/comments/{id}")
     public ResponseEntity<?> updateComment(@PathVariable UUID id,
-                                          @RequestBody Comment comment,
-                                          @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Comment comment,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -154,7 +166,7 @@ public class ThreadController {
     // Delete a comment
     @DeleteMapping("/comments/{id}")
     public ResponseEntity<?> deleteComment(@PathVariable UUID id,
-                                          @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -167,6 +179,124 @@ public class ThreadController {
             } else {
                 return ResponseEntity.status(403).body("Unauthorized to delete comment");
             }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Toggle like for a thread
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> toggleLike(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            Map<String, Object> result = threadService.likeThread(id, userOpt.get());
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Toggle dislike for a thread
+    @PostMapping("/{id}/dislike")
+    public ResponseEntity<?> toggleDislike(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            Map<String, Object> result = threadService.dislikeThread(id, userOpt.get());
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Get like status for a thread
+    @GetMapping("/{id}/like-status")
+    public ResponseEntity<?> getLikeStatus(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            Map<String, Object> result = threadService.getLikeStatus(id, userOpt.get());
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Get users who liked a thread
+    @GetMapping("/{id}/likers")
+    public ResponseEntity<?> getThreadLikers(@PathVariable UUID id) {
+        try {
+            List<User> likers = threadService.getThreadLikers(id);
+            return ResponseEntity.ok(likers);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Get users who disliked a thread
+    @GetMapping("/{id}/dislikers")
+    public ResponseEntity<?> getThreadDislikers(@PathVariable UUID id) {
+        try {
+            List<User> dislikers = threadService.getThreadDislikers(id);
+            return ResponseEntity.ok(dislikers);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Toggle like for a comment
+    @PostMapping("/comments/{id}/like")
+    public ResponseEntity<?> toggleCommentLike(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            Map<String, Object> result = threadService.likeComment(id, userOpt.get());
+            return ResponseEntity.ok(result);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Get users who liked a comment
+    @GetMapping("/comments/{id}/likers")
+    public ResponseEntity<?> getCommentLikers(@PathVariable UUID id) {
+        try {
+            List<User> likers = threadService.getCommentLikers(id);
+            return ResponseEntity.ok(likers);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Get like status for a comment
+    @GetMapping("/comments/{id}/like-status")
+    public ResponseEntity<?> getCommentLikeStatus(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            Map<String, Object> result = threadService.getCommentLikeStatus(id, userOpt.get());
+            return ResponseEntity.ok(result);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -138,16 +138,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setIsLoading(false)
     
-    // Force a complete re-check of authentication status to ensure clean state
-    setTimeout(() => {
-      checkLocalAuth()
-    }, 50)
-    
-    // If user is signed in with Clerk, we don't automatically sign them out
-    // They can choose to sign out of Clerk separately
-    
-    // Note: Navigation should be handled by the calling component
-    // This allows for more flexible logout behavior
+    // Clear any cached data from the current page
+    if (typeof window !== 'undefined') {
+      // Clear any potential React Query cache
+      if ((window as any).queryClient) {
+        (window as any).queryClient.clear()
+      }
+      
+      // Use router to navigate and clear any cached pages
+      // Using replace to prevent going back to the logged-in state
+      window.location.replace('/sign-in')
+    }
   }
 
   const syncWithBackend = async () => {

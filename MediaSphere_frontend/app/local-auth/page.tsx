@@ -39,7 +39,7 @@ export default function LocalAuthPage() {
       } else {
         await registerLocal(formData.email, formData.password, formData.username)
       }
-      router.push("/dashboard")
+      router.push("/profile")
     } catch (err: any) {
       setError(err.message || "Authentication failed")
     } finally {

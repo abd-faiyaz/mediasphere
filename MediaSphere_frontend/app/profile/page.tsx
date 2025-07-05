@@ -1,5 +1,6 @@
 "use client"
 
+import Head from "next/head"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -8,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Edit, MessageSquare, Calendar, Users, Trophy, Settings, Camera, Upload, Star, Heart, Eye, Sparkles, MapPin, Globe, Loader2, ArrowLeft } from "lucide-react"
+import { Edit, MessageSquare, Calendar, Users, Trophy, Settings, Camera, Upload, Star, Heart, Eye, Sparkles, MapPin, Globe, Loader2, ArrowLeft, LogOut } from "lucide-react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
@@ -28,18 +29,11 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false)
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null)
+  const [selectedStatsCard, setSelectedStatsCard] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const { isAuthenticated, isLoading: authLoading, user: authUser } = useAuth()
+  const { isAuthenticated, isLoading: authLoading, user: authUser, logout } = useAuth()
   const router = useRouter()
-
-  // Redirect to sign in if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/sign-in')
-      return
-    }
-  }, [isAuthenticated, authLoading, router])
 
   // Enhanced form state
   const [formData, setFormData] = useState({
@@ -49,6 +43,21 @@ export default function ProfilePage() {
     location: "",
     website: ""
   })
+
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/sign-in')
+      return
+    }
+  }, [isAuthenticated, authLoading, router])
+
+  // Load user data effect
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      loadUserData()
+    }
+  }, [isAuthenticated, authLoading])
 
   // Floating particles animation
   const floatingParticles = Array.from({ length: 20 }, (_, i) => ({
@@ -76,10 +85,6 @@ export default function ProfilePage() {
     return null
   }
 
-  useEffect(() => {
-    loadUserData()
-  }, [])
-
   const loadUserData = async () => {
     try {
       setLoading(true)
@@ -89,8 +94,8 @@ export default function ProfilePage() {
       const [userData, statsData, clubsData, threadsData, achievementsData] = await Promise.all([
         apiService.getUserProfile(currentUser.id),
         apiService.getUserStats(currentUser.id),
-        apiService.getUserClubs(currentUser.id),
-        apiService.getUserThreads(currentUser.id),
+        fetchUserClubsWithDetails(currentUser.id),
+        fetchUserThreadsWithClubNames(currentUser.id),
         Promise.resolve(apiService.getUserAchievements(currentUser.id))
       ])
 
@@ -118,6 +123,185 @@ export default function ProfilePage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Fetch user clubs with member count and join date from backend
+  const fetchUserClubsWithDetails = async (userId: string): Promise<Club[]> => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/users/${userId}/clubs`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+
+      if (!response.ok) {
+        return []
+      }
+
+      const clubs = await response.json()
+      
+      // Fetch additional details for each club
+      const clubsWithDetails = await Promise.all(
+        clubs.map(async (club: any) => {
+          try {
+            // Fetch club details including member count
+            const clubDetailResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${club.id}`, {
+              headers: {
+                'Authorization': `Bearer ${authService.getToken()}`
+              }
+            })
+            
+            if (clubDetailResponse.ok) {
+              const clubDetails = await clubDetailResponse.json()
+              
+              // Get join date from user_clubs table
+              const membersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${club.id}/members`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              let joinedDate = 'Recently'
+              if (membersResponse.ok) {
+                const members = await membersResponse.json()
+                const userMembership = members.find((member: any) => member.user?.id === userId)
+                if (userMembership?.joinedAt) {
+                  joinedDate = new Date(userMembership.joinedAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short',
+                    day: 'numeric'
+                  })
+                }
+              }
+              
+              return {
+                ...club,
+                memberCount: clubDetails.memberCount || 0,
+                joined: joinedDate
+              }
+            }
+            
+            return {
+              ...club,
+              memberCount: 0,
+              joined: 'Recently'
+            }
+          } catch (error) {
+            console.error(`Error fetching details for club ${club.id}:`, error)
+            return {
+              ...club,
+              memberCount: 0,
+              joined: 'Recently'
+            }
+          }
+        })
+      )
+      
+      return clubsWithDetails
+    } catch (error) {
+      console.error('Error fetching user clubs:', error)
+      return []
+    }
+  }
+
+  // Fetch user threads with club names, comments count, and likes count from backend
+  const fetchUserThreadsWithClubNames = async (userId: string): Promise<Thread[]> => {
+    try {
+      // First get all threads created by the user
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+
+      if (!response.ok) {
+        return []
+      }
+
+      const allThreads = await response.json()
+      
+      // Filter threads created by the current user
+      const userThreads = allThreads.filter((thread: any) => thread.createdBy?.id === userId || thread.authorId === userId)
+      
+      // Fetch club details, comments count, and likes count for each thread
+      const threadsWithFullDetails = await Promise.all(
+        userThreads.map(async (thread: any) => {
+          try {
+            // Fetch club name
+            let clubName = 'Unknown Club'
+            if (thread.clubId || thread.club?.id) {
+              const clubId = thread.clubId || thread.club?.id
+              const clubResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${clubId}`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              if (clubResponse.ok) {
+                const clubData = await clubResponse.json()
+                clubName = clubData.name
+              }
+            }
+
+            // Fetch comments count
+            let commentsCount = 0
+            try {
+              const commentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${thread.id}/comments`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              if (commentsResponse.ok) {
+                const comments = await commentsResponse.json()
+                commentsCount = Array.isArray(comments) ? comments.length : 0
+              }
+            } catch (error) {
+              console.error(`Error fetching comments for thread ${thread.id}:`, error)
+            }
+
+            // Fetch likes count
+            let likesCount = 0
+            try {
+              const likesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${thread.id}/likes`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              if (likesResponse.ok) {
+                const likes = await likesResponse.json()
+                likesCount = Array.isArray(likes) ? likes.length : (likes.count || 0)
+              }
+            } catch (error) {
+              console.error(`Error fetching likes for thread ${thread.id}:`, error)
+            }
+            
+            return {
+              ...thread,
+              clubName,
+              commentsCount,
+              likesCount,
+              replies: commentsCount // Keep replies for backward compatibility
+            }
+          } catch (error) {
+            console.error(`Error fetching details for thread ${thread.id}:`, error)
+            return {
+              ...thread,
+              clubName: 'Unknown Club',
+              commentsCount: 0,
+              likesCount: 0,
+              replies: 0
+            }
+          }
+        })
+      )
+      
+      return threadsWithFullDetails
+    } catch (error) {
+      console.error('Error fetching user threads:', error)
+      return []
     }
   }
 
@@ -210,6 +394,24 @@ export default function ProfilePage() {
       toast({
         title: "Error",
         description: "Failed to update profile",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      logout()
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out"
+      })
+      // Navigation is handled by the auth context
+    } catch (error) {
+      console.error("Error logging out:", error)
+      toast({
+        title: "Error",
+        description: "Failed to log out",
         variant: "destructive"
       })
     }
@@ -325,6 +527,19 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      <Head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </Head>
+      <Head>
+        <title>Profile - MediaSphere</title>
+        <meta name="description" content="User profile page for MediaSphere" />
+        <meta httpEquiv="Cache-Control" content="no-store, no-cache, must-revalidate, proxy-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </Head>
+
       {/* Back Button - Floating */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
@@ -340,6 +555,24 @@ export default function ProfilePage() {
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="font-medium">Back</span>
+        </motion.button>
+      </motion.div>
+
+      {/* Logout Button - Floating */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="fixed top-6 right-6 z-50"
+      >
+        <motion.button
+          onClick={handleLogout}
+          className="flex items-center gap-2 bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-xl shadow-2xl border border-white/30 transition-all duration-300 hover:bg-white/30"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="font-medium">Logout</span>
         </motion.button>
       </motion.div>
 
@@ -574,18 +807,19 @@ export default function ProfilePage() {
           variants={itemVariants}
         >
           {[
-            { label: "Threads", value: userStats?.threadsCreated || 0, icon: MessageSquare, gradient: "from-blue-500 to-cyan-500" },
-            { label: "Comments", value: userStats?.commentsPosted || 0, icon: Heart, gradient: "from-pink-500 to-rose-500" },
+            { label: "Threads", value: threads.length, icon: MessageSquare, gradient: "from-blue-500 to-cyan-500" },
+            { label: "Achievements", value: achievements?.length || 0, icon: Trophy, gradient: "from-yellow-500 to-orange-500" },
             { label: "Events", value: userStats?.eventsAttended || 0, icon: Calendar, gradient: "from-purple-500 to-indigo-500" },
-            { label: "Clubs", value: userStats?.clubsJoined || 0, icon: Users, gradient: "from-emerald-500 to-teal-500" }
+            { label: "Clubs", value: clubs.length, icon: Users, gradient: "from-emerald-500 to-teal-500" }
           ].map((stat, index) => (
             <motion.div
               key={stat.label}
               variants={cardVariants}
               whileHover="hover"
-              className="perspective-1000"
+              className="perspective-1000 cursor-pointer"
+              onClick={() => setSelectedStatsCard(selectedStatsCard === stat.label ? null : stat.label)}
             >
-              <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl">
+              <Card className={`bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl ${selectedStatsCard === stat.label ? 'ring-2 ring-purple-400' : ''}`}>
                 <CardContent className="p-6 text-center">
                   <motion.div
                     className={`w-12 h-12 mx-auto mb-4 rounded-full bg-gradient-to-r ${stat.gradient} flex items-center justify-center shadow-lg`}
@@ -611,18 +845,9 @@ export default function ProfilePage() {
         {/* Main Content Tabs */}
         <motion.div variants={itemVariants}>
           <Tabs defaultValue="profile" className="w-full">
-            <TabsList className="grid w-full grid-cols-4 bg-white/10 backdrop-blur-md border-white/20">
+            <TabsList className="grid w-full grid-cols-1 bg-white/10 backdrop-blur-md border-white/20">
               <TabsTrigger value="profile" className="data-[state=active]:bg-white/20 text-white">
                 Profile
-              </TabsTrigger>
-              <TabsTrigger value="threads" className="data-[state=active]:bg-white/20 text-white">
-                Threads
-              </TabsTrigger>
-              <TabsTrigger value="clubs" className="data-[state=active]:bg-white/20 text-white">
-                Clubs
-              </TabsTrigger>
-              <TabsTrigger value="achievements" className="data-[state=active]:bg-white/20 text-white">
-                Achievements
               </TabsTrigger>
             </TabsList>
 
@@ -719,196 +944,217 @@ export default function ProfilePage() {
                   </motion.div>
                 )}
               </AnimatePresence>
-            </TabsContent>
 
-            {/* Threads Tab */}
-            <TabsContent value="threads" className="mt-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-6"
-              >
-                {threads.length > 0 ? (
-                  threads.map((thread, index) => (
-                    <motion.div
-                      key={thread.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.02, x: 10 }}
-                    >
-                      <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <h3 className="text-xl font-semibold text-white mb-2">
-                                {thread.title}
-                              </h3>
-                              <p className="text-purple-200 mb-4 line-clamp-2">
-                                {thread.content}
-                              </p>
-                              <div className="flex items-center gap-4 text-sm text-purple-300">
-                                <span className="flex items-center gap-1">
-                                  <MessageSquare className="w-4 h-4" />
-                                  {thread.replies || 0} replies
-                                </span>
-                                <span className="flex items-center gap-1">
-                                  <Eye className="w-4 h-4" />
-                                  {thread.likes || 0} likes
-                                </span>
-                                <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
-                              </div>
-                            </div>
-                            <Badge 
-                              variant="secondary" 
-                              className="bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white border-white/20"
-                            >
-                              Discussion
-                            </Badge>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))
-                ) : (
+              {/* Stats Details Section */}
+              <AnimatePresence>
+                {selectedStatsCard && (
                   <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="text-center py-12"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    className="mt-8"
                   >
-                    <MessageSquare className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No threads yet</h3>
-                    <p className="text-purple-200 mb-6">Start creating threads to share your thoughts!</p>
-                    <Link href="/threads">
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
-                        Create Thread
-                      </Button>
-                    </Link>
-                  </motion.div>
-                )}
-              </motion.div>
-            </TabsContent>
-
-            {/* Clubs Tab */}
-            <TabsContent value="clubs" className="mt-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {clubs.length > 0 ? (
-                  clubs.map((club, index) => (
-                    <motion.div
-                      key={club.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.05, rotateY: 5 }}
-                      className="perspective-1000"
-                    >
-                      <Link href={`/clubs/${club.id}`}>
-                        <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl h-full">
-                          <CardContent className="p-6">
-                            <div className="text-center mb-4">
-                              <motion.div
-                                className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center shadow-lg"
-                                whileHover={{ scale: 1.1, rotate: 15 }}
-                              >
-                                <Users className="w-8 h-8 text-white" />
-                              </motion.div>
-                              <h3 className="text-lg font-semibold text-white mb-2 line-clamp-1">
-                                {club.name}
-                              </h3>
-                              <p className="text-purple-200 text-sm line-clamp-2 mb-4">
-                                {club.description}
-                              </p>
-                              <div className="flex items-center justify-center gap-4 text-xs text-purple-300">
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-3 h-3" />
-                                  {club.role || 'Member'}
-                                </span>
-                                <Badge 
-                                  variant="secondary" 
-                                  className="bg-white/10 text-white border-white/20 text-xs"
+                    {selectedStatsCard === "Threads" && (
+                      <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <MessageSquare className="w-5 h-5" />
+                            My Threads ({threads.length})
+                          </CardTitle>
+                          <CardDescription className="text-purple-200">
+                            All threads you've created
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {threads.length > 0 ? (
+                            <div className="space-y-4">
+                              {threads.map((thread, index) => (
+                                <motion.div
+                                  key={thread.id}
+                                  initial={{ opacity: 0, x: -20 }}
+                                  animate={{ opacity: 1, x: 0 }}
+                                  transition={{ delay: index * 0.1 }}
                                 >
-                                  Club
-                                </Badge>
-                              </div>
+                                  <Link href={`/threads/${thread.id}`}>
+                                    <div className="bg-white/5 rounded-lg p-4 hover:bg-white/10 transition-colors cursor-pointer">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <h3 className="text-lg font-semibold text-white mb-2">
+                                            {thread.title}
+                                          </h3>
+                                          <div className="flex items-center gap-4 text-sm text-purple-300">
+                                            <span className="flex items-center gap-1">
+                                              <Users className="w-4 h-4" />
+                                              {(thread as any).clubName || 'Unknown Club'}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                              <Calendar className="w-4 h-4" />
+                                              {new Date(thread.createdAt).toLocaleDateString()}
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                              <MessageSquare className="w-4 h-4" />
+                                              {(thread as any).commentsCount || 0} comments
+                                            </span>
+                                            <span className="flex items-center gap-1">
+                                              <Heart className="w-4 h-4" />
+                                              {(thread as any).likesCount || 0} likes
+                                            </span>
+                                          </div>
+                                        </div>
+                                        <Badge variant="secondary" className="bg-blue-500/20 text-blue-200 border-blue-300/20">
+                                          Thread
+                                        </Badge>
+                                      </div>
+                                    </div>
+                                  </Link>
+                                </motion.div>
+                              ))}
                             </div>
-                          </CardContent>
-                        </Card>
-                      </Link>
-                    </motion.div>
-                  ))
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="col-span-full text-center py-12"
-                  >
-                    <Users className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No clubs joined</h3>
-                    <p className="text-purple-200 mb-6">Join clubs to connect with people who share your interests!</p>
-                    <Link href="/clubs">
-                      <Button className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600">
-                        Explore Clubs
-                      </Button>
-                    </Link>
-                  </motion.div>
-                )}
-              </motion.div>
-            </TabsContent>
+                          ) : (
+                            <div className="text-center py-8">
+                              <MessageSquare className="w-12 h-12 text-purple-300 mx-auto mb-4" />
+                              <p className="text-purple-200">No threads created yet</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
 
-            {/* Achievements Tab */}
-            <TabsContent value="achievements" className="mt-8">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-              >
-                {achievements.length > 0 ? (
-                  achievements.map((achievement, index) => (
-                    <motion.div
-                      key={achievement.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                      whileHover={{ scale: 1.05, rotateY: 5 }}
-                      className="perspective-1000"
-                    >
-                      <Card className="bg-white/10 backdrop-blur-md border-white/20 hover:border-white/40 transition-all duration-300 shadow-xl">
-                        <CardContent className="p-6 text-center">
-                          <motion.div
-                            className="w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg"
-                            whileHover={{ scale: 1.1, rotate: 15 }}
-                          >
-                            <Trophy className="w-8 h-8 text-white" />
-                          </motion.div>
-                          <h3 className="text-lg font-semibold text-white mb-2">
-                            {achievement.title}
-                          </h3>
-                          <p className="text-purple-200 text-sm mb-4">
-                            {achievement.description}
-                          </p>
-                          <div className="text-xs text-purple-300">
-                            {achievement.earned}
+                    {selectedStatsCard === "Clubs" && (
+                      <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <Users className="w-5 h-5" />
+                            My Clubs ({clubs.length})
+                          </CardTitle>
+                          <CardDescription className="text-purple-200">
+                            Clubs you're a member of
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {clubs.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {clubs.map((club, index) => (
+                                <motion.div
+                                  key={club.id}
+                                  initial={{ opacity: 0, y: 20 }}
+                                  animate={{ opacity: 1, y: 0 }}
+                                  transition={{ delay: index * 0.1 }}
+                                >
+                                  <Link href={`/clubs/${club.id}`}>
+                                    <Card className="bg-white/5 hover:bg-white/10 transition-all duration-300 cursor-pointer h-full">
+                                      <CardContent className="p-4">
+                                        <div className="flex items-start gap-3">
+                                          <div className="w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg">
+                                            <Users className="w-6 h-6 text-white" />
+                                          </div>
+                                          <div className="flex-1">
+                                            <h3 className="text-lg font-semibold text-white mb-1">
+                                              {club.name}
+                                            </h3>
+                                            <p className="text-purple-200 text-sm mb-3 line-clamp-2">
+                                              {club.description || 'No description available'}
+                                            </p>
+                                            <div className="space-y-1 text-xs text-purple-300">
+                                              <div className="flex items-center gap-1">
+                                                <Users className="w-3 h-3" />
+                                                <span>{(club as any).memberCount || 0} members</span>
+                                              </div>
+                                              <div className="flex items-center gap-1">
+                                                <Calendar className="w-3 h-3" />
+                                                <span>Joined {club.joined || 'Recently'}</span>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </CardContent>
+                                    </Card>
+                                  </Link>
+                                </motion.div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8">
+                              <Users className="w-12 h-12 text-purple-300 mx-auto mb-4" />
+                              <p className="text-purple-200">No clubs joined yet</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {selectedStatsCard === "Achievements" && (
+                      <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <Trophy className="w-5 h-5" />
+                            My Achievements ({achievements.length})
+                          </CardTitle>
+                          <CardDescription className="text-purple-200">
+                            Your earned achievements and milestones
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          {achievements.length > 0 ? (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                              {achievements.map((achievement, index) => (
+                                <motion.div
+                                  key={achievement.id}
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ delay: index * 0.1 }}
+                                >
+                                  <Card className="bg-white/5 hover:bg-white/10 transition-all duration-300 h-full">
+                                    <CardContent className="p-4 text-center">
+                                      <div className="w-12 h-12 mx-auto mb-3 rounded-full bg-gradient-to-r from-yellow-500 to-orange-500 flex items-center justify-center shadow-lg">
+                                        <Trophy className="w-6 h-6 text-white" />
+                                      </div>
+                                      <h3 className="text-lg font-semibold text-white mb-2">
+                                        {achievement.title}
+                                      </h3>
+                                      <p className="text-purple-200 text-sm mb-3">
+                                        {achievement.description}
+                                      </p>
+                                      <div className="text-xs text-purple-300">
+                                        Earned {achievement.earned}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                </motion.div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="text-center py-8">
+                              <Trophy className="w-12 h-12 text-purple-300 mx-auto mb-4" />
+                              <p className="text-purple-200">No achievements earned yet</p>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {selectedStatsCard === "Events" && (
+                      <Card className="bg-white/10 backdrop-blur-md border-white/20 shadow-2xl">
+                        <CardHeader>
+                          <CardTitle className="text-white flex items-center gap-2">
+                            <Calendar className="w-5 h-5" />
+                            My Events ({userStats?.eventsAttended || 0})
+                          </CardTitle>
+                          <CardDescription className="text-purple-200">
+                            Events you've attended
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="text-center py-8">
+                            <Calendar className="w-12 h-12 text-purple-300 mx-auto mb-4" />
+                            <p className="text-purple-200">Events feature coming soon</p>
                           </div>
                         </CardContent>
                       </Card>
-                    </motion.div>
-                  ))
-                ) : (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="col-span-full text-center py-12"
-                  >
-                    <Trophy className="w-16 h-16 text-purple-300 mx-auto mb-4" />
-                    <h3 className="text-xl font-semibold text-white mb-2">No achievements yet</h3>
-                    <p className="text-purple-200 mb-6">Start participating to unlock achievements!</p>
+                    )}
                   </motion.div>
                 )}
-              </motion.div>
+              </AnimatePresence>
             </TabsContent>
           </Tabs>
         </motion.div>

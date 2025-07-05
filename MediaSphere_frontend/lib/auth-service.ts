@@ -174,11 +174,25 @@ export class AuthService {
     this.removeToken()
     // Force any cached data to be cleared
     if (typeof window !== 'undefined') {
-      // Clear any cached user data or other auth-related storage
+      // Clear specific auth-related data instead of everything
       const authKeys = Object.keys(localStorage).filter(key => 
-        key.includes('auth') || key.includes('user') || key.includes('token')
+        key.includes('auth') || 
+        key.includes('user') || 
+        key.includes('token') ||
+        key.includes('clerk') ||
+        key.includes('mediasphere')
       )
       authKeys.forEach(key => localStorage.removeItem(key))
+      
+      // Clear sessionStorage auth data
+      const sessionAuthKeys = Object.keys(sessionStorage).filter(key => 
+        key.includes('auth') || 
+        key.includes('user') || 
+        key.includes('token') ||
+        key.includes('clerk') ||
+        key.includes('mediasphere')
+      )
+      sessionAuthKeys.forEach(key => sessionStorage.removeItem(key))
     }
   }
 

@@ -1,5 +1,6 @@
 "use client"
 
+import Head from "next/head"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -8,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Edit, MessageSquare, Calendar, Users, Trophy, Settings, Camera, Upload, Star, Heart, Eye, Sparkles, MapPin, Globe, Loader2, ArrowLeft } from "lucide-react"
+import { Edit, MessageSquare, Calendar, Users, Trophy, Settings, Camera, Upload, Star, Heart, Eye, Sparkles, MapPin, Globe, Loader2, ArrowLeft, LogOut } from "lucide-react"
 import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState, useRef } from "react"
@@ -28,9 +29,10 @@ export default function ProfilePage() {
   const [loading, setLoading] = useState(true)
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false)
   const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null)
+  const [selectedStatsCard, setSelectedStatsCard] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const { isAuthenticated, isLoading: authLoading, user: authUser } = useAuth()
+  const { isAuthenticated, isLoading: authLoading, user: authUser, logout } = useAuth()
   const router = useRouter()
 
   // Redirect to sign in if not authenticated
@@ -76,10 +78,6 @@ export default function ProfilePage() {
     return null
   }
 
-  useEffect(() => {
-    loadUserData()
-  }, [])
-
   const loadUserData = async () => {
     try {
       setLoading(true)
@@ -89,8 +87,8 @@ export default function ProfilePage() {
       const [userData, statsData, clubsData, threadsData, achievementsData] = await Promise.all([
         apiService.getUserProfile(currentUser.id),
         apiService.getUserStats(currentUser.id),
-        apiService.getUserClubs(currentUser.id),
-        apiService.getUserThreads(currentUser.id),
+        fetchUserClubsWithDetails(currentUser.id),
+        fetchUserThreadsWithClubNames(currentUser.id),
         Promise.resolve(apiService.getUserAchievements(currentUser.id))
       ])
 
@@ -118,6 +116,192 @@ export default function ProfilePage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  // Load user data effect
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      loadUserData()
+    }
+  }, [isAuthenticated, authLoading])
+
+  // Fetch user clubs with member count and join date from backend
+  const fetchUserClubsWithDetails = async (userId: string): Promise<Club[]> => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/users/${userId}/clubs`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+
+      if (!response.ok) {
+        return []
+      }
+
+      const clubs = await response.json()
+      
+      // Fetch additional details for each club
+      const clubsWithDetails = await Promise.all(
+        clubs.map(async (club: any) => {
+          try {
+            // Fetch club details including member count
+            const clubDetailResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${club.id}`, {
+              headers: {
+                'Authorization': `Bearer ${authService.getToken()}`
+              }
+            })
+            
+            if (clubDetailResponse.ok) {
+              const clubDetails = await clubDetailResponse.json()
+              
+              // Get join date from user_clubs table
+              const membersResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${club.id}/members`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              let joinedDate = 'Recently'
+              if (membersResponse.ok) {
+                const members = await membersResponse.json()
+                const userMembership = members.find((member: any) => member.user?.id === userId)
+                if (userMembership?.joinedAt) {
+                  joinedDate = new Date(userMembership.joinedAt).toLocaleDateString('en-US', { 
+                    year: 'numeric', 
+                    month: 'short',
+                    day: 'numeric'
+                  })
+                }
+              }
+              
+              return {
+                ...club,
+                memberCount: clubDetails.memberCount || 0,
+                joined: joinedDate
+              }
+            }
+            
+            return {
+              ...club,
+              memberCount: 0,
+              joined: 'Recently'
+            }
+          } catch (error) {
+            console.error(`Error fetching details for club ${club.id}:`, error)
+            return {
+              ...club,
+              memberCount: 0,
+              joined: 'Recently'
+            }
+          }
+        })
+      )
+      
+      return clubsWithDetails
+    } catch (error) {
+      console.error('Error fetching user clubs:', error)
+      return []
+    }
+  }
+
+  // Fetch user threads with club names, comments count, and likes count from backend
+  const fetchUserThreadsWithClubNames = async (userId: string): Promise<Thread[]> => {
+    try {
+      // First get all threads created by the user
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+
+      if (!response.ok) {
+        return []
+      }
+
+      const allThreads = await response.json()
+      
+      // Filter threads created by the current user
+      const userThreads = allThreads.filter((thread: any) => thread.createdBy?.id === userId || thread.authorId === userId)
+      
+      // Fetch club details, comments count, and likes count for each thread
+      const threadsWithFullDetails = await Promise.all(
+        userThreads.map(async (thread: any) => {
+          try {
+            // Fetch club name
+            let clubName = 'Unknown Club'
+            if (thread.clubId || thread.club?.id) {
+              const clubId = thread.clubId || thread.club?.id
+              const clubResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${clubId}`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              if (clubResponse.ok) {
+                const clubData = await clubResponse.json()
+                clubName = clubData.name
+              }
+            }
+
+            // Fetch comments count
+            let commentsCount = 0
+            try {
+              const commentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${thread.id}/comments`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              if (commentsResponse.ok) {
+                const comments = await commentsResponse.json()
+                commentsCount = Array.isArray(comments) ? comments.length : 0
+              }
+            } catch (error) {
+              console.error(`Error fetching comments for thread ${thread.id}:`, error)
+            }
+
+            // Fetch likes count
+            let likesCount = 0
+            try {
+              const likesResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${thread.id}/likes`, {
+                headers: {
+                  'Authorization': `Bearer ${authService.getToken()}`
+                }
+              })
+              
+              if (likesResponse.ok) {
+                const likes = await likesResponse.json()
+                likesCount = Array.isArray(likes) ? likes.length : (likes.count || 0)
+              }
+            } catch (error) {
+              console.error(`Error fetching likes for thread ${thread.id}:`, error)
+            }
+            
+            return {
+              ...thread,
+              clubName,
+              commentsCount,
+              likesCount,
+              replies: commentsCount // Keep replies for backward compatibility
+            }
+          } catch (error) {
+            console.error(`Error fetching details for thread ${thread.id}:`, error)
+            return {
+              ...thread,
+              clubName: 'Unknown Club',
+              commentsCount: 0,
+              likesCount: 0,
+              replies: 0
+            }
+          }
+        })
+      )
+      
+      return threadsWithFullDetails
+    } catch (error) {
+      console.error('Error fetching user threads:', error)
+      return []
     }
   }
 
@@ -210,6 +394,24 @@ export default function ProfilePage() {
       toast({
         title: "Error",
         description: "Failed to update profile",
+        variant: "destructive"
+      })
+    }
+  }
+
+  const handleLogout = async () => {
+    try {
+      logout()
+      toast({
+        title: "Logged out",
+        description: "You have been successfully logged out"
+      })
+      // Navigation is handled by the auth context
+    } catch (error) {
+      console.error("Error logging out:", error)
+      toast({
+        title: "Error",
+        description: "Failed to log out",
         variant: "destructive"
       })
     }
@@ -325,6 +527,18 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 relative overflow-hidden">
+      <Head>
+        <meta httpEquiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </Head>
+      {/* Prevent caching */}
+      <Head>
+        <meta httpEquiv="Cache-Control" content="no-store, no-cache, must-revalidate, proxy-revalidate" />
+        <meta httpEquiv="Pragma" content="no-cache" />
+        <meta httpEquiv="Expires" content="0" />
+      </Head>
+
       {/* Back Button - Floating */}
       <motion.div
         initial={{ opacity: 0, x: -50 }}
@@ -340,6 +554,24 @@ export default function ProfilePage() {
         >
           <ArrowLeft className="h-4 w-4" />
           <span className="font-medium">Back</span>
+        </motion.button>
+      </motion.div>
+
+      {/* Logout Button - Floating */}
+      <motion.div
+        initial={{ opacity: 0, x: 50 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.3, duration: 0.6 }}
+        className="fixed top-6 right-6 z-50"
+      >
+        <motion.button
+          onClick={handleLogout}
+          className="flex items-center gap-2 bg-white/20 backdrop-blur-lg text-white px-4 py-2 rounded-xl shadow-2xl border border-white/30 transition-all duration-300 hover:bg-white/30"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          <LogOut className="h-4 w-4" />
+          <span className="font-medium">Logout</span>
         </motion.button>
       </motion.div>
 

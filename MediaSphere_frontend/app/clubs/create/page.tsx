@@ -211,7 +211,7 @@ export default function CreateClubPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -223,7 +223,7 @@ export default function CreateClubPage() {
             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
             className="relative mb-6"
           >
-            <div className="w-16 h-16 mx-auto bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto bg-gradient-to-r from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
               <Sparkles className="h-8 w-8 text-white" />
             </div>
           </motion.div>
@@ -231,7 +231,7 @@ export default function CreateClubPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, duration: 0.6 }}
-            className="text-gray-600 text-lg"
+            className="text-slate-400 text-lg"
           >
             Loading media types...
           </motion.p>
@@ -241,24 +241,24 @@ export default function CreateClubPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
       {/* Animated Background Elements */}
       <motion.div
         variants={floatingVariants}
         animate="animate"
-        className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full opacity-20 blur-xl"
+        className="absolute top-20 left-10 w-20 h-20 bg-gradient-to-r from-purple-400/30 to-pink-500/30 rounded-full opacity-40 blur-xl"
       />
       <motion.div
         variants={floatingVariants}
         animate="animate"
         style={{ animationDelay: "2s" }}
-        className="absolute top-1/3 right-20 w-32 h-32 bg-gradient-to-r from-pink-400 to-red-500 rounded-full opacity-15 blur-xl"
+        className="absolute top-1/3 right-20 w-32 h-32 bg-gradient-to-r from-blue-400/30 to-purple-500/30 rounded-full opacity-30 blur-xl"
       />
       <motion.div
         variants={floatingVariants}
         animate="animate"
         style={{ animationDelay: "4s" }}
-        className="absolute bottom-1/4 left-1/4 w-24 h-24 bg-gradient-to-r from-purple-400 to-blue-500 rounded-full opacity-20 blur-xl"
+        className="absolute bottom-1/4 left-1/4 w-24 h-24 bg-gradient-to-r from-pink-400/30 to-purple-500/30 rounded-full opacity-40 blur-xl"
       />
 
       {/* Header */}
@@ -266,7 +266,7 @@ export default function CreateClubPage() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: "easeOut" }}
-        className="bg-white/80 backdrop-blur-md border-b border-gray-200/50 sticky top-0 z-50"
+        className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-50 shadow-lg"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -274,7 +274,7 @@ export default function CreateClubPage() {
               whileHover={{ scale: 1.05 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
                 Mediasphere
               </Link>
             </motion.div>
@@ -292,7 +292,7 @@ export default function CreateClubPage() {
                   transition={{ delay: 0.1 * index, duration: 0.6 }}
                 >
                   <Link href={item.href}>
-                    <Button variant="ghost" className="hover:bg-white/50 transition-all duration-300">
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 transition-all duration-300">
                       {item.label}
                     </Button>
                   </Link>
@@ -319,7 +319,7 @@ export default function CreateClubPage() {
               whileHover={{ x: -5 }}
               transition={{ type: "spring", stiffness: 300 }}
             >
-              <Button variant="ghost" className="flex items-center gap-2 hover:bg-white/50 transition-all duration-300">
+              <Button variant="ghost" className="flex items-center gap-2 text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 transition-all duration-300">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Clubs
               </Button>
@@ -344,8 +344,8 @@ export default function CreateClubPage() {
                 <motion.div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all duration-300 ${
                     currentStep >= step
-                      ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg'
-                      : 'bg-white text-gray-400 border-2 border-gray-200'
+                      ? 'bg-gradient-to-r from-purple-500 to-pink-600 text-white shadow-lg'
+                      : 'bg-slate-800/50 text-slate-400 border-2 border-slate-700/50'
                   }`}
                   whileHover={{ scale: 1.1 }}
                   animate={currentStep >= step ? { scale: [1, 1.1, 1] } : {}}
@@ -360,7 +360,7 @@ export default function CreateClubPage() {
                 {step < 4 && (
                   <motion.div
                     className={`flex-1 h-1 mx-2 rounded transition-all duration-500 ${
-                      currentStep > step ? 'bg-gradient-to-r from-blue-500 to-purple-600' : 'bg-gray-200'
+                      currentStep > step ? 'bg-gradient-to-r from-purple-500 to-pink-600' : 'bg-slate-700/50'
                     }`}
                     initial={{ scaleX: 0 }}
                     animate={{ scaleX: currentStep > step ? 1 : 0 }}
@@ -376,7 +376,7 @@ export default function CreateClubPage() {
             animate={{ opacity: 1 }}
             transition={{ delay: 0.6 }}
           >
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-slate-400">
               Step {currentStep} of 4: {
                 currentStep === 1 ? 'Club Name' :
                 currentStep === 2 ? 'Description' :
@@ -396,18 +396,18 @@ export default function CreateClubPage() {
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
-            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full mb-4"
+            className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-600 rounded-full mb-4"
           >
             <Sparkles className="h-8 w-8 text-white" />
           </motion.div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-100 via-purple-300 to-pink-300 bg-clip-text text-transparent">
             Create a New Club
           </h1>
           <motion.p
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5, duration: 0.6 }}
-            className="text-gray-600 mt-2 text-lg"
+            className="text-slate-400 mt-2 text-lg"
           >
             Start a community around your favorite media
           </motion.p>
@@ -419,7 +419,7 @@ export default function CreateClubPage() {
           className="relative"
         >
           <motion.div
-            className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-600/20 rounded-2xl blur-xl"
+            className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-600/20 rounded-2xl blur-xl"
             animate={{
               scale: [1, 1.02, 1],
               opacity: [0.5, 0.8, 0.5]
@@ -430,25 +430,25 @@ export default function CreateClubPage() {
               ease: "easeInOut"
             }}
           />
-          <Card className="max-w-2xl mx-auto relative bg-white/80 backdrop-blur-md border-0 shadow-2xl rounded-2xl overflow-hidden">
+          <Card className="max-w-2xl mx-auto relative bg-slate-900/90 backdrop-blur-xl border border-slate-800/50 shadow-2xl rounded-2xl overflow-hidden">
             <motion.div
-              className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500"
+              className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500 via-pink-500 to-purple-600"
               initial={{ scaleX: 0 }}
               animate={{ scaleX: (currentStep - 1) / 3 }}
               transition={{ duration: 0.5, ease: "easeOut" }}
             />
             <CardHeader className="text-center pb-6">
-              <CardTitle className="flex items-center justify-center gap-3 text-2xl">
+              <CardTitle className="flex items-center justify-center gap-3 text-2xl text-slate-200">
                 <motion.div
                   animate={{ rotate: 360 }}
                   transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                  className="p-2 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg"
+                  className="p-2 bg-gradient-to-r from-purple-500 to-pink-600 rounded-lg"
                 >
                   <Plus className="h-6 w-6 text-white" />
                 </motion.div>
                 Club Information
               </CardTitle>
-              <CardDescription className="text-gray-600 text-base">
+              <CardDescription className="text-slate-400 text-base">
                 Fill in the details below to create your new club and start building your community
               </CardDescription>
             </CardHeader>
@@ -462,8 +462,8 @@ export default function CreateClubPage() {
                   transition={{ delay: 0.2, duration: 0.6 }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  <Label htmlFor="name" className="text-lg font-medium text-gray-700 flex items-center gap-2">
-                    <Users className="h-5 w-5 text-blue-500" />
+                  <Label htmlFor="name" className="text-lg font-medium text-slate-300 flex items-center gap-2">
+                    <Users className="h-5 w-5 text-purple-400" />
                     Club Name *
                   </Label>
                   <motion.div
@@ -477,7 +477,7 @@ export default function CreateClubPage() {
                       onChange={(e) => handleInputChange('name', e.target.value)}
                       onFocus={() => setFocusedField('name')}
                       onBlur={() => setFocusedField(null)}
-                      className="text-lg p-4 border-2 focus:border-blue-500 transition-all duration-300 rounded-xl"
+                      className="text-lg p-4 border-2 border-slate-700/50 bg-slate-800/50 text-slate-200 placeholder-slate-400 focus:border-purple-500 transition-all duration-300 rounded-xl"
                       required
                     />
                   </motion.div>
@@ -487,7 +487,7 @@ export default function CreateClubPage() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center gap-2 text-green-600"
+                        className="flex items-center gap-2 text-green-400"
                       >
                         <CheckCircle className="h-4 w-4" />
                         <span className="text-sm">Great choice!</span>
@@ -504,7 +504,7 @@ export default function CreateClubPage() {
                   transition={{ delay: 0.3, duration: 0.6 }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  <Label htmlFor="description" className="text-lg font-medium text-gray-700 flex items-center gap-2">
+                  <Label htmlFor="description" className="text-lg font-medium text-slate-300 flex items-center gap-2">
                     <Globe className="h-5 w-5 text-purple-500" />
                     Description *
                   </Label>
@@ -520,7 +520,7 @@ export default function CreateClubPage() {
                       onFocus={() => setFocusedField('description')}
                       onBlur={() => setFocusedField(null)}
                       rows={4}
-                      className="text-lg p-4 border-2 focus:border-purple-500 transition-all duration-300 rounded-xl resize-none"
+                      className="text-lg p-4 border-2 border-slate-700/50 bg-slate-800/50 text-slate-200 placeholder-slate-400 focus:border-purple-500 transition-all duration-300 rounded-xl resize-none"
                       required
                     />
                   </motion.div>
@@ -530,7 +530,7 @@ export default function CreateClubPage() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center gap-2 text-green-600"
+                        className="flex items-center gap-2 text-green-400"
                       >
                         <CheckCircle className="h-4 w-4" />
                         <span className="text-sm">Perfect description!</span>
@@ -547,8 +547,8 @@ export default function CreateClubPage() {
                   transition={{ delay: 0.4, duration: 0.6 }}
                   whileHover={{ scale: 1.02 }}
                 >
-                  <Label htmlFor="mediaType" className="text-lg font-medium text-gray-700 flex items-center gap-2">
-                    <Star className="h-5 w-5 text-pink-500" />
+                  <Label htmlFor="mediaType" className="text-lg font-medium text-slate-300 flex items-center gap-2">
+                    <Star className="h-5 w-5 text-pink-400" />
                     Media Type *
                   </Label>
                   <motion.div
@@ -560,13 +560,13 @@ export default function CreateClubPage() {
                       onValueChange={(value) => handleInputChange('mediaTypeId', value)}
                     >
                       <SelectTrigger 
-                        className="text-lg p-4 border-2 focus:border-pink-500 transition-all duration-300 rounded-xl"
+                        className="text-lg p-4 border-2 border-slate-700/50 bg-slate-800/50 text-slate-200 focus:border-pink-500 transition-all duration-300 rounded-xl"
                         onFocus={() => setFocusedField('mediaType')}
                         onBlur={() => setFocusedField(null)}
                       >
-                        <SelectValue placeholder="Select the perfect media type for your club" />
+                        <SelectValue placeholder="Select the perfect media type for your club" className="text-slate-400" />
                       </SelectTrigger>
-                      <SelectContent className="rounded-xl border-2">
+                      <SelectContent className="rounded-xl border-2 border-slate-700/50 bg-slate-800/90 backdrop-blur-xl">
                         {mediaTypes.map((mediaType, index) => (
                           <motion.div
                             key={mediaType.id}
@@ -574,10 +574,10 @@ export default function CreateClubPage() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
                           >
-                            <SelectItem value={mediaType.id} className="p-4 rounded-lg">
+                            <SelectItem value={mediaType.id} className="p-4 rounded-lg text-slate-200 hover:bg-slate-700/50">
                               <div className="flex flex-col">
-                                <span className="font-medium text-lg">{mediaType.name}</span>
-                                <span className="text-sm text-gray-500">{mediaType.description}</span>
+                                <span className="font-medium text-lg text-slate-200">{mediaType.name}</span>
+                                <span className="text-sm text-slate-400">{mediaType.description}</span>
                               </div>
                             </SelectItem>
                           </motion.div>
@@ -591,7 +591,7 @@ export default function CreateClubPage() {
                         initial={{ opacity: 0, y: -10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="flex items-center gap-2 text-green-600"
+                        className="flex items-center gap-2 text-green-400"
                       >
                         <CheckCircle className="h-4 w-4" />
                         <span className="text-sm">Excellent choice!</span>
@@ -616,7 +616,7 @@ export default function CreateClubPage() {
                       <Button 
                         type="button" 
                         variant="outline" 
-                        className="w-full h-14 text-lg font-medium border-2 hover:bg-gray-50 transition-all duration-300 rounded-xl"
+                        className="w-full h-14 text-lg font-medium border-2 border-slate-700/50 text-slate-300 hover:bg-slate-800/50 hover:text-slate-200 transition-all duration-300 rounded-xl"
                       >
                         Cancel
                       </Button>
@@ -629,7 +629,7 @@ export default function CreateClubPage() {
                   >
                     <Button 
                       type="submit" 
-                      className="w-full h-14 text-lg font-medium bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-700 hover:via-purple-700 hover:to-pink-700 transition-all duration-300 rounded-xl shadow-lg"
+                      className="w-full h-14 text-lg font-medium bg-gradient-to-r from-purple-600 via-pink-600 to-purple-700 hover:from-purple-700 hover:via-pink-700 hover:to-purple-800 transition-all duration-300 rounded-xl shadow-lg"
                       disabled={submitting}
                     >
                       <AnimatePresence mode="wait">

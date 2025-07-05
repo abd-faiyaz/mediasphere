@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp, Loader2, Star, Heart, Eye, Globe, Zap, Award, Sparkles, Crown, Trophy, Activity, ArrowLeft, X, BarChart3 } from "lucide-react"
+import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp, Loader2, Star, Heart, Eye, Globe, Zap, Award, Sparkles, Crown, Trophy, Activity, ArrowLeft, X, BarChart3, Clock } from "lucide-react"
 import Link from "next/link"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useEffect, useState, use, useRef } from "react"
@@ -109,6 +109,9 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   const [showMembersPanel, setShowMembersPanel] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false)
+  const [showNewMemberPanel, setShowNewMemberPanel] = useState(false)
+  const [showLatestThreadPanel, setShowLatestThreadPanel] = useState(false)
+  const [showLatestEventPanel, setShowLatestEventPanel] = useState(false)
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const containerRef = useRef(null)
@@ -537,7 +540,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-purple-50 relative overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingIcons.map((item, index) => (
@@ -608,7 +611,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-white/80 backdrop-blur-xl border-b border-white/20 sticky top-0 z-40 shadow-lg"
+        className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-40 shadow-lg"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -695,7 +698,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           initial={{ opacity: 0, scale: 0.8, y: 100 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative overflow-hidden bg-white/90 backdrop-blur-xl rounded-3xl border border-white/20 mb-12 shadow-2xl"
+          className="relative overflow-hidden bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-slate-800/50 mb-12 shadow-2xl"
         >
           {/* Animated Background Pattern */}
           <div className="absolute inset-0 overflow-hidden">
@@ -718,29 +721,31 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           
           {/* Hero Header with Gradient */}
           <div 
-            className="h-48 relative overflow-hidden"
+            className="h-64 relative overflow-hidden"
             style={{ 
-              background: `linear-gradient(45deg, ${getMediaTypeGradient(club?.mediaType.name || 'default')})`,
+              background: `linear-gradient(135deg, ${getMediaTypeGradient(club?.mediaType.name || 'default')})`,
             }}
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-black/20 to-black/40" />
+            <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-black/30" />
             
-            {/* Floating Particles in Hero */}
+            {/* Enhanced Floating Particles in Hero */}
             <div className="absolute inset-0">
-              {Array.from({ length: 8 }).map((_, i) => (
+              {Array.from({ length: 20 }).map((_, i) => (
                 <motion.div
                   key={`hero-particle-${i}`}
                   animate={{
-                    y: [0, -20, 0],
-                    x: [0, Math.random() * 10 - 5, 0],
-                    opacity: [0.3, 0.8, 0.3],
+                    y: [0, -40, 0],
+                    x: [0, Math.random() * 20 - 10, 0],
+                    opacity: [0.2, 0.6, 0.2],
+                    scale: [0.8, 1.2, 0.8],
                   }}
                   transition={{
-                    duration: 3 + Math.random() * 2,
+                    duration: 4 + Math.random() * 3,
                     repeat: Infinity,
-                    delay: Math.random() * 3,
+                    delay: Math.random() * 4,
+                    ease: "easeInOut",
                   }}
-                  className="absolute w-2 h-2 bg-white/30 rounded-full"
+                  className="absolute w-3 h-3 bg-white/40 rounded-full backdrop-blur-sm"
                   style={{
                     left: `${Math.random() * 100}%`,
                     top: `${Math.random() * 100}%`,
@@ -749,15 +754,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               ))}
             </div>
             
-            {/* Badge and Member Status */}
+            {/* Enhanced Badge and Member Status */}
             <motion.div
               initial={{ scale: 0, rotate: -90 }}
               animate={{ scale: 1, rotate: 0 }}
               transition={{ delay: 0.5, duration: 0.8, type: "spring", stiffness: 200 }}
               className="absolute top-8 right-8"
             >
-              <Badge variant="secondary" className="bg-white/95 text-gray-800 shadow-2xl text-lg px-6 py-3 backdrop-blur-sm">
-                <Globe className="w-4 h-4 mr-2" />
+              <Badge variant="secondary" className="bg-white/95 text-gray-800 shadow-2xl text-lg px-6 py-3 backdrop-blur-sm border border-white/50">
+                <Globe className="w-5 h-5 mr-2" />
                 {club?.mediaType.name}
               </Badge>
             </motion.div>
@@ -807,7 +812,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   className="mb-8"
                 >
                   <motion.h1 
-                    className="text-6xl font-bold bg-gradient-to-r from-gray-900 via-blue-800 to-purple-800 bg-clip-text text-transparent mb-6 leading-tight"
+                    className="text-6xl font-bold bg-gradient-to-r from-slate-100 via-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 leading-tight"
                     whileHover={{ scale: 1.02 }}
                   >
                     {club?.name}
@@ -816,7 +821,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5, duration: 0.8 }}
-                    className="text-gray-700 text-xl leading-relaxed max-w-3xl"
+                    className="text-slate-300 text-xl leading-relaxed max-w-3xl"
                   >
                     {club?.description}
                   </motion.p>
@@ -831,7 +836,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   className="flex items-center gap-8"
                 >
                   <motion.div 
-                    className="flex items-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg"
+                    className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-slate-700/50"
                     whileHover={{ scale: 1.05, y: -5 }}
                     transition={{ duration: 0.3 }}
                   >
@@ -842,15 +847,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       <Users className="h-8 w-8 text-white" />
                     </motion.div>
                     <div>
-                      <div className="text-3xl font-bold text-gray-900">
+                      <div className="text-3xl font-bold text-slate-200">
                         {club?.memberCount?.toLocaleString() || "0"}
                       </div>
-                      <div className="text-gray-600 font-medium">Members</div>
+                      <div className="text-slate-400 font-medium">Members</div>
                     </div>
                   </motion.div>
                   
                   <motion.div 
-                    className="flex items-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg"
+                    className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-slate-700/50"
                     whileHover={{ scale: 1.05, y: -5 }}
                     transition={{ duration: 0.3 }}
                   >
@@ -861,17 +866,17 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       <Calendar className="h-8 w-8 text-white" />
                     </motion.div>
                     <div>
-                      <div className="text-lg font-semibold text-gray-900">
+                      <div className="text-lg font-semibold text-slate-200">
                         Founded
                       </div>
-                      <div className="text-gray-600">
+                      <div className="text-slate-400">
                         {club ? new Date(club.createdAt).toLocaleDateString() : ""}
                       </div>
                     </div>
                   </motion.div>
                   
                   <motion.div 
-                    className="flex items-center gap-4 bg-white/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg"
+                    className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-slate-700/50"
                     whileHover={{ scale: 1.05, y: -5 }}
                     transition={{ duration: 0.3 }}
                   >
@@ -882,10 +887,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       <Activity className="h-8 w-8 text-white" />
                     </motion.div>
                     <div>
-                      <div className="text-3xl font-bold text-gray-900">
+                      <div className="text-3xl font-bold text-slate-200">
                         {threads.length}
                       </div>
-                      <div className="text-gray-600 font-medium">Discussions</div>
+                      <div className="text-slate-400 font-medium">Discussions</div>
                     </div>
                   </motion.div>
                 </motion.div>
@@ -904,10 +909,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     whileTap={{ scale: 0.95 }}
                     className="relative"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl blur-lg opacity-30" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-40" />
                     <Button 
                       size="lg" 
-                      className="relative bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-2xl px-10 py-4 text-xl rounded-2xl transition-all duration-300"
+                      className="relative bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl px-10 py-4 text-xl rounded-2xl transition-all duration-300"
                       onClick={joinClub}
                     >
                       <motion.div
@@ -929,7 +934,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     <Button 
                       variant="outline" 
                       size="lg" 
-                      className="bg-white/80 backdrop-blur-sm shadow-2xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-xl rounded-2xl transition-all duration-300 hover:bg-white/90"
+                      className="bg-slate-800/80 backdrop-blur-sm shadow-2xl border-2 border-slate-600 hover:border-slate-500 px-10 py-4 text-xl rounded-2xl transition-all duration-300 hover:bg-slate-800/90 text-slate-200 hover:text-white"
                       onClick={() => setShowSidePanel(true)}
                     >
                       <BarChart3 className="mr-3 h-6 w-6" />
@@ -986,27 +991,27 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             transition={{ delay: 1.2, duration: 0.8 }}
             className="lg:col-span-3"
           >
-            <div className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            <div className="bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800/50 overflow-hidden">
               <Tabs defaultValue="discussions" className="w-full">
-                <div className="bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6">
-                  <TabsList className="grid w-full grid-cols-3 bg-white/50 backdrop-blur-sm rounded-2xl p-2">
+                <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 px-8 py-6">
+                  <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl p-2">
                     <TabsTrigger 
                       value="discussions" 
-                      className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl py-3"
+                      className="flex items-center gap-3 data-[state=active]:bg-slate-700 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-300 hover:text-white"
                     >
                       <MessageSquare className="h-5 w-5" />
                       <span className="font-medium">Discussions</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="events" 
-                      className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl py-3"
+                      className="flex items-center gap-3 data-[state=active]:bg-slate-700 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-300 hover:text-white"
                     >
                       <Calendar className="h-5 w-5" />
                       <span className="font-medium">Events</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="members" 
-                      className="flex items-center gap-3 data-[state=active]:bg-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl py-3"
+                      className="flex items-center gap-3 data-[state=active]:bg-slate-700 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-300 hover:text-white"
                     >
                       <Users className="h-5 w-5" />
                       <span className="font-medium">Members</span>
@@ -1022,17 +1027,17 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     className="flex justify-between items-center mb-8"
                   >
                     <div>
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent mb-2">
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent mb-2">
                         Discussion Threads
                       </h2>
-                      <p className="text-gray-600">Join the conversation and share your thoughts</p>
+                      <p className="text-slate-400">Join the conversation and share your thoughts</p>
                     </div>
                     <motion.div 
                       whileHover={{ scale: 1.05, y: -2 }} 
                       whileTap={{ scale: 0.95 }}
                     >
                       <Button 
-                        className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg rounded-2xl px-6 py-3"
+                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg rounded-2xl px-6 py-3"
                         onClick={() => setShowCreateThreadModal(true)}
                         disabled={!isMember}
                       >
@@ -1054,13 +1059,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       >
                         <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
                       </motion.div>
-                      <p className="text-gray-600 text-lg">Loading discussions...</p>
+                      <p className="text-slate-400 text-lg">Loading discussions...</p>
                     </motion.div>
                   ) : threads.length === 0 ? (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl"
+                      className="text-center py-16 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/30"
                     >
                       <motion.div
                         animate={{ 
@@ -1075,15 +1080,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         className="mb-4"
                       >
                         {!isMember ? (
-                          <Users className="h-16 w-16 mx-auto text-gray-400" />
+                          <Users className="h-16 w-16 mx-auto text-slate-500" />
                         ) : (
-                          <MessageSquare className="h-16 w-16 mx-auto text-gray-400" />
+                          <MessageSquare className="h-16 w-16 mx-auto text-slate-500" />
                         )}
                       </motion.div>
                       {!isMember ? (
                         <>
-                          <h3 className="text-xl font-semibold text-gray-700 mb-2">Join to View Discussions</h3>
-                          <p className="text-gray-600 mb-4">You need to be a club member to view and participate in discussions.</p>
+                          <h3 className="text-xl font-semibold text-slate-300 mb-2">Join to View Discussions</h3>
+                          <p className="text-slate-400 mb-4">You need to be a club member to view and participate in discussions.</p>
                           {isAuthenticated && (
                             <Button 
                               onClick={joinClub}
@@ -1096,8 +1101,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         </>
                       ) : (
                         <>
-                          <h3 className="text-xl font-semibold text-gray-700 mb-2">No discussions yet</h3>
-                          <p className="text-gray-600">Be the first to start a conversation!</p>
+                          <h3 className="text-xl font-semibold text-slate-300 mb-2">No discussions yet</h3>
+                          <p className="text-slate-400">Be the first to start a conversation!</p>
                         </>
                       )}
                     </motion.div>
@@ -1115,192 +1120,228 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                           whileHover="hover"
                           className="perspective-1000"
                         >
-                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/80 backdrop-blur-sm border-0">
-                            {/* Enhanced Background gradient overlay */}
-                            <div 
-                              className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
-                            />
-                            
-                            <CardHeader className="pb-4 relative z-10">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-4 mb-4">
-                                    {thread.isPinned && (
+                          <Link href={`/threads/${thread.id}`}>
+                            <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-slate-900/90 backdrop-blur-xl border-slate-800/50 rounded-3xl shadow-2xl">
+                              {/* Enhanced gradient border effect */}
+                              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
+                              
+                              {/* Background pattern */}
+                              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 via-blue-600/5 to-indigo-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              
+                              <CardHeader className="pb-6 relative z-10">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-4 mb-4">
+                                      {thread.isPinned && (
+                                        <motion.div
+                                          initial={{ rotate: -45, scale: 0 }}
+                                          animate={{ rotate: 0, scale: 1 }}
+                                          transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 200 }}
+                                          whileHover={{ rotate: 360, scale: 1.3 }}
+                                          className="p-3 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 rounded-2xl shadow-xl"
+                                        >
+                                          <Pin className="h-5 w-5 text-white" />
+                                        </motion.div>
+                                      )}
                                       <motion.div
-                                        initial={{ rotate: -45, scale: 0 }}
-                                        animate={{ rotate: 0, scale: 1 }}
-                                        transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 200 }}
-                                        whileHover={{ rotate: 15, scale: 1.2 }}
-                                        className="p-2 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-xl shadow-lg"
+                                        initial={{ opacity: 0, x: -20 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: 0.2 + index * 0.1 }}
                                       >
-                                        <Pin className="h-4 w-4 text-white" />
+                                        <CardTitle className="text-2xl group-hover:text-purple-400 transition-colors duration-300 font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:to-pink-400">
+                                          {thread.title}
+                                        </CardTitle>
                                       </motion.div>
-                                    )}
-                                    <CardTitle className="text-2xl group-hover:text-blue-600 transition-colors duration-300 font-bold">
-                                      {thread.title}
-                                    </CardTitle>
-                                  </div>
-                                  <CardDescription className="text-base flex items-center gap-2 mb-4">
-                                    <Avatar className="w-6 h-6">
-                                      <AvatarFallback className="text-xs">
-                                        {thread.createdBy.firstName?.[0]}{thread.createdBy.lastName?.[0]}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                    by <span className="font-semibold text-gray-700">{thread.createdBy.firstName} {thread.createdBy.lastName}</span> 
-                                    <span className="text-gray-400">•</span>
-                                    <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
-                                  </CardDescription>
-                                  
-                                  {/* Thread Content */}
-                                  <div className="mb-4">
-                                    {thread.content && (
-                                      <p className="text-gray-700 text-base leading-relaxed line-clamp-3 mb-3">
-                                        {thread.content}
-                                      </p>
-                                    )}
+                                    </div>
                                     
-                                    {/* Thread Images */}
-                                    {thread.images && thread.images.length > 0 && (
-                                      <div className="mt-3">
-                                        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                                          {thread.images.slice(0, 4).map((image, imgIndex) => (
-                                            <motion.div
-                                              key={image.id}
-                                              initial={{ opacity: 0, scale: 0.8 }}
-                                              animate={{ opacity: 1, scale: 1 }}
-                                              transition={{ delay: 0.2 + imgIndex * 0.1 }}
-                                              className="relative group cursor-pointer"
-                                            >
-                                              <div className="aspect-square overflow-hidden rounded-lg bg-gray-100">
-                                                <img
-                                                  src={image.fileUrl}
-                                                  alt={image.fileName}
-                                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                                  onError={(e) => {
-                                                    const target = e.target as HTMLImageElement;
-                                                    target.src = "/placeholder.svg";
-                                                  }}
-                                                />
-                                              </div>
-                                              {/* Overlay for image count if more than 4 */}
-                                              {imgIndex === 3 && thread.images!.length > 4 && (
-                                                <div className="absolute inset-0 bg-black/50 rounded-lg flex items-center justify-center">
-                                                  <span className="text-white font-semibold text-sm">
-                                                    +{thread.images!.length - 4}
-                                                  </span>
+                                    <motion.div
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: 0.3 + index * 0.1 }}
+                                    >
+                                      <CardDescription className="text-base flex items-center gap-3 mb-4">
+                                        <Avatar className="w-8 h-8 ring-2 ring-purple-400/50 shadow-lg">
+                                          <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500 to-pink-500 text-white font-semibold">
+                                            {thread.createdBy.firstName?.[0]}{thread.createdBy.lastName?.[0]}
+                                          </AvatarFallback>
+                                        </Avatar>
+                                        <span className="text-slate-300">by</span>
+                                        <span className="font-semibold text-slate-200">{thread.createdBy.firstName} {thread.createdBy.lastName}</span> 
+                                        <span className="text-slate-500">•</span>
+                                        <span className="text-slate-400">{new Date(thread.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                                      </CardDescription>
+                                    </motion.div>
+                                    
+                                    {/* Enhanced Thread Content */}
+                                    <motion.div 
+                                      initial={{ opacity: 0, y: 10 }}
+                                      animate={{ opacity: 1, y: 0 }}
+                                      transition={{ delay: 0.4 + index * 0.1 }}
+                                      className="mb-6"
+                                    >
+                                      {thread.content && (
+                                        <p className="text-slate-300 text-base leading-relaxed line-clamp-3 mb-4">
+                                          {thread.content}
+                                        </p>
+                                      )}
+                                      
+                                      {/* Enhanced Thread Images */}
+                                      {thread.images && thread.images.length > 0 && (
+                                        <div className="mt-4">
+                                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+                                            {thread.images.slice(0, 4).map((image, imgIndex) => (
+                                              <motion.div
+                                                key={image.id}
+                                                initial={{ opacity: 0, scale: 0.8 }}
+                                                animate={{ opacity: 1, scale: 1 }}
+                                                transition={{ delay: 0.5 + imgIndex * 0.1 }}
+                                                whileHover={{ scale: 1.05, rotate: 2 }}
+                                                className="relative group cursor-pointer"
+                                              >
+                                                <div className="aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 shadow-lg">
+                                                  <img
+                                                    src={image.fileUrl}
+                                                    alt={image.fileName}
+                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
+                                                    onError={(e) => {
+                                                      const target = e.target as HTMLImageElement;
+                                                      target.src = "/placeholder.svg";
+                                                    }}
+                                                  />
                                                 </div>
-                                              )}
-                                            </motion.div>
-                                          ))}
+                                                {/* Enhanced overlay for image count */}
+                                                {imgIndex === 3 && thread.images!.length > 4 && (
+                                                  <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/80 rounded-xl flex items-center justify-center backdrop-blur-sm">
+                                                    <span className="text-white font-bold text-lg">
+                                                      +{thread.images!.length - 4}
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </motion.div>
+                                            ))}
+                                          </div>
                                         </div>
-                                      </div>
-                                    )}
+                                      )}
+                                    </motion.div>
                                   </div>
-                                </div>
-                                
-                                <div className="flex items-center gap-6">
-                                  <motion.div
+                                  
+                                  <motion.div 
                                     initial={{ opacity: 0, scale: 0 }}
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: 0.7 + index * 0.1 }}
-                                    whileHover={{ scale: 1.2, y: -2 }}
-                                    className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors bg-blue-50 rounded-lg px-3 py-2"
+                                    className="flex items-center gap-6"
                                   >
-                                    <Eye className="h-4 w-4" />
-                                    <span className="font-semibold">{thread.viewCount}</span>
+                                    <motion.div
+                                      whileHover={{ scale: 1.1, y: -3 }}
+                                      className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors bg-slate-800/90 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg border border-purple-500/20"
+                                    >
+                                      <Eye className="h-5 w-5" />
+                                      <span className="font-semibold">{thread.viewCount}</span>
+                                    </motion.div>
+                                  </motion.div>
+                                </div>
+                              </CardHeader>
+                              
+                              {/* Enhanced Thread Actions */}
+                              <div className="px-8 pb-6">
+                                <div className="flex items-center justify-between border-t border-slate-700/50 pt-6">
+                                  <div className="flex items-center gap-4">
+                                    {/* Enhanced Like/Dislike */}
+                                    <div className="flex items-center gap-2">
+                                      <motion.div
+                                        whileHover={{ scale: 1.1, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-blue-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-blue-500/30"
+                                        onClick={(e) => e.preventDefault()}
+                                      >
+                                        <motion.div
+                                          whileHover={{ y: -2, rotate: 15, scale: 1.2 }}
+                                          transition={{ duration: 0.3 }}
+                                          className="text-blue-400 group-hover:text-blue-300 text-lg"
+                                        >
+                                          👍
+                                        </motion.div>
+                                        <span className="text-sm font-semibold text-blue-400 group-hover:text-blue-300">
+                                          {thread.likeCount || 0}
+                                        </span>
+                                      </motion.div>
+                                      
+                                      <motion.div
+                                        whileHover={{ scale: 1.1, y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-red-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-red-500/30"
+                                        onClick={(e) => e.preventDefault()}
+                                      >
+                                        <motion.div
+                                          whileHover={{ y: -2, rotate: -15, scale: 1.2 }}
+                                          transition={{ duration: 0.3 }}
+                                          className="text-red-400 group-hover:text-red-300 text-lg"
+                                        >
+                                          👎
+                                        </motion.div>
+                                        <span className="text-sm font-semibold text-red-400 group-hover:text-red-300">
+                                          {thread.dislikeCount || 0}
+                                        </span>
+                                      </motion.div>
+                                    </div>
+                                    
+                                    {/* Enhanced Comments */}
+                                    <motion.div
+                                      whileHover={{ scale: 1.1, y: -2 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-green-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-green-500/30"
+                                    >
+                                      <MessageSquare className="h-5 w-5 text-green-400 group-hover:text-green-300" />
+                                      <span className="text-sm font-semibold text-green-400 group-hover:text-green-300">
+                                        {thread.commentCount || 0} Comments
+                                      </span>
+                                    </motion.div>
+                                    
+                                    {/* Enhanced Share */}
+                                    <motion.div
+                                      whileHover={{ scale: 1.1, y: -2, rotateZ: 5 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-cyan-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-cyan-500/30"
+                                      onClick={(e) => e.preventDefault()}
+                                    >
+                                      <motion.div
+                                        whileHover={{ rotate: 15, scale: 1.1 }}
+                                        className="text-cyan-400 group-hover:text-cyan-300 text-lg"
+                                      >
+                                        🔗
+                                      </motion.div>
+                                      <span className="text-sm font-semibold text-cyan-400 group-hover:text-cyan-300">
+                                        Share
+                                      </span>
+                                    </motion.div>
+                                  </div>
+                                  
+                                  {/* Enhanced View Details Button */}
+                                  <motion.div
+                                    whileHover={{ scale: 1.05, x: 5, rotateY: 5 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 transition-all duration-300 shadow-xl"
+                                  >
+                                    View Details →
                                   </motion.div>
                                 </div>
                               </div>
-                            </CardHeader>
-                            
-                            {/* Thread Actions */}
-                            <div className="px-6 pb-4">
-                              <div className="flex items-center justify-between border-t pt-4">
-                                <div className="flex items-center gap-4">
-                                  {/* Like/Dislike */}
-                                  <div className="flex items-center gap-2">
-                                    <motion.button
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                      className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-green-50 transition-colors group"
-                                    >
-                                      <motion.div
-                                        whileHover={{ y: -2 }}
-                                        className="text-gray-600 group-hover:text-green-600"
-                                      >
-                                        👍
-                                      </motion.div>
-                                      <span className="text-sm font-medium text-gray-600 group-hover:text-green-600">
-                                        {thread.likeCount || 0}
-                                      </span>
-                                    </motion.button>
-                                    
-                                    <motion.button
-                                      whileHover={{ scale: 1.1 }}
-                                      whileTap={{ scale: 0.9 }}
-                                      className="flex items-center gap-1 px-3 py-2 rounded-lg hover:bg-red-50 transition-colors group"
-                                    >
-                                      <motion.div
-                                        whileHover={{ y: -2 }}
-                                        className="text-gray-600 group-hover:text-red-600"
-                                      >
-                                        👎
-                                      </motion.div>
-                                      <span className="text-sm font-medium text-gray-600 group-hover:text-red-600">
-                                        {thread.dislikeCount || 0}
-                                      </span>
-                                    </motion.button>
-                                  </div>
-                                  
-                                  {/* Comments */}
-                                  <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
-                                  >
-                                    <MessageSquare className="h-4 w-4 text-gray-600 group-hover:text-blue-600" />
-                                    <span className="text-sm font-medium text-gray-600 group-hover:text-blue-600">
-                                      {thread.commentCount || 0} Comments
-                                    </span>
-                                  </motion.button>
-                                  
-                                  {/* Share */}
-                                  <motion.button
-                                    whileHover={{ scale: 1.1 }}
-                                    whileTap={{ scale: 0.9 }}
-                                    className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors group"
-                                  >
-                                    <motion.div
-                                      whileHover={{ rotate: 15 }}
-                                      className="text-gray-600 group-hover:text-purple-600"
-                                    >
-                                      🔗
-                                    </motion.div>
-                                    <span className="text-sm font-medium text-gray-600 group-hover:text-purple-600">
-                                      Share
-                                    </span>
-                                  </motion.button>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            {/* Enhanced Decorative elements */}
-                            <motion.div
-                              initial={{ scale: 0, rotate: 0 }}
-                              animate={{ scale: 1, rotate: 360 }}
-                              transition={{ delay: 1 + index * 0.1, duration: 2, ease: "easeOut" }}
-                              className="absolute top-4 right-4 w-3 h-3 rounded-full opacity-20 group-hover:opacity-40 transition-opacity"
-                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
-                            />
-                            <motion.div
-                              initial={{ scale: 0, rotate: 0 }}
-                              animate={{ scale: 1, rotate: -180 }}
-                              transition={{ delay: 1.2 + index * 0.1, duration: 1.5, ease: "easeOut" }}
-                              className="absolute bottom-4 left-4 w-2 h-2 rounded-full opacity-30 group-hover:opacity-60 transition-opacity"
-                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
-                            />
-                          </Card>
+                              
+                              {/* Enhanced Decorative elements */}
+                              <motion.div
+                                initial={{ scale: 0, rotate: 0 }}
+                                animate={{ scale: 1, rotate: 360 }}
+                                transition={{ delay: 1 + index * 0.1, duration: 2, ease: "easeOut" }}
+                                className="absolute top-6 right-6 w-4 h-4 rounded-full opacity-20 group-hover:opacity-40 transition-opacity bg-gradient-to-r from-indigo-400 to-purple-500"
+                              />
+                              <motion.div
+                                initial={{ scale: 0, rotate: 0 }}
+                                animate={{ scale: 1, rotate: -180 }}
+                                transition={{ delay: 1.2 + index * 0.1, duration: 1.5, ease: "easeOut" }}
+                                className="absolute bottom-6 left-6 w-3 h-3 rounded-full opacity-30 group-hover:opacity-60 transition-opacity bg-gradient-to-r from-purple-400 to-pink-500"
+                              />
+                            </Card>
+                          </Link>
                         </motion.div>
                       ))}
                     </motion.div>
@@ -1315,10 +1356,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     className="flex justify-between items-center mb-8"
                   >
                     <div>
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-purple-600 bg-clip-text text-transparent mb-2">
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent mb-2">
                         Upcoming Events
                       </h2>
-                      <p className="text-gray-600">Don't miss out on exciting happenings</p>
+                      <p className="text-slate-400">Don't miss out on exciting happenings</p>
                     </div>
                     <motion.div 
                       whileHover={{ scale: 1.05, y: -2 }} 
@@ -1341,15 +1382,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       >
-                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-600" />
+                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
                       </motion.div>
-                      <p className="text-gray-600 text-lg">Loading events...</p>
+                      <p className="text-slate-400 text-lg">Loading events...</p>
                     </motion.div>
                   ) : events.length === 0 ? (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl"
+                      className="text-center py-16 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/30"
                     >
                       <motion.div
                         animate={{ 
@@ -1363,10 +1404,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         }}
                         className="mb-4"
                       >
-                        <Calendar className="h-16 w-16 mx-auto text-gray-400" />
+                        <Calendar className="h-16 w-16 mx-auto text-slate-500" />
                       </motion.div>
-                      <h3 className="text-xl font-semibold text-gray-700 mb-2">No upcoming events</h3>
-                      <p className="text-gray-600">Stay tuned for exciting events!</p>
+                      <h3 className="text-xl font-semibold text-slate-300 mb-2">No upcoming events</h3>
+                      <p className="text-slate-400">Stay tuned for exciting events!</p>
                     </motion.div>
                   ) : (
                     <motion.div 
@@ -1428,13 +1469,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     className="flex justify-between items-center mb-8"
                   >
                     <div>
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-green-600 bg-clip-text text-transparent mb-2">
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent mb-2">
                         Club Members
                       </h2>
-                      <p className="text-gray-600">Connect with fellow club members</p>
+                      <p className="text-slate-400">Connect with fellow club members</p>
                     </div>
-                    <div className="flex items-center gap-2 text-gray-600">
-                      <Users className="h-5 w-5" />
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Users className="h-5 w-5 text-purple-400" />
                       <span className="font-semibold">{members.length} member{members.length !== 1 ? 's' : ''}</span>
                     </div>
                   </motion.div>
@@ -1449,15 +1490,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                       >
-                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-green-600" />
+                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
                       </motion.div>
-                      <p className="text-gray-600 text-lg">Loading members...</p>
+                      <p className="text-slate-400 text-lg">Loading members...</p>
                     </motion.div>
                   ) : members.length === 0 ? (
                     <motion.div 
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-gradient-to-br from-green-50 to-blue-50 rounded-2xl"
+                      className="text-center py-16 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/30"
                     >
                       <motion.div
                         animate={{ 
@@ -1471,10 +1512,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         }}
                         className="mb-4"
                       >
-                        <Users className="h-16 w-16 mx-auto text-gray-400" />
+                        <Users className="h-16 w-16 mx-auto text-slate-500" />
                       </motion.div>
-                      <h3 className="text-xl font-semibold text-gray-700 mb-2">No members yet</h3>
-                      <p className="text-gray-600">Be the first to join this club!</p>
+                      <h3 className="text-xl font-semibold text-slate-300 mb-2">No members yet</h3>
+                      <p className="text-slate-400">Be the first to join this club!</p>
                     </motion.div>
                   ) : (
                     <motion.div 
@@ -1950,9 +1991,9 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.1 }}
-                      className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 shadow-lg mb-6"
+                      className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-6 shadow-lg mb-6 border border-slate-700/30"
                     >
-                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
+                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
                         Club Statistics
                       </h3>
                       <div className="space-y-4">
@@ -1976,7 +2017,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                             transition={{ delay: 0.2 + index * 0.1 }}
                             whileHover={{ scale: stat.clickable ? 1.05 : 1.02, x: 5 }}
                             onClick={stat.clickable ? stat.onClick : undefined}
-                            className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ${stat.clickable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
+                            className={`flex items-center justify-between p-4 bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-700/30 ${stat.clickable ? 'cursor-pointer hover:bg-slate-700/50 hover:border-purple-500/30' : ''}`}
                           >
                             <div className="flex items-center gap-3">
                               <motion.div
@@ -1985,16 +2026,16 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                               >
                                 <span className="text-lg">{stat.icon}</span>
                               </motion.div>
-                              <span className="font-medium text-gray-700">{stat.label}</span>
+                              <span className="font-medium text-slate-300">{stat.label}</span>
                             </div>
                             <div className="flex items-center gap-2">
-                              <span className="font-bold text-xl text-gray-900">{stat.value}</span>
+                              <span className="font-bold text-xl text-slate-100">{stat.value}</span>
                               {stat.clickable && (
                                 <motion.div
                                   animate={{ x: [0, 3, 0] }}
                                   transition={{ duration: 2, repeat: Infinity }}
                                 >
-                                  <ArrowLeft className="h-4 w-4 text-blue-600 rotate-180" />
+                                  <ArrowLeft className="h-4 w-4 text-purple-400 rotate-180" />
                                 </motion.div>
                               )}
                             </div>
@@ -2008,35 +2049,65 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
-                      className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg"
+                      className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-slate-700/30"
                     >
-                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-purple-600 bg-clip-text text-transparent">
+                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
                         Recent Activity
                       </h3>
                       <div className="space-y-4">
                         {[
-                          { action: "New member joined", time: "2 hours ago", icon: Users },
-                          { action: "Discussion started", time: "5 hours ago", icon: MessageSquare },
-                          { action: "Event created", time: "1 day ago", icon: Calendar },
+                          { 
+                            action: "New member joined", 
+                            time: members.length > 0 ? `${new Date(members[0].joinedAt).toLocaleDateString()}` : "Recently", 
+                            icon: Users, 
+                            clickable: true,
+                            onClick: () => setShowNewMemberPanel(true)
+                          },
+                          { 
+                            action: "Last thread created", 
+                            time: threads.length > 0 ? `${new Date(threads[0].createdAt).toLocaleDateString()}` : "Recently", 
+                            icon: MessageSquare, 
+                            clickable: true,
+                            onClick: () => setShowLatestThreadPanel(true)
+                          },
+                          { 
+                            action: "Latest event", 
+                            time: events.length > 0 ? `${new Date(events[0].createdAt).toLocaleDateString()}` : "Recently", 
+                            icon: Calendar, 
+                            clickable: true,
+                            onClick: () => setShowLatestEventPanel(true)
+                          },
                         ].map((activity, index) => (
                           <motion.div
                             key={`activity-${activity.action}-${index}`}
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: 0.4 + index * 0.1 }}
-                            whileHover={{ scale: 1.02, x: 5 }}
-                            className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all duration-300"
+                            whileHover={{ scale: activity.clickable ? 1.05 : 1.02, x: activity.clickable ? 8 : 5 }}
+                            onClick={activity.clickable ? activity.onClick : undefined}
+                            className={`flex items-center gap-3 p-3 bg-slate-800/50 backdrop-blur-sm rounded-lg hover:shadow-md transition-all duration-300 border border-slate-700/30 ${
+                              activity.clickable ? 'cursor-pointer hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:border-purple-400/50' : ''
+                            }`}
                           >
                             <motion.div
                               whileHover={{ scale: 1.2, rotate: 10 }}
-                              className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg"
+                              className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-lg border border-purple-500/30"
                             >
-                              <activity.icon className="h-4 w-4 text-purple-600" />
+                              <activity.icon className="h-4 w-4 text-purple-400" />
                             </motion.div>
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-700">{activity.action}</p>
-                              <p className="text-xs text-gray-500">{activity.time}</p>
+                              <p className="text-sm font-medium text-slate-300">{activity.action}</p>
+                              <p className="text-xs text-slate-500">{activity.time}</p>
                             </div>
+                            {activity.clickable && (
+                              <motion.div
+                                animate={{ x: [0, 3, 0] }}
+                                transition={{ duration: 2, repeat: Infinity }}
+                                className="text-purple-400"
+                              >
+                                <ArrowLeft className="h-4 w-4 rotate-180" />
+                              </motion.div>
+                            )}
                           </motion.div>
                         ))}
                       </div>
@@ -2268,6 +2339,310 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   </div>
                 </div>
               </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* New Member Panel */}
+      <AnimatePresence>
+        {showNewMemberPanel && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => setShowNewMemberPanel(false)}
+            />
+            
+            {/* Panel */}
+            <motion.div
+              initial={{ opacity: 0, x: "100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Latest Member
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowNewMemberPanel(false)}
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-6 w-6 text-slate-400" />
+                </motion.button>
+              </div>
+              
+              {members.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50"
+                >
+                  <div className="flex items-center gap-4 mb-4">
+                    <Avatar className="h-16 w-16 border-2 border-purple-500/50">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${members[0].user.username}`} />
+                      <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xl">
+                        {members[0].user.firstName[0]}{members[0].user.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <h3 className="text-xl font-bold text-slate-200">
+                        {members[0].user.firstName} {members[0].user.lastName}
+                      </h3>
+                      <p className="text-slate-400">@{members[0].user.username}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Calendar className="h-4 w-4 text-purple-400" />
+                      <span>Joined {new Date(members[0].joinedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Users className="h-4 w-4 text-blue-400" />
+                      <span>{members[0].mutualClubs?.length || 0} mutual clubs</span>
+                    </div>
+                  </div>
+                  
+                  {members[0].mutualClubs && members[0].mutualClubs.length > 0 && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-semibold text-slate-300 mb-2">Mutual Clubs</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {members[0].mutualClubs.map((club) => (
+                          <Badge key={club.id} className="bg-purple-600/20 text-purple-300 border-purple-500/50">
+                            {club.name}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No members yet</p>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Latest Thread Panel */}
+      <AnimatePresence>
+        {showLatestThreadPanel && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => setShowLatestThreadPanel(false)}
+            />
+            
+            {/* Panel */}
+            <motion.div
+              initial={{ opacity: 0, x: "100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
+                  Latest Thread
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowLatestThreadPanel(false)}
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-6 w-6 text-slate-400" />
+                </motion.button>
+              </div>
+              
+              {threads.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50"
+                >
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-slate-200 mb-2">
+                      {threads[0].title}
+                    </h3>
+                    <p className="text-slate-400 line-clamp-3">
+                      {threads[0].content}
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center gap-4 mb-4">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${threads[0].createdBy.username}`} />
+                      <AvatarFallback className="bg-gradient-to-r from-green-500 to-blue-500 text-white text-sm">
+                        {threads[0].createdBy.firstName[0]}{threads[0].createdBy.lastName[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-200">
+                        {threads[0].createdBy.firstName} {threads[0].createdBy.lastName}
+                      </p>
+                      <p className="text-xs text-slate-400">@{threads[0].createdBy.username}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Calendar className="h-4 w-4 text-green-400" />
+                      <span>Created {new Date(threads[0].createdAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-4 text-slate-300">
+                      <div className="flex items-center gap-1">
+                        <Eye className="h-4 w-4 text-blue-400" />
+                        <span>{threads[0].viewCount}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <MessageSquare className="h-4 w-4 text-purple-400" />
+                        <span>{threads[0].commentCount}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Heart className="h-4 w-4 text-red-400" />
+                        <span>{threads[0].likeCount}</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {threads[0].isPinned && (
+                    <div className="mt-4 flex items-center gap-2 text-yellow-400">
+                      <Pin className="h-4 w-4" />
+                      <span className="text-sm">Pinned thread</span>
+                    </div>
+                  )}
+                  
+                  <Link href={`/threads/${threads[0].id}`} className="block mt-4">
+                    <Button className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
+                      View Thread
+                    </Button>
+                  </Link>
+                </motion.div>
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No threads yet</p>
+                </div>
+              )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Latest Event Panel */}
+      <AnimatePresence>
+        {showLatestEventPanel && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+              onClick={() => setShowLatestEventPanel(false)}
+            />
+            
+            {/* Panel */}
+            <motion.div
+              initial={{ opacity: 0, x: "100%" }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 400 }}
+              className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
+                  Latest Event
+                </h2>
+                <motion.button
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setShowLatestEventPanel(false)}
+                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors duration-200"
+                >
+                  <X className="h-6 w-6 text-slate-400" />
+                </motion.button>
+              </div>
+              
+              {events.length > 0 ? (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50"
+                >
+                  <div className="mb-4">
+                    <h3 className="text-xl font-bold text-slate-200 mb-2">
+                      {events[0].title}
+                    </h3>
+                    <p className="text-slate-400 line-clamp-3">
+                      {events[0].description}
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Calendar className="h-4 w-4 text-orange-400" />
+                      <span>{new Date(events[0].date).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Clock className="h-4 w-4 text-blue-400" />
+                      <span>{events[0].time}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Globe className="h-4 w-4 text-green-400" />
+                      <span>{events[0].location}</span>
+                    </div>
+                    <div className="flex items-center gap-2 text-slate-300">
+                      <Users className="h-4 w-4 text-purple-400" />
+                      <span>{events[0].currentAttendees}/{events[0].maxAttendees} attendees</span>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-4 flex items-center gap-4">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${events[0].createdBy.username}`} />
+                      <AvatarFallback className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm">
+                        {events[0].createdBy.username[0]}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div>
+                      <p className="text-sm font-semibold text-slate-200">
+                        Organized by @{events[0].createdBy.username}
+                      </p>
+                      <p className="text-xs text-slate-400">
+                        Created {new Date(events[0].createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <Link href={`/events/${events[0].id}`} className="block mt-4">
+                    <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
+                      View Event
+                    </Button>
+                  </Link>
+                </motion.div>
+              ) : (
+                <div className="text-center py-8 text-slate-400">
+                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                  <p>No events yet</p>
+                </div>
+              )}
             </motion.div>
           </>
         )}

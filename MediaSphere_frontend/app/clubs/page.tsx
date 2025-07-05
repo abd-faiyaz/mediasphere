@@ -11,9 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { Search, Users, Filter, Plus, Loader2, ArrowLeft, AlertTriangle, LogOut } from "lucide-react"
+import { Search, Users, Filter, Plus, Loader2, ArrowLeft, AlertTriangle, LogOut, Star, Heart, Trophy, Crown, Sparkles, Award, Activity, Globe, Zap } from "lucide-react"
 import Link from "next/link"
-import { motion } from "framer-motion"
+import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
@@ -367,30 +367,76 @@ export default function ClubsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading clubs...</p>
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+            className="inline-block"
+          >
+            <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
+          </motion.div>
+          <p className="text-slate-400">Loading clubs...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+      {/* Floating Background Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        {[
+          { icon: Star, delay: 0.5, x: -30, y: -40, size: 'h-8 w-8' },
+          { icon: Heart, delay: 0.8, x: 40, y: -30, size: 'h-6 w-6' },
+          { icon: Trophy, delay: 1.1, x: -40, y: 30, size: 'h-10 w-10' },
+          { icon: Crown, delay: 1.4, x: 30, y: 40, size: 'h-7 w-7' },
+          { icon: Sparkles, delay: 1.7, x: 0, y: -50, size: 'h-5 w-5' },
+          { icon: Award, delay: 2.0, x: 50, y: 0, size: 'h-9 w-9' },
+          { icon: Activity, delay: 2.3, x: -50, y: -10, size: 'h-6 w-6' },
+          { icon: Globe, delay: 2.6, x: 20, y: -60, size: 'h-8 w-8' },
+          { icon: Zap, delay: 2.9, x: -20, y: 60, size: 'h-7 w-7' },
+        ].map((item, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, scale: 0, rotate: -180 }}
+            animate={{ 
+              opacity: [0, 0.3, 0.6, 0.3, 0],
+              scale: [0, 1.2, 1, 1.2, 0],
+              rotate: 360,
+              x: [item.x, item.x + 20, item.x - 10, item.x + 15, item.x],
+              y: [item.y, item.y - 15, item.y + 10, item.y - 20, item.y]
+            }}
+            transition={{ 
+              duration: 20,
+              delay: item.delay,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="absolute"
+            style={{
+              left: `${50 + item.x}%`,
+              top: `${50 + item.y}%`,
+            }}
+          >
+            <item.icon className={`${item.size} text-purple-400/20`} />
+          </motion.div>
+        ))}
+      </div>
+
       {/* Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-white border-b border-gray-200 sticky top-0 z-50"
+        className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-50 shadow-lg"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <Link 
                 href={isAuthenticated ? "/profile" : "/"} 
-                className="text-2xl font-bold text-gray-900"
+                className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent"
               >
                 Mediasphere
               </Link>
@@ -407,7 +453,7 @@ export default function ClubsPage() {
                   variant="ghost"
                   size="sm"
                   onClick={() => router.back()}
-                  className="flex items-center gap-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 rounded-xl px-3 py-2"
+                  className="flex items-center gap-2 text-slate-400 hover:text-purple-400 hover:bg-slate-800/50 transition-all duration-300 rounded-xl px-3 py-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span className="font-medium">Back</span>
@@ -419,32 +465,32 @@ export default function ClubsPage() {
                 // Authenticated user navigation
                 <>
                   <Link href="/clubs">
-                    <Button variant="ghost">Clubs</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Clubs</Button>
                   </Link>
                   <Link href="/ai-services">
-                    <Button variant="ghost">AI Services</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">AI Services</Button>
                   </Link>
                   <Link href="/notifications">
-                    <Button variant="ghost">Notifications</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Notifications</Button>
                   </Link>
                   <Link href="/profile">
-                    <Button variant="ghost">Profile</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Profile</Button>
                   </Link>
                 </>
               ) : (
                 // Non-authenticated user navigation
                 <>
                   <Link href="/">
-                    <Button variant="ghost">Home</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Home</Button>
                   </Link>
                   <Link href="/clubs">
-                    <Button variant="ghost">Clubs</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Clubs</Button>
                   </Link>
                   <Link href="/sign-in">
-                    <Button variant="ghost">Sign In</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Sign In</Button>
                   </Link>
                   <Link href="/sign-up">
-                    <Button variant="ghost">Sign Up</Button>
+                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Sign Up</Button>
                   </Link>
                 </>
               )}
@@ -466,10 +512,10 @@ export default function ClubsPage() {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
               Clubs
             </h1>
-            <p className="text-gray-600 mt-2">Discover and join communities that match your interests</p>
+            <p className="text-slate-400 mt-2">Discover and join communities that match your interests</p>
           </motion.div>
           <motion.div 
             initial={{ x: 50, opacity: 0, scale: 0.8 }}
@@ -492,7 +538,7 @@ export default function ClubsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="bg-white rounded-lg border border-gray-200 p-6 mb-8"
+          className="bg-slate-900/90 backdrop-blur-xl rounded-lg border border-slate-800/50 p-6 mb-8 shadow-lg"
         >
           <div className="flex flex-col md:flex-row gap-4">
             <motion.div
@@ -502,7 +548,7 @@ export default function ClubsPage() {
               className="flex-1"
             >
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
                 <Input 
                   placeholder="Search clubs..." 
                   className="pl-10"
@@ -551,7 +597,7 @@ export default function ClubsPage() {
             animate={{ opacity: 1 }}
             className="text-center py-12"
           >
-            <p className="text-gray-600 text-lg">
+            <p className="text-slate-400 text-lg">
               {searchTerm || selectedCategory !== "All" 
                 ? "No clubs match your search criteria." 
                 : "No clubs available at the moment."}
@@ -573,7 +619,7 @@ export default function ClubsPage() {
                 transition={{ delay: index * 0.1 }}
                 className="perspective-1000"
               >
-                <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer h-full relative group">
+                <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer h-full relative group bg-slate-900/90 backdrop-blur-xl border-slate-800/50">
                   {/* Background gradient overlay */}
                   <div 
                     className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
@@ -616,12 +662,12 @@ export default function ClubsPage() {
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: 0.4 + index * 0.1, duration: 0.6 }}
                     >
-                      <CardTitle className="text-xl mb-2 group-hover:text-blue-600 transition-colors">
+                      <CardTitle className="text-xl mb-2 group-hover:text-purple-400 transition-colors text-slate-200">
                         <Link href={`/clubs/${club.id}`}>
                           {club.name}
                         </Link>
                       </CardTitle>
-                      <CardDescription className="line-clamp-2 text-sm">
+                      <CardDescription className="line-clamp-2 text-sm text-slate-400">
                         {club.description}
                       </CardDescription>
                     </motion.div>
@@ -634,12 +680,12 @@ export default function ClubsPage() {
                       transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
                       className="flex justify-between items-center mb-4"
                     >
-                      <div className="flex items-center text-sm text-gray-600">
+                      <div className="flex items-center text-sm text-slate-400">
                         <motion.div
                           whileHover={{ scale: 1.1 }}
                           className="flex items-center"
                         >
-                          <Users className="h-4 w-4 mr-2 text-blue-500" />
+                          <Users className="h-4 w-4 mr-2 text-purple-500" />
                           <span className="font-medium">
                             {club.memberCount ? `${club.memberCount} members` : new Date(club.createdAt).toLocaleDateString()}
                           </span>
@@ -754,147 +800,149 @@ export default function ClubsPage() {
       </main>
 
       {/* Enhanced Confirmation Modal */}
-      {showModal && selectedClub && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 50 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 50 }}
-            transition={{ type: "spring", duration: 0.5 }}
-            className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-          >
-            <div className="p-6">
-              {/* Header */}
-              <div className="flex items-center gap-3 mb-6">
-                <motion.div
-                  initial={{ scale: 0, rotate: -180 }}
-                  animate={{ scale: 1, rotate: 0 }}
-                  transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                  className={`p-2 rounded-full ${
-                    modalAction === 'join' 
-                      ? 'bg-blue-100 text-blue-600' 
-                      : 'bg-red-100 text-red-600'
-                  }`}
-                >
-                  {modalAction === 'join' ? (
-                    <Users className="h-5 w-5" />
-                  ) : (
-                    <LogOut className="h-5 w-5" />
-                  )}
-                </motion.div>
-                <div>
-                  <motion.h3
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-xl font-bold text-gray-900"
-                  >
-                    {modalAction === 'join' ? 'Join Club' : 'Leave Club'}
-                  </motion.h3>
-                  <motion.p
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: 0.4 }}
-                    className="text-sm text-gray-500"
-                  >
-                    {selectedClub.name}
-                  </motion.p>
-                </div>
-              </div>
-
-              {/* Content */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-                className="mb-6"
-              >
-                {modalAction === 'join' ? (
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-xl border border-blue-200">
-                    <Users className="h-5 w-5 text-blue-600 flex-shrink-0" />
-                    <p className="text-blue-800">
-                      You're about to join <span className="font-semibold">"{selectedClub.name}"</span>. 
-                      You'll be able to participate in discussions and events.
-                    </p>
-                  </div>
-                ) : (
-                  <div>
-                    <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-200 mb-4">
-                      <AlertTriangle className="h-5 w-5 text-red-600 flex-shrink-0" />
-                      <p className="text-red-800">
-                        You're about to leave <span className="font-semibold">"{selectedClub.name}"</span>. 
-                        You'll lose access to club discussions and events.
-                      </p>
-                    </div>
-
-                    {/* Reason Input */}
-                    <div className="space-y-3">
-                      <Label htmlFor="leave-reason" className="text-sm font-medium text-gray-700">
-                        Why are you leaving? <span className="text-gray-400">(Optional)</span>
-                      </Label>
-                      <Textarea
-                        id="leave-reason"
-                        placeholder="Help us improve by sharing your reason for leaving..."
-                        value={leaveReason}
-                        onChange={(e) => setLeaveReason(e.target.value)}
-                        className="min-h-[80px] resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500"
-                        maxLength={500}
-                      />
-                      <p className="text-xs text-gray-400 text-right">
-                        {leaveReason.length}/500 characters
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </motion.div>
-
-              {/* Action Buttons */}
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                className="flex gap-3 justify-end"
-              >
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    variant="outline"
-                    onClick={closeModal}
-                    disabled={isLeavingClub}
-                    className="px-6 py-2 border-gray-300 hover:border-gray-400"
-                  >
-                    Cancel
-                  </Button>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                  <Button
-                    onClick={confirmAction}
-                    disabled={isLeavingClub}
-                    className={`px-6 py-2 font-medium shadow-lg transition-all duration-200 ${
+      <AnimatePresence>
+        {showModal && selectedClub && (
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 50 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-slate-800/50"
+            >
+              <div className="p-6">
+                {/* Header */}
+                <div className="flex items-center gap-3 mb-6">
+                  <motion.div
+                    initial={{ scale: 0, rotate: -180 }}
+                    animate={{ scale: 1, rotate: 0 }}
+                    transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                    className={`p-2 rounded-full ${
                       modalAction === 'join' 
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white' 
-                        : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                        ? 'bg-purple-500/20 text-purple-400' 
+                        : 'bg-red-500/20 text-red-400'
                     }`}
                   >
-                    {isLeavingClub ? (
-                      <div className="flex items-center gap-2">
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Loader2 className="h-4 w-4" />
-                        </motion.div>
-                        Leaving...
-                      </div>
+                    {modalAction === 'join' ? (
+                      <Users className="h-5 w-5" />
                     ) : (
-                      modalAction === 'join' ? 'Join Club' : 'Leave Club'
+                      <LogOut className="h-5 w-5" />
                     )}
-                  </Button>
+                  </motion.div>
+                  <div>
+                    <motion.h3
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.3 }}
+                      className="text-xl font-bold text-slate-200"
+                    >
+                      {modalAction === 'join' ? 'Join Club' : 'Leave Club'}
+                    </motion.h3>
+                    <motion.p
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.4 }}
+                      className="text-sm text-slate-400"
+                    >
+                      {selectedClub.name}
+                    </motion.p>
+                  </div>
+                </div>
+
+                {/* Content */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="mb-6"
+                >
+                  {modalAction === 'join' ? (
+                    <div className="flex items-center gap-3 p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                      <Users className="h-5 w-5 text-purple-400 flex-shrink-0" />
+                      <p className="text-slate-300">
+                        You're about to join <span className="font-semibold text-purple-300">"{selectedClub.name}"</span>. 
+                        You'll be able to participate in discussions and events.
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <div className="flex items-center gap-3 p-4 bg-red-500/10 rounded-xl border border-red-500/20 mb-4">
+                        <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
+                        <p className="text-slate-300">
+                          You're about to leave <span className="font-semibold text-red-300">"{selectedClub.name}"</span>. 
+                          You'll lose access to club discussions and events.
+                        </p>
+                      </div>
+
+                      {/* Reason Input */}
+                      <div className="space-y-3">
+                        <Label htmlFor="leave-reason" className="text-sm font-medium text-slate-300">
+                          Why are you leaving? <span className="text-slate-500">(Optional)</span>
+                        </Label>
+                        <Textarea
+                          id="leave-reason"
+                          placeholder="Help us improve by sharing your reason for leaving..."
+                          value={leaveReason}
+                          onChange={(e) => setLeaveReason(e.target.value)}
+                          className="min-h-[80px] resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder-slate-400"
+                          maxLength={500}
+                        />
+                        <p className="text-xs text-slate-500 text-right">
+                          {leaveReason.length}/500 characters
+                        </p>
+                      </div>
+                    </div>
+                  )}
                 </motion.div>
-              </motion.div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+
+                {/* Action Buttons */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                  className="flex gap-3 justify-end"
+                >
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      variant="outline"
+                      onClick={closeModal}
+                      disabled={isLeavingClub}
+                      className="px-6 py-2 border-slate-600 hover:border-slate-500 text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
+                    >
+                      Cancel
+                    </Button>
+                  </motion.div>
+                  <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button
+                      onClick={confirmAction}
+                      disabled={isLeavingClub}
+                      className={`px-6 py-2 font-medium shadow-lg transition-all duration-200 ${
+                        modalAction === 'join' 
+                          ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white' 
+                          : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
+                      }`}
+                    >
+                      {isLeavingClub ? (
+                        <div className="flex items-center gap-2">
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                          >
+                            <Loader2 className="h-4 w-4" />
+                          </motion.div>
+                          Leaving...
+                        </div>
+                      ) : (
+                        modalAction === 'join' ? 'Join Club' : 'Leave Club'
+                      )}
+                    </Button>
+                  </motion.div>
+                </motion.div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
