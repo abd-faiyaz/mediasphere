@@ -4,8 +4,23 @@ import { SignIn } from "@clerk/nextjs"
 import { motion } from "framer-motion"
 import { Users, Sparkles, Globe, Heart, Camera, Music, Video, Palette } from "lucide-react"
 import Link from "next/link"
+import { useState, useEffect } from "react"
 
 export default function SignInPage() {
+  const [isMounted, setIsMounted] = useState(false)
+  const [iconPositions, setIconPositions] = useState<Array<{x: number, y: number}>>([])
+
+  // Handle client-side mounting to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true)
+    // Generate random positions only on client side
+    setIconPositions([
+      { x: Math.random() * 100, y: Math.random() * 100 },
+      { x: Math.random() * 100, y: Math.random() * 100 },
+      { x: Math.random() * 100, y: Math.random() * 100 },
+      { x: Math.random() * 100, y: Math.random() * 100 },
+    ])
+  }, [])
   const containerVariants = {
     hidden: { opacity: 0 },
     visible: {
@@ -102,7 +117,7 @@ export default function SignInPage() {
 
       {/* Floating Icons Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {floatingIcons.map((item, index) => (
+        {isMounted && floatingIcons.map((item, index) => (
           <motion.div
             key={index}
             initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
@@ -121,8 +136,8 @@ export default function SignInPage() {
             }}
             className="absolute"
             style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
+              left: iconPositions[index] ? `${iconPositions[index].x}%` : '50%',
+              top: iconPositions[index] ? `${iconPositions[index].y}%` : '50%',
             }}
           >
             <item.icon className="w-8 h-8 text-white/20" />
@@ -209,7 +224,7 @@ export default function SignInPage() {
                   socialButtonsVariant: "blockButton",
                 },
               }}
-              redirectUrl="/dashboard"
+              redirectUrl="/profile"
               signUpUrl="/sign-up"
             />
           </motion.div>

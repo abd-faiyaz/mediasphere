@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { authService } from './auth-service'
 import { PageLoader } from '@/components/ui/loading'
 
@@ -24,7 +24,7 @@ interface AuthContextType {
   isAuthenticated: boolean
   loginLocal: (email: string, password: string) => Promise<void>
   registerLocal: (email: string, password: string, username: string) => Promise<void>
-  logout: () => void
+  logout: () => Promise<void>
   syncWithBackend: () => Promise<void>
 }
 
@@ -34,7 +34,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const { isLoaded, isSignedIn, user: clerkUser } = useUser()
+  const { signOut } = useClerk()
 
   // Handle client-side mounting
   useEffect(() => {
@@ -50,15 +52,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Handle Clerk authentication
   useEffect(() => {
+    // Don't auto-authenticate if we're in the middle of logging out
+    if (isLoggingOut) return
+    
     if (isMounted && isLoaded && isSignedIn && clerkUser) {
       handleClerkAuthentication()
     } else if (isMounted && isLoaded && !isSignedIn) {
       // User is not signed in with Clerk, check local auth
       checkLocalAuth()
     }
-  }, [isMounted, isLoaded, isSignedIn, clerkUser])
+  }, [isMounted, isLoaded, isSignedIn, clerkUser, isLoggingOut])
 
   const checkAuthStatus = async () => {
+    // Don't check auth status if we're logging out
+    if (isLoggingOut) return
+    
     setIsLoading(true)
     try {
       const localUser = await authService.getCurrentUser()
@@ -132,22 +140,44 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const logout = () => {
-    // Clear all auth data immediately
-    authService.logout()
-    setUser(null)
-    setIsLoading(false)
-    
-    // Force a complete re-check of authentication status to ensure clean state
-    setTimeout(() => {
-      checkLocalAuth()
-    }, 50)
-    
-    // If user is signed in with Clerk, we don't automatically sign them out
-    // They can choose to sign out of Clerk separately
-    
-    // Note: Navigation should be handled by the calling component
-    // This allows for more flexible logout behavior
+  const logout = async () => {
+    try {
+      // Set logout flag to prevent auto-authentication
+      setIsLoggingOut(true)
+      
+      // Clear all auth data immediately
+      authService.logout()
+      setUser(null)
+      setIsLoading(false)
+      
+      // Sign out from Clerk if user is signed in
+      if (isSignedIn) {
+        await signOut()
+      }
+      
+      // Clear any cached data from the current page
+      if (typeof window !== 'undefined') {
+        // Clear any potential React Query cache
+        if ((window as any).queryClient) {
+          (window as any).queryClient.clear()
+        }
+        
+        // Use router to navigate and clear any cached pages
+        // Using replace to prevent going back to the logged-in state
+        window.location.replace('/sign-in')
+      }
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Even if there's an error, still navigate to sign-in
+      if (typeof window !== 'undefined') {
+        window.location.replace('/sign-in')
+      }
+    } finally {
+      // Reset logout flag after a delay to allow navigation
+      setTimeout(() => {
+        setIsLoggingOut(false)
+      }, 1000)
+    }
   }
 
   const syncWithBackend = async () => {

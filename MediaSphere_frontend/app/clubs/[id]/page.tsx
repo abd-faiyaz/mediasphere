@@ -112,6 +112,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   const [showNewMemberPanel, setShowNewMemberPanel] = useState(false)
   const [showLatestThreadPanel, setShowLatestThreadPanel] = useState(false)
   const [showLatestEventPanel, setShowLatestEventPanel] = useState(false)
+  const [isMounted, setIsMounted] = useState(false)
+  const [iconPositions, setIconPositions] = useState<Array<{x: number, y: number}>>([])
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
   const containerRef = useRef(null)
@@ -1731,12 +1733,39 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                   animate={{ x: [0, 3, 0] }}
                                   transition={{ duration: 2, repeat: Infinity }}
                                 >
-                                  <ArrowLeft className="h-4 w-4 text-blue-600 rotate-180" />
+                                  <ArrowLeft className="h-4 w-4 text-purple-600 rotate-180" />
                                 </motion.div>
                               )}
                             </div>
                           </motion.div>
                         ))}
+
+                        {/* Enhanced Member Count Animation */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.2, duration: 0.8 }}
+                          className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                          onClick={() => setShowMembersPanel(true)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                              <Users className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="font-medium text-gray-700">Total Members</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
+                              className="font-bold text-2xl text-gray-900"
+                            >
+                              {club?.memberCount?.toLocaleString() || "0"}
+                            </motion.span>
+                            <ArrowLeft className="h-4 w-4 text-purple-600 rotate-180" />
+                          </div>
+                        </motion.div>
                       </div>
                     </motion.div>
 
@@ -1766,13 +1795,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                           >
                             <motion.div
                               whileHover={{ scale: 1.2, rotate: 10 }}
-                              className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg"
+                              className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-lg"
                             >
-                              <activity.icon className="h-4 w-4 text-purple-600" />
+                              <activity.icon className="h-4 w-4 text-purple-400" />
                             </motion.div>
                             <div className="flex-1">
-                              <p className="text-sm font-medium text-gray-700">{activity.action}</p>
-                              <p className="text-xs text-gray-500">{activity.time}</p>
+                              <p className="text-sm font-medium text-slate-300">{activity.action}</p>
+                              <p className="text-xs text-slate-500">{activity.time}</p>
                             </div>
                           </motion.div>
                         ))}
@@ -1877,7 +1906,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       >
                         {members.map((member, index) => (
                           <motion.div
-                            key={member.id}
+                            key={`member-${member.id}`}
                             initial={{ opacity: 0, x: 50 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: index * 0.1 }}
@@ -1919,7 +1948,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                     <div className="flex flex-wrap gap-1">
                                       {member.mutualClubs.slice(0, 2).map((mutualClub) => (
                                         <Badge 
-                                          key={mutualClub.id}
+                                          key={`mutual-${mutualClub.id}`}
                                           variant="secondary" 
                                           className="text-xs bg-blue-50 text-blue-700"
                                         >
@@ -2041,6 +2070,33 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                             </div>
                           </motion.div>
                         ))}
+
+                        {/* Enhanced Member Count Animation */}
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ delay: 0.2, duration: 0.8 }}
+                          className="flex items-center justify-between p-4 bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
+                          onClick={() => setShowMembersPanel(true)}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg">
+                              <Users className="h-5 w-5 text-white" />
+                            </div>
+                            <span className="font-medium text-gray-700">Total Members</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <motion.span
+                              initial={{ scale: 0 }}
+                              animate={{ scale: 1 }}
+                              transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
+                              className="font-bold text-2xl text-gray-900"
+                            >
+                              {club?.memberCount?.toLocaleString() || "0"}
+                            </motion.span>
+                            <ArrowLeft className="h-4 w-4 text-purple-600 rotate-180" />
+                          </div>
+                        </motion.div>
                       </div>
                     </motion.div>
 
@@ -2049,7 +2105,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.3 }}
-                      className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-6 shadow-lg border border-slate-700/30"
+                      className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-slate-700/30"
                     >
                       <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
                         Recent Activity
@@ -2064,7 +2120,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                             onClick: () => setShowNewMemberPanel(true)
                           },
                           { 
-                            action: "Last thread created", 
+                            action: "Discussion started", 
                             time: threads.length > 0 ? `${new Date(threads[0].createdAt).toLocaleDateString()}` : "Recently", 
                             icon: MessageSquare, 
                             clickable: true,
@@ -2091,7 +2147,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                           >
                             <motion.div
                               whileHover={{ scale: 1.2, rotate: 10 }}
-                              className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-lg border border-purple-500/30"
+                              className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-lg"
                             >
                               <activity.icon className="h-4 w-4 text-purple-400" />
                             </motion.div>
@@ -2282,81 +2338,25 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               </>
             )}
           </AnimatePresence>
-        </div>
-      </main>
 
-      {/* Leave Club Confirmation Dialog */}
-      <AnimatePresence>
-        {showLeaveConfirmation && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={cancelLeaveClub}
-            />
-            
-            {/* Confirmation Dialog */}
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed inset-0 flex items-center justify-center z-50 p-4"
-            >
-              <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 border border-gray-100">
-                <div className="text-center">
-                  <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
-                    <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth="1.5" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Are you sure you want to leave this club?
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    You will no longer have access to club discussions, events, and member content.
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={cancelLeaveClub}
-                      className="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-800 font-medium rounded-lg transition-colors duration-200"
-                    >
-                      No, Cancel
-                    </motion.button>
-                    <motion.button
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={confirmLeaveClub}
-                      className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white font-medium rounded-lg transition-colors duration-200"
-                    >
-                      Yes, Leave Club
-                    </motion.button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* New Member Panel */}
-      <AnimatePresence>
-        {showNewMemberPanel && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={() => setShowNewMemberPanel(false)}
-            />
-            
+          {/* Leave Club Confirmation Dialog */}
+          <AnimatePresence>
+            {showLeaveConfirmation && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                  onClick={cancelLeaveClub}
+                />
+                
+                {/* Confirmation Dialog */}
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
             {/* Panel */}
             <motion.div
               initial={{ opacity: 0, x: "100%" }}
