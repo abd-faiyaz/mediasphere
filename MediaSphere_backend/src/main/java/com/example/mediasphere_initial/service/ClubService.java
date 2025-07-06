@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.stream.Collectors;
 import java.io.IOException;
 import com.example.mediasphere_initial.model.Club;
 import com.example.mediasphere_initial.model.User;
@@ -42,6 +44,8 @@ public class ClubService {
     private ActivityLogService activityLogService;
     @Autowired
     private ImageUploadService imageUploadService;
+    @Autowired
+    private NotificationService notificationService;
 
     public List<Club> getAllClubs() {
         return clubRepository.findAll();
@@ -105,6 +109,11 @@ public class ClubService {
             membership.setClub(club);
             membership.setJoinedAt(LocalDateTime.now());
             userClubRepository.save(membership);
+            
+            // Send notifications to existing club members
+            List<User> clubMembers = getClubMembersAsUsers(clubId);
+            notificationService.notifyClubJoin(clubMembers, user, club.getName(), clubId);
+            
             return true;
         }
         return false;
@@ -127,6 +136,10 @@ public class ClubService {
             // Log for console output as well
             System.out.println(
                     "User " + user.getUsername() + " is leaving club " + club.getName() + " for reason: " + reason);
+
+            // Send notifications to remaining club members before removing membership
+            List<User> clubMembers = getClubMembersAsUsers(clubId);
+            notificationService.notifyClubLeave(clubMembers, user, club.getName(), clubId);
 
             // Remove membership
             userClubRepository.delete(membership);
@@ -182,7 +195,13 @@ public class ClubService {
         thread.setIsPinned(false);
         thread.setIsLocked(false);
 
-        return threadRepository.save(thread);
+        Thread savedThread = threadRepository.save(thread);
+        
+        // Send notifications to club members about the new thread
+        List<User> clubMembers = getClubMembersAsUsers(clubId);
+        notificationService.notifyClubThreadCreated(clubMembers, creator, thread.getTitle(), club.getName(), savedThread.getId());
+
+        return savedThread;
     }
 
     public Thread createThreadWithImages(UUID clubId, Thread thread, User creator, MultipartFile[] images) {
@@ -246,6 +265,10 @@ public class ClubService {
 
         // Update club activity tracking
         updateClubActivityForNewThread(clubId);
+
+        // Send notifications to club members about the new thread
+        List<User> clubMembers = getClubMembersAsUsers(clubId);
+        notificationService.notifyClubThreadCreated(clubMembers, creator, thread.getTitle(), club.getName(), savedThread.getId());
 
         System.out.println("Thread creation completed successfully");
         return savedThread;
@@ -388,5 +411,18 @@ public class ClubService {
 
         clubRepository.save(club);
         System.out.println("Club activity updated for club: " + club.getName());
+    }
+
+    // Get club members as User objects (for notifications)
+    public List<User> getClubMembersAsUsers(UUID clubId) {
+        Club club = clubRepository.findById(clubId).orElse(null);
+        if (club == null) {
+            return Collections.emptyList();
+        }
+
+        List<UserClub> memberships = userClubRepository.findByClub(club);
+        return memberships.stream()
+                .map(UserClub::getUser)
+                .collect(Collectors.toList());
     }
 }

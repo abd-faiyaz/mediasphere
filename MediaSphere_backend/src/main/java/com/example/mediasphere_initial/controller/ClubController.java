@@ -282,6 +282,45 @@ public class ClubController {
         }
     }
 
+    // Update event
+    @PutMapping("/events/{eventId}")
+    public ResponseEntity<?> updateEvent(@PathVariable UUID eventId,
+            @RequestBody Event event,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            Event updatedEvent = eventService.updateEvent(eventId, event, userOpt.get());
+            return ResponseEntity.ok(updatedEvent);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Delete event
+    @DeleteMapping("/events/{eventId}")
+    public ResponseEntity<?> deleteEvent(@PathVariable UUID eventId,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            boolean deleted = eventService.deleteEvent(eventId, userOpt.get());
+            if (deleted) {
+                return ResponseEntity.ok().body("Event deleted successfully");
+            } else {
+                return ResponseEntity.badRequest().body("Failed to delete event");
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // Check if user is a member of a club
     @GetMapping("/{id}/membership")
     public ResponseEntity<Boolean> checkMembership(@PathVariable UUID id,

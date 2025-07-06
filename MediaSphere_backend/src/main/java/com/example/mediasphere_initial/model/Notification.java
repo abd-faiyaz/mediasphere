@@ -15,6 +15,10 @@ public class Notification {
     @JoinColumn(name = "user_id")
     private User user;
 
+    @ManyToOne
+    @JoinColumn(name = "actor_id")
+    private User actor; // The user who performed the action
+
     @Column(nullable = false)
     private String title;
 
@@ -37,11 +41,22 @@ public class Notification {
     private LocalDateTime createdAt;
 
     // Constructors
-    public Notification() {}
+    public Notification() {
+    }
 
     public Notification(UUID id, User user, String title, String content, String type) {
         this.id = id;
         this.user = user;
+        this.title = title;
+        this.content = content;
+        this.type = type;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Notification(UUID id, User user, User actor, String title, String content, String type) {
+        this.id = id;
+        this.user = user;
+        this.actor = actor;
         this.title = title;
         this.content = content;
         this.type = type;
@@ -63,6 +78,14 @@ public class Notification {
 
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public User getActor() {
+        return actor;
+    }
+
+    public void setActor(User actor) {
+        this.actor = actor;
     }
 
     public String getTitle() {

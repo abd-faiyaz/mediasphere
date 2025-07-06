@@ -43,6 +43,9 @@ public class ThreadService {
     @Autowired
     private CommentLikeRepository commentLikeRepository;
 
+    @Autowired
+    private NotificationService notificationService;
+
     public List<Thread> getAllThreads() {
         return threadRepository.findAll();
     }
@@ -136,6 +139,9 @@ public class ThreadService {
         thread.setCommentCount(thread.getCommentCount() + 1);
         threadRepository.save(thread);
 
+        // Send notification to thread owner
+        notificationService.notifyThreadComment(thread.getCreatedBy(), user, thread.getTitle(), thread.getId());
+
         return savedComment;
     }
 
@@ -202,6 +208,9 @@ public class ThreadService {
             ThreadLike newLike = new ThreadLike(thread, user);
             threadLikeRepository.save(newLike);
             thread.setLikeCount(thread.getLikeCount() + 1);
+
+            // Send notification to thread owner
+            notificationService.notifyThreadLike(thread.getCreatedBy(), user, thread.getTitle(), thread.getId());
         }
 
         threadRepository.save(thread);
@@ -238,6 +247,9 @@ public class ThreadService {
             ThreadDislike newDislike = new ThreadDislike(thread, user);
             threadDislikeRepository.save(newDislike);
             thread.setDislikeCount(thread.getDislikeCount() + 1);
+
+            // Send notification to thread owner
+            notificationService.notifyThreadDislike(thread.getCreatedBy(), user, thread.getTitle(), thread.getId());
         }
 
         threadRepository.save(thread);
@@ -305,6 +317,10 @@ public class ThreadService {
             commentLikeRepository.save(commentLike);
             result.put("liked", true);
             result.put("message", "Comment liked successfully");
+
+            // Send notification to comment owner
+            notificationService.notifyCommentLike(comment.getCreatedBy(), user, comment.getThread().getTitle(),
+                    comment.getThread().getId());
         }
 
         long likeCount = commentLikeRepository.countByComment(comment);
