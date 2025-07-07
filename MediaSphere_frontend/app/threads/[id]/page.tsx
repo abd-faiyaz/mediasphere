@@ -89,6 +89,82 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   const [showReplies, setShowReplies] = useState<{[key: string]: boolean}>({})
   const [likedComments, setLikedComments] = useState<{[key: string]: boolean}>({})
   
+  // Bookmark/Save functionality
+  const [isBookmarked, setIsBookmarked] = useState(false)
+  const [bookmarking, setBookmarking] = useState(false)
+  
+  // Enhanced sharing
+  const [showShareModal, setShowShareModal] = useState(false)
+  const [shareLoading, setShareLoading] = useState(false)
+  
+  // Emoji reactions beyond like/dislike
+  const reactions = ['👍', '👎', '❤️', '😂', '😮', '😢', '😡']
+  const [threadReactions, setThreadReactions] = useState<{[key: string]: number}>({})
+  const [userReactions, setUserReactions] = useState<string[]>([])
+  const [showReactionPicker, setShowReactionPicker] = useState(false)
+  
+  // Comment sorting options
+  const [sortBy, setSortBy] = useState('newest') // newest, oldest, most_liked, controversial
+  const sortOptions = [
+    { value: 'newest', label: 'Newest first', icon: '🕒' },
+    { value: 'oldest', label: 'Oldest first', icon: '📅' },
+    { value: 'most_liked', label: 'Most liked', icon: '👍' },
+    { value: 'controversial', label: 'Controversial', icon: '⚡' }
+  ]
+  
+  // Thread tags for categorization
+  const threadTags = ['Discussion', 'Question', 'Announcement', 'Help', 'Tutorial', 'Bug Report']
+  
+  // Better nested reply visualization
+  const [collapsedReplies, setCollapsedReplies] = useState<{[key: string]: boolean}>({})
+  const [replyDepth, setReplyDepth] = useState<{[key: string]: number}>({})
+  const maxReplyDepth = 5 // Maximum nesting level
+  
+  // Auto-save draft comments
+  const [draftComment, setDraftComment] = useState("")
+  const [draftReply, setDraftReply] = useState<{[key: string]: string}>({})
+  const draftKey = `thread-${resolvedParams.id}-draft`
+  
+  // Comment editing functionality
+  const [editingComment, setEditingComment] = useState<string | null>(null)
+  const [editingContent, setEditingContent] = useState("")
+  const [savingEdit, setSavingEdit] = useState(false)
+  
+  // Follow thread for notifications
+  const [isFollowing, setIsFollowing] = useState(false)
+  const [following, setFollowing] = useState(false)
+  
+  // Rich text editor state
+  const [showRichEditor, setShowRichEditor] = useState(false)
+  const [selectedText, setSelectedText] = useState("")
+  const [richTextMode, setRichTextMode] = useState(false)
+  
+  // @mentions functionality
+  const [showMentions, setShowMentions] = useState(false)
+  const [mentionQuery, setMentionQuery] = useState("")
+  const [mentionUsers, setMentionUsers] = useState<User[]>([])
+  const [mentionPosition, setMentionPosition] = useState({ x: 0, y: 0 })
+  
+  // Image uploads
+  const [uploadingImage, setUploadingImage] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  // Infinite scroll for comments
+  const [commentsPage, setCommentsPage] = useState(1)
+  const [loadingMoreComments, setLoadingMoreComments] = useState(false)
+  const [hasMoreComments, setHasMoreComments] = useState(true)
+  const commentsPerPage = 20
+  
+  // Keyboard navigation
+  const [selectedCommentIndex, setSelectedCommentIndex] = useState(-1)
+  const [keyboardNavigationActive, setKeyboardNavigationActive] = useState(false)
+  const commentRefs = useRef<{[key: string]: HTMLDivElement | null}>({})
+  
+  // Enhanced performance and image optimization
+  const [imageLoadingStates, setImageLoadingStates] = useState<{[key: string]: boolean}>({})
+  const [optimizedImages, setOptimizedImages] = useState<{[key: string]: string}>({})
+  
   const containerRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: containerRef })
 

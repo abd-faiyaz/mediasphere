@@ -8,10 +8,12 @@ import { useAuth } from "@/lib/auth-context"
 import { toast } from "@/hooks/use-toast"
 
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bell, MessageSquare, Users, Calendar, Brain, Check, X, Settings, ArrowLeft, Loader2, Trash2, RefreshCw, Filter, Heart, ThumbsUp, ThumbsDown, MoreHorizontal, User as UserIcon } from "lucide-react"
+import { Switch } from "@/components/ui/switch"
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
+import { Bell, MessageSquare, Users, Calendar, Brain, Check, X, Settings, ArrowLeft, Loader2, Trash2, RefreshCw, Filter, Heart, ThumbsUp, ThumbsDown, MoreHorizontal, User as UserIcon, Mail, Volume2, Smartphone } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -29,10 +31,62 @@ function NotificationsContent() {
   const [newNotificationIds, setNewNotificationIds] = useState<Set<string>>(new Set())
   const [isSSEConnected, setIsSSEConnected] = useState(false)
   const eventSourceRef = useRef<EventSource | null>(null)
+  
+  // Notification settings state
+  const [notificationSettings, setNotificationSettings] = useState({
+    emailNotifications: true,
+    realTimeNotifications: true,
+    soundAlerts: true,
+    pushNotifications: true
+  })
+  const [settingsDialogOpen, setSettingsDialogOpen] = useState(false)
+
+  // Load settings from localStorage on mount
+  useEffect(() => {
+    const savedSettings = localStorage.getItem('notification_settings')
+    if (savedSettings) {
+      setNotificationSettings(JSON.parse(savedSettings))
+    }
+  }, [])
+
+  // Save settings to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('notification_settings', JSON.stringify(notificationSettings))
+  }, [notificationSettings])
+
+  // Update setting function
+  const updateSetting = (key: keyof typeof notificationSettings, value: boolean) => {
+    setNotificationSettings(prev => ({
+      ...prev,
+      [key]: value
+    }))
+    
+    // Show feedback toast
+    const settingNames = {
+      emailNotifications: 'Email notifications',
+      realTimeNotifications: 'Real-time notifications',
+      soundAlerts: 'Sound alerts',
+      pushNotifications: 'Push notifications'
+    }
+    
+    toast({
+      title: `${settingNames[key]} ${value ? 'enabled' : 'disabled'}`,
+      description: `Your ${settingNames[key].toLowerCase()} have been ${value ? 'turned on' : 'turned off'}.`,
+    })
+    
+    // Handle real-time connection based on setting
+    if (key === 'realTimeNotifications') {
+      if (value) {
+        connectSSE()
+      } else {
+        disconnectSSE()
+      }
+    }
+  }
 
   // SSE connection for real-time notifications
   const connectSSE = () => {
-    if (!user) return
+    if (!user || !notificationSettings.realTimeNotifications) return
 
     const token = localStorage.getItem('auth_token')
     if (!token) return
@@ -71,23 +125,25 @@ function NotificationsContent() {
           })
 
           // Play notification sound (simple beep)
-          try {
-            const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
-            const oscillator = audioContext.createOscillator()
-            const gainNode = audioContext.createGain()
+          if (notificationSettings.soundAlerts) {
+            try {
+              const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)()
+              const oscillator = audioContext.createOscillator()
+              const gainNode = audioContext.createGain()
 
-            oscillator.connect(gainNode)
-            gainNode.connect(audioContext.destination)
+              oscillator.connect(gainNode)
+              gainNode.connect(audioContext.destination)
 
-            oscillator.frequency.value = 800
-            oscillator.type = 'sine'
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
+              oscillator.frequency.value = 800
+              oscillator.type = 'sine'
+              gainNode.gain.setValueAtTime(0.3, audioContext.currentTime)
+              gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2)
 
-            oscillator.start(audioContext.currentTime)
-            oscillator.stop(audioContext.currentTime + 0.2)
-          } catch (error) {
-            console.log('Audio notification not supported:', error)
+              oscillator.start(audioContext.currentTime)
+              oscillator.stop(audioContext.currentTime + 0.2)
+            } catch (error) {
+              console.log('Audio notification not supported:', error)
+            }
           }
 
           // Remove from new notifications after 5 seconds
@@ -494,15 +550,15 @@ function NotificationsContent() {
   const unreadCount = notifications.filter((n) => !n.read).length
   const totalNewCount = unreadCount + newNotificationIds.size
 
-  // Get counts for each tab
+  // Get counts for each tab (only unread notifications)
   const getTabCounts = () => {
     const counts = {
-      all: notifications.length,
-      comment: notifications.filter(n => n.type === "comment" || n.type === "thread_reply").length,
-      reaction: notifications.filter(n => ["thread_like", "comment_like", "thread_dislike", "comment_dislike", "reaction"].includes(n.type)).length,
-      club: notifications.filter(n => ["club_join", "club_leave", "club_thread_created"].includes(n.type)).length,
-      event: notifications.filter(n => ["event", "event_created", "event_updated", "event_cancelled", "event_reminder"].includes(n.type)).length,
-      ai: notifications.filter(n => n.type === "ai").length,
+      all: notifications.filter(n => !n.read).length,
+      comment: notifications.filter(n => !n.read && (n.type === "comment" || n.type === "thread_reply")).length,
+      reaction: notifications.filter(n => !n.read && ["thread_like", "comment_like", "thread_dislike", "comment_dislike", "reaction"].includes(n.type)).length,
+      club: notifications.filter(n => !n.read && ["club_join", "club_leave", "club_thread_created"].includes(n.type)).length,
+      event: notifications.filter(n => !n.read && ["event", "event_created", "event_updated", "event_cancelled", "event_reminder"].includes(n.type)).length,
+      ai: notifications.filter(n => !n.read && n.type === "ai").length,
     }
     return counts
   }
@@ -773,10 +829,10 @@ function NotificationsContent() {
             {/* Connection Status */}
             <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded-lg">
               <motion.div
-                className={`w-2 h-2 rounded-full ${isSSEConnected ? 'bg-green-500' : 'bg-red-500'}`}
+                className={`w-2 h-2 rounded-full ${isSSEConnected && notificationSettings.realTimeNotifications ? 'bg-green-500' : 'bg-red-500'}`}
                 animate={{
-                  scale: isSSEConnected ? [1, 1.2, 1] : [1, 0.8, 1],
-                  opacity: isSSEConnected ? [1, 0.7, 1] : [1, 0.5, 1]
+                  scale: isSSEConnected && notificationSettings.realTimeNotifications ? [1, 1.2, 1] : [1, 0.8, 1],
+                  opacity: isSSEConnected && notificationSettings.realTimeNotifications ? [1, 0.7, 1] : [1, 0.5, 1]
                 }}
                 transition={{
                   duration: 1.5,
@@ -784,8 +840,8 @@ function NotificationsContent() {
                   ease: "easeInOut"
                 }}
               />
-              <span className={`text-xs font-medium ${isSSEConnected ? 'text-green-400' : 'text-red-400'}`}>
-                {isSSEConnected ? 'Connected' : 'Disconnected'}
+              <span className={`text-xs font-medium ${isSSEConnected && notificationSettings.realTimeNotifications ? 'text-green-400' : 'text-red-400'}`}>
+                {isSSEConnected && notificationSettings.realTimeNotifications ? 'Connected' : 'Disconnected'}
               </span>
             </div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
@@ -815,13 +871,109 @@ function NotificationsContent() {
               </Button>
             </motion.div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button
-                variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800/50 hover:text-purple-400"
-              >
-                <Settings className="mr-2 h-4 w-4" />
-                Settings
-              </Button>
+              <Dialog open={settingsDialogOpen} onOpenChange={setSettingsDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className="border-slate-700 text-slate-300 hover:bg-slate-800/50 hover:text-purple-400"
+                  >
+                    <Settings className="mr-2 h-4 w-4" />
+                    Settings
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-slate-200 max-w-md">
+                  <DialogHeader>
+                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-purple-400" />
+                      Notification Settings
+                    </DialogTitle>
+                  </DialogHeader>
+                  
+                  <div className="space-y-6 mt-6">
+                    {/* Email Notifications */}
+                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
+                          <Mail className="h-5 w-5 text-blue-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-slate-200">Email Notifications</h3>
+                          <p className="text-sm text-slate-400">Receive notifications via email</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.emailNotifications}
+                        onCheckedChange={(checked) => updateSetting('emailNotifications', checked)}
+                        className="data-[state=checked]:bg-purple-600"
+                      />
+                    </div>
+
+                    {/* Real-time Notifications */}
+                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                          <Bell className="h-5 w-5 text-green-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-slate-200">Real-time Updates</h3>
+                          <p className="text-sm text-slate-400">Live notification updates</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.realTimeNotifications}
+                        onCheckedChange={(checked) => updateSetting('realTimeNotifications', checked)}
+                        className="data-[state=checked]:bg-purple-600"
+                      />
+                    </div>
+
+                    {/* Sound Alerts */}
+                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
+                          <Volume2 className="h-5 w-5 text-yellow-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-slate-200">Sound Alerts</h3>
+                          <p className="text-sm text-slate-400">Play sound for new notifications</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.soundAlerts}
+                        onCheckedChange={(checked) => updateSetting('soundAlerts', checked)}
+                        className="data-[state=checked]:bg-purple-600"
+                      />
+                    </div>
+
+                    {/* Push Notifications */}
+                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
+                          <Smartphone className="h-5 w-5 text-purple-400" />
+                        </div>
+                        <div>
+                          <h3 className="font-medium text-slate-200">Push Notifications</h3>
+                          <p className="text-sm text-slate-400">Browser push notifications</p>
+                        </div>
+                      </div>
+                      <Switch
+                        checked={notificationSettings.pushNotifications}
+                        onCheckedChange={(checked) => updateSetting('pushNotifications', checked)}
+                        className="data-[state=checked]:bg-purple-600"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700/50">
+                    <Button
+                      variant="outline"
+                      onClick={() => setSettingsDialogOpen(false)}
+                      className="border-slate-700 text-slate-300 hover:bg-slate-800/50"
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
             </motion.div>
           </motion.div>
         </motion.div>
