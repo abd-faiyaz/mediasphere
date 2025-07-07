@@ -323,7 +323,7 @@ public class ThreadService {
                     comment.getThread().getId());
         }
 
-        long likeCount = commentLikeRepository.countByComment(comment);
+        long  likeCount = commentLikeRepository.countByComment(comment);
         comment.setLikeCount((int) likeCount);
         commentRepository.save(comment);
 
