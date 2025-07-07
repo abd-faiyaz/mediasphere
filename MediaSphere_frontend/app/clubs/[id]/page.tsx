@@ -1641,11 +1641,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                         </motion.div>
                       ))}
                     </motion.div>
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-          </motion.div>
+                  )}                  </TabsContent>
+                </Tabs>
+              </div>
+            </motion.div>
+          </div>
 
           {/* Sliding Side Panel for Club Info */}
           <AnimatePresence>
@@ -2357,14 +2357,54 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   initial={{ opacity: 0, scale: 0.9, y: 20 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            {/* Panel */}
-            <motion.div
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
-            >
+                  transition={{ duration: 0.3 }}
+                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-slate-800/50 z-50 w-96"
+                >
+                  <div className="text-center">
+                    <h3 className="text-xl font-semibold text-slate-200 mb-4">Leave Club</h3>
+                    <p className="text-slate-400 mb-6">Are you sure you want to leave this club?</p>
+                    <div className="flex gap-4 justify-center">
+                      <Button 
+                        variant="outline" 
+                        onClick={cancelLeaveClub}
+                        className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={confirmLeaveClub}
+                        className="bg-red-600 hover:bg-red-700 text-white"
+                      >
+                        Leave Club
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* New Member Panel */}
+          <AnimatePresence>
+            {showNewMemberPanel && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
+                  onClick={() => setShowNewMemberPanel(false)}
+                />
+                
+                {/* Panel */}
+                <motion.div
+                  initial={{ opacity: 0, x: "100%" }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: "100%" }}
+                  transition={{ type: "spring", damping: 25, stiffness: 400 }}
+                  className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
+                >
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
                   Latest Member
@@ -2644,9 +2684,9 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                 </div>
               )}
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          </>          )}
+        </AnimatePresence>
+      </main>
       
       {/* Create Thread Modal */}
       <CreateThreadModal

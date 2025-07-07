@@ -116,6 +116,34 @@ public class NotificationController {
         }
     }
 
+    // Delete a notification
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotification(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            // Check if notification exists and belongs to the user
+            Optional<Notification> notificationOpt = notificationService.getNotificationById(id);
+            if (!notificationOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Notification notification = notificationOpt.get();
+            if (!notification.getUser().getId().equals(userOpt.get().getId())) {
+                return ResponseEntity.status(403).body("Unauthorized to delete notification");
+            }
+
+            notificationService.deleteNotification(id);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
     // Mark all notifications as read
     @PostMapping("/mark-all-read")
     public ResponseEntity<?> markAllAsRead(@RequestHeader("Authorization") String authHeader) {
