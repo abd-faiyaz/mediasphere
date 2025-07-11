@@ -19,6 +19,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth-service"
+import { AnimatedDots } from './components/AnimatedDots';
 
 interface Club {
   id: string
@@ -44,6 +45,7 @@ interface Club {
 export default function ClubsPage() {
   const [clubs, setClubs] = useState<Club[]>([])
   const [filteredClubs, setFilteredClubs] = useState<Club[]>([])
+  const [clubView, setClubView] = useState<'all' | 'my'>('all')
   const [loading, setLoading] = useState(true)
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("All")
@@ -51,7 +53,7 @@ export default function ClubsPage() {
   const [showModal, setShowModal] = useState(false)
   const [modalAction, setModalAction] = useState<'join' | 'leave' | null>(null)
   const [selectedClub, setSelectedClub] = useState<Club | null>(null)
-  
+
   // Leave club modal states
   const [leaveReason, setLeaveReason] = useState("")
   const [isLeavingClub, setIsLeavingClub] = useState(false)
@@ -128,16 +130,16 @@ export default function ClubsPage() {
   // Generate background image for each club based on media type
   const getClubBackgroundImage = (mediaType: string) => {
     const backgrounds: Record<string, string> = {
-      'Photography': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'Music': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      'Video': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      'Art': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      'Writing': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-      'Gaming': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-      'Technology': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-      'Sports': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-      'Education': 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-      'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      'Photography': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Music': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 70%)',
+      'Video': 'linear-gradient(135deg, #90CAF9 0%, #1E3A8A 100%)',
+      'Art': 'linear-gradient(135deg, #1E3A8A 30%, #90CAF9 100%)',
+      'Writing': 'linear-gradient(135deg, #90CAF9 30%, #1E3A8A 100%)',
+      'Gaming': 'linear-gradient(135deg, #1E3A8A 10%, #90CAF9 90%)',
+      'Technology': 'linear-gradient(135deg, #90CAF9 10%, #1E3A8A 90%)',
+      'Sports': 'linear-gradient(135deg, #1E3A8A 50%, #90CAF9 100%)',
+      'Education': 'linear-gradient(135deg, #90CAF9 50%, #1E3A8A 100%)',
+      'default': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)'
     }
     return backgrounds[mediaType] || backgrounds.default
   }
@@ -171,7 +173,7 @@ export default function ClubsPage() {
     } else if (modalAction === 'leave') {
       await performLeaveClub(selectedClub.id, leaveReason)
     }
-    
+
     closeModal()
   }
 
@@ -187,7 +189,7 @@ export default function ClubsPage() {
       console.log('Joining club:', clubId)
       console.log('Token:', token)
       console.log('User:', user)
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${clubId}/join`, {
         method: 'POST',
         headers: {
@@ -198,7 +200,7 @@ export default function ClubsPage() {
 
       console.log('Response status:', response.status)
       console.log('Response ok:', response.ok)
-      
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Response error:', errorText)
@@ -209,7 +211,7 @@ export default function ClubsPage() {
         title: "Success",
         description: "Successfully joined the club!",
       })
-      
+
       // Refresh the clubs data to get updated information
       fetchClubs()
     } catch (error) {
@@ -229,7 +231,7 @@ export default function ClubsPage() {
       console.log('Leaving club:', clubId)
       console.log('Token:', token)
       console.log('Reason:', reason)
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${clubId}/leave`, {
         method: 'POST',
         headers: {
@@ -241,7 +243,7 @@ export default function ClubsPage() {
 
       console.log('Response status:', response.status)
       console.log('Response ok:', response.ok)
-      
+
       if (!response.ok) {
         const errorText = await response.text()
         console.error('Response error:', errorText)
@@ -252,7 +254,7 @@ export default function ClubsPage() {
         title: "Success",
         description: "Successfully left the club!",
       })
-      
+
       // Refresh the clubs data to get updated information
       fetchClubs()
     } catch (error) {
@@ -281,7 +283,7 @@ export default function ClubsPage() {
     try {
       setLoading(true)
       const token = authService.getToken()
-      
+
       // Use different endpoints based on authentication status
       let apiUrl: string
       if (isAuthenticated && token) {
@@ -289,10 +291,10 @@ export default function ClubsPage() {
       } else {
         apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/`
       }
-      
+
       console.log('Fetching clubs from:', apiUrl)
       console.log('Token:', token ? 'Present' : 'Not present')
-      
+
       const response = await fetch(apiUrl, {
         headers: {
           'Content-Type': 'application/json',
@@ -328,6 +330,11 @@ export default function ClubsPage() {
   useEffect(() => {
     let filtered = clubs
 
+    // Filter by clubView
+    if (clubView === 'my') {
+      filtered = filtered.filter(club => club.isMember || (user && club.createdBy.id === user.id))
+    }
+
     // Filter by search term
     if (searchTerm) {
       filtered = filtered.filter(club =>
@@ -358,89 +365,121 @@ export default function ClubsPage() {
     })
 
     setFilteredClubs(filtered)
-  }, [clubs, searchTerm, selectedCategory, sortBy])
+  }, [clubs, searchTerm, selectedCategory, sortBy, clubView, user])
 
   // Fetch clubs on component mount
   useEffect(() => {
     fetchClubs()
   }, [])
 
+  // Infinite scroll states
+  const [visibleCount, setVisibleCount] = useState(9); // Show 9 clubs initially
+  const clubsPerPage = 9;
+
+  // Infinite scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      if (
+        window.innerHeight + window.scrollY >= document.body.offsetHeight - 300 &&
+        visibleCount < filteredClubs.length
+      ) {
+        setVisibleCount((prev) => Math.min(prev + clubsPerPage, filteredClubs.length));
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [visibleCount, filteredClubs.length]);
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
+        <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-            className="inline-block"
+            animate={{
+              rotate: 360,
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="relative inline-block"
           >
-            <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-full blur-xl opacity-50 animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] p-6 rounded-full">
+              <Loader2 className="h-10 w-10 text-white" />
+            </div>
           </motion.div>
-          <p className="text-slate-400">Loading clubs...</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="mt-8 space-y-3"
+          >
+            <h3 className="text-xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent">
+              Loading Clubs
+            </h3>
+            <p className="text-[#333333]/70 font-['Open Sans']">
+              Please wait while we fetch the latest clubs
+            </p>
+          </motion.div>
         </div>
+
+        {/* Loading state background effects */}
+        <motion.div
+          className="absolute inset-0 z-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {Array.from({ length: 5 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-full blur-3xl"
+              style={{
+                width: Math.random() * 300 + 100,
+                height: Math.random() * 300 + 100,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: i * 0.5,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
+        </motion.div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Floating Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[
-          { icon: Star, delay: 0.5, x: -30, y: -40, size: 'h-8 w-8' },
-          { icon: Heart, delay: 0.8, x: 40, y: -30, size: 'h-6 w-6' },
-          { icon: Trophy, delay: 1.1, x: -40, y: 30, size: 'h-10 w-10' },
-          { icon: Crown, delay: 1.4, x: 30, y: 40, size: 'h-7 w-7' },
-          { icon: Sparkles, delay: 1.7, x: 0, y: -50, size: 'h-5 w-5' },
-          { icon: Award, delay: 2.0, x: 50, y: 0, size: 'h-9 w-9' },
-          { icon: Activity, delay: 2.3, x: -50, y: -10, size: 'h-6 w-6' },
-          { icon: Globe, delay: 2.6, x: 20, y: -60, size: 'h-8 w-8' },
-          { icon: Zap, delay: 2.9, x: -20, y: 60, size: 'h-7 w-7' },
-        ].map((item, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0, rotate: -180 }}
-            animate={{ 
-              opacity: [0, 0.3, 0.6, 0.3, 0],
-              scale: [0, 1.2, 1, 1.2, 0],
-              rotate: 360,
-              x: [item.x, item.x + 20, item.x - 10, item.x + 15, item.x],
-              y: [item.y, item.y - 15, item.y + 10, item.y - 20, item.y]
-            }}
-            transition={{ 
-              duration: 20,
-              delay: item.delay,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute"
-            style={{
-              left: `${50 + item.x}%`,
-              top: `${50 + item.y}%`,
-            }}
-          >
-            <item.icon className={`${item.size} text-purple-400/20`} />
-          </motion.div>
-        ))}
-      </div>
-
+    <div className="relative min-h-screen bg-[#f7ecdf] overflow-hidden">
+      {/* Rest of the page content */}
       {/* Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-50 shadow-lg"
+        className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <Link 
-                href={isAuthenticated ? "/profile" : "/"} 
-                className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent"
+              <Link
+                href={isAuthenticated ? "/profile" : "/"}
+                className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block"
               >
                 Mediasphere
               </Link>
-              
+
               {/* Back Button */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -448,13 +487,12 @@ export default function ClubsPage() {
                 transition={{ delay: 0.3, duration: 0.5 }}
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+              >                  <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.back()}
+                className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 rounded-xl px-3 py-2"
               >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.back()}
-                  className="flex items-center gap-2 text-slate-400 hover:text-purple-400 hover:bg-slate-800/50 transition-all duration-300 rounded-xl px-3 py-2"
-                >
                   <ArrowLeft className="h-4 w-4" />
                   <span className="font-medium">Back</span>
                 </Button>
@@ -465,32 +503,80 @@ export default function ClubsPage() {
                 // Authenticated user navigation
                 <>
                   <Link href="/clubs">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Clubs</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Clubs</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                   <Link href="/ai-services">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">AI Services</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">AI Services</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                   <Link href="/notifications">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Notifications</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Notifications</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                   <Link href="/profile">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Profile</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Profile</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                 </>
               ) : (
                 // Non-authenticated user navigation
                 <>
                   <Link href="/">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Home</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Home</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                   <Link href="/clubs">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Clubs</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Clubs</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                   <Link href="/sign-in">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Sign In</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Sign In</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                   <Link href="/sign-up">
-                    <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Sign Up</Button>
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Sign Up</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
                   </Link>
                 </>
               )}
@@ -512,24 +598,53 @@ export default function ClubsPage() {
             animate={{ x: 0, opacity: 1 }}
             transition={{ delay: 0.2, duration: 0.6 }}
           >
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
-              Clubs
-            </h1>
-            <p className="text-slate-400 mt-2">Discover and join communities that match your interests</p>
+            <div className="relative">
+              <h1 className="text-5xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent pb-2 relative">
+                Clubs
+                <div className="absolute bottom-0 left-0 w-1/4 h-1 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-full"></div>
+              </h1>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-[#333333] mt-4 font-['Open Sans'] text-lg tracking-wide"
+              >
+                Discover and join communities that match your interests
+              </motion.p>
+            </div>
           </motion.div>
-          <motion.div 
+          <motion.div
             initial={{ x: 50, opacity: 0, scale: 0.8 }}
             animate={{ x: 0, opacity: 1, scale: 1 }}
             transition={{ delay: 0.4, duration: 0.6 }}
-            whileHover={{ scale: 1.05 }} 
+            whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
-            <Link href="/clubs/create">
-              <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
-                <Plus className="mr-2 h-4 w-4" />
-                Create Club
-              </Button>
-            </Link>
+            <div className="flex flex-col items-end gap-2">
+              <Link href="/clubs/create">
+                <Button className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Club
+                </Button>
+              </Link>
+              {/* Club View Segmented Toggle Button */}
+              <div className="mt-2 flex rounded-lg overflow-hidden border border-[#90CAF9]/30 bg-white shadow-sm">
+                <button
+                  className={`px-4 py-2 font-['Nunito'] text-sm font-semibold transition-colors duration-200 focus:outline-none ${clubView === 'all' ? 'bg-[#90CAF9] text-white' : 'bg-white text-[#1E3A8A] hover:bg-[#F0F7FF]'}`}
+                  onClick={() => setClubView('all')}
+                  aria-pressed={clubView === 'all'}
+                >
+                  All Clubs
+                </button>
+                <button
+                  className={`px-4 py-2 font-['Nunito'] text-sm font-semibold transition-colors duration-200 focus:outline-none ${clubView === 'my' ? 'bg-[#90CAF9] text-white' : 'bg-white text-[#1E3A8A] hover:bg-[#F0F7FF]'}`}
+                  onClick={() => setClubView('my')}
+                  aria-pressed={clubView === 'my'}
+                >
+                  My Clubs
+                </button>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
 
@@ -538,7 +653,7 @@ export default function ClubsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.6 }}
-          className="bg-slate-900/90 backdrop-blur-xl rounded-lg border border-slate-800/50 p-6 mb-8 shadow-lg"
+          className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-xl border border-[#90CAF9]/30 p-6 mb-8 shadow-[0_5px_20px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.1)] transition-shadow duration-300"
         >
           <div className="flex flex-col md:flex-row gap-4">
             <motion.div
@@ -548,10 +663,10 @@ export default function ClubsPage() {
               className="flex-1"
             >
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500 h-4 w-4" />
-                <Input 
-                  placeholder="Search clubs..." 
-                  className="pl-10"
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#1E3A8A] h-4 w-4" />
+                <Input
+                  placeholder="Search clubs..."
+                  className="pl-10 bg-gradient-to-r from-[#F0F7FF]/50 to-white border-[#90CAF9]/30 text-[#333333] placeholder-[#90CAF9]/70 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] rounded-xl shadow-[inset_0_2px_6px_-2px_rgba(0,0,0,0.05)] hover:shadow-[inset_0_2px_8px_-2px_rgba(0,0,0,0.08)] transition-shadow"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
@@ -564,7 +679,7 @@ export default function ClubsPage() {
               className="flex gap-4"
             >
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 border-[#90CAF9]/30 focus:ring-[#1E3A8A] focus:border-[#1E3A8A]">
                   <Filter className="mr-2 h-4 w-4" />
                   <SelectValue />
                 </SelectTrigger>
@@ -577,7 +692,7 @@ export default function ClubsPage() {
                 </SelectContent>
               </Select>
               <Select value={sortBy} onValueChange={setSortBy}>
-                <SelectTrigger className="w-40">
+                <SelectTrigger className="w-40 border-[#90CAF9]/30 focus:ring-[#1E3A8A] focus:border-[#1E3A8A]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -593,15 +708,26 @@ export default function ClubsPage() {
         {/* Clubs Grid */}
         {filteredClubs.length === 0 ? (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center py-12"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center py-16"
           >
-            <p className="text-slate-400 text-lg">
-              {searchTerm || selectedCategory !== "All" 
-                ? "No clubs match your search criteria." 
-                : "No clubs available at the moment."}
-            </p>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-2xl border border-[#90CAF9]/30 p-8 max-w-md mx-auto shadow-xl"
+            >
+              <Users className="h-12 w-12 mx-auto mb-4 text-[#1E3A8A] opacity-50" />
+              <h3 className="text-xl font-['Nunito'] font-bold text-[#1E3A8A] mb-2">
+                {searchTerm || selectedCategory !== "All" ? "No Matches Found" : "Coming Soon"}
+              </h3>
+              <p className="text-[#333333] text-lg font-['Open Sans']">
+                {searchTerm || selectedCategory !== "All"
+                  ? "No clubs match your search criteria."
+                  : "No clubs available at the moment."}
+              </p>
+            </motion.div>
           </motion.div>
         ) : (
           <motion.div
@@ -610,7 +736,7 @@ export default function ClubsPage() {
             animate="visible"
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {filteredClubs.map((club, index) => (
+            {filteredClubs.slice(0, visibleCount).map((club, index) => (
               <motion.div
                 key={club.id}
                 variants={cardVariants}
@@ -619,26 +745,26 @@ export default function ClubsPage() {
                 transition={{ delay: index * 0.1 }}
                 className="perspective-1000"
               >
-                <Card className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer h-full relative group bg-slate-900/90 backdrop-blur-xl border-slate-800/50">
+                <Card className="overflow-hidden hover:shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] hover:scale-[1.02] transition-all duration-500 cursor-pointer h-full relative group bg-white/90 backdrop-blur-xl border-[#90CAF9]/30 rounded-xl transform hover:-translate-y-1">
                   {/* Background gradient overlay */}
-                  <div 
-                    className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-300"
+                  <div
+                    className="absolute inset-0 opacity-5 group-hover:opacity-10 transition-opacity duration-300"
                     style={{ background: getClubBackgroundImage(club.mediaType.name) }}
                   />
-                  
+
                   {/* Header with gradient background */}
-                  <div 
+                  <div
                     className="h-32 relative overflow-hidden"
                     style={{ background: getClubBackgroundImage(club.mediaType.name) }}
                   >
-                    <div className="absolute inset-0 bg-black bg-opacity-20" />
+                    <div className="absolute inset-0 bg-black bg-opacity-10" />
                     <motion.div
                       initial={{ y: -20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
                       transition={{ delay: 0.3 + index * 0.1, duration: 0.6 }}
                       className="absolute top-4 right-4"
                     >
-                      <Badge variant="secondary" className="bg-white/90 text-gray-800 shadow-lg">
+                      <Badge variant="secondary" className="bg-gradient-to-r from-[#90CAF9] to-[#1E3A8A] text-white font-['Nunito'] font-medium shadow-[0_2px_8px_-1px_rgba(30,58,138,0.25)] px-4 py-1 rounded-full hover:scale-105 transition-transform">
                         {club.mediaType.name}
                       </Badge>
                     </motion.div>
@@ -649,7 +775,7 @@ export default function ClubsPage() {
                         transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 200 }}
                         className="absolute top-4 left-4"
                       >
-                        <Badge variant="default" className="bg-green-500/90 text-white shadow-lg">
+                        <Badge variant="default" className="bg-[#1E3A8A] text-white font-['Nunito'] font-medium shadow-md">
                           Member
                         </Badge>
                       </motion.div>
@@ -662,12 +788,12 @@ export default function ClubsPage() {
                       animate={{ x: 0, opacity: 1 }}
                       transition={{ delay: 0.4 + index * 0.1, duration: 0.6 }}
                     >
-                      <CardTitle className="text-xl mb-2 group-hover:text-purple-400 transition-colors text-slate-200">
+                      <CardTitle className="text-xl mb-2 group-hover:text-[#1E3A8A] transition-colors text-[#333333] font-['Nunito']">
                         <Link href={`/clubs/${club.id}`}>
                           {club.name}
                         </Link>
                       </CardTitle>
-                      <CardDescription className="line-clamp-2 text-sm text-slate-400">
+                      <CardDescription className="line-clamp-2 text-sm text-[#333333]/70 font-['Open Sans']">
                         {club.description}
                       </CardDescription>
                     </motion.div>
@@ -680,12 +806,12 @@ export default function ClubsPage() {
                       transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
                       className="flex justify-between items-center mb-4"
                     >
-                      <div className="flex items-center text-sm text-slate-400">
+                      <div className="flex items-center text-sm text-[#333333]/70">
                         <motion.div
                           whileHover={{ scale: 1.1 }}
                           className="flex items-center"
                         >
-                          <Users className="h-4 w-4 mr-2 text-purple-500" />
+                          <Users className="h-4 w-4 mr-2 text-[#1E3A8A]" />
                           <span className="font-medium">
                             {club.memberCount ? `${club.memberCount} members` : new Date(club.createdAt).toLocaleDateString()}
                           </span>
@@ -700,20 +826,20 @@ export default function ClubsPage() {
                       className="flex gap-2"
                     >
                       <Link href={`/clubs/${club.id}`} className="flex-1">
-                        <motion.div 
-                          whileHover={{ scale: 1.02 }} 
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className="w-full"
                         >
-                          <Button variant="outline" className="w-full group-hover:border-blue-500 transition-colors">
+                          <Button variant="outline" className="w-full group-hover:border-[#1E3A8A] text-[#333333] border-[#90CAF9]/50 hover:bg-[#F0F7FF] font-['Open Sans'] transition-colors">
                             View Details
                           </Button>
                         </motion.div>
                       </Link>
                       {club.isMember ? (
-                        <motion.div 
-                          whileHover={{ scale: 1.02, rotateX: 5 }} 
-                          whileTap={{ scale: 0.98 }} 
+                        <motion.div
+                          whileHover={{ scale: 1.02, rotateX: 5 }}
+                          whileTap={{ scale: 0.98 }}
                           className="flex-1"
                         >
                           <motion.div
@@ -725,8 +851,8 @@ export default function ClubsPage() {
                               transition: { duration: 0.2 }
                             }}
                           >
-                            <Button 
-                              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-lg group relative overflow-hidden transition-all duration-300"
+                            <Button
+                              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-md group relative overflow-hidden transition-all duration-300 text-white"
                               onClick={() => leaveClub(club)}
                             >
                               <motion.div
@@ -734,7 +860,7 @@ export default function ClubsPage() {
                                 initial={false}
                               />
                               <motion.span
-                                className="relative z-10 flex items-center gap-2 font-medium"
+                                className="relative z-10 flex items-center gap-2 font-medium font-['Nunito']"
                                 whileHover={{ x: -2 }}
                                 transition={{ duration: 0.2 }}
                               >
@@ -745,15 +871,14 @@ export default function ClubsPage() {
                           </motion.div>
                         </motion.div>
                       ) : (
-                        <motion.div 
-                          whileHover={{ scale: 1.02 }} 
-                          whileTap={{ scale: 0.98 }} 
+                        <motion.div
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           className="flex-1"
+                        >                              <Button
+                          className="w-full bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
+                          onClick={() => joinClub(club)}
                         >
-                          <Button 
-                            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 shadow-lg"
-                            onClick={() => joinClub(club)}
-                          >
                             Join Club
                           </Button>
                         </motion.div>
@@ -782,21 +907,8 @@ export default function ClubsPage() {
           </motion.div>
         )}
 
-        {/* Load More - Only show if there are more clubs to load */}
-        {filteredClubs.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 1.2, duration: 0.6 }}
-            className="text-center mt-12"
-          >
-            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-              <Button variant="outline" size="lg">
-                Load More Clubs
-              </Button>
-            </motion.div>
-          </motion.div>
-        )}
+        {/* Infinite scroll replaces Load More button */}
+        {/* No button here, clubs load as you scroll */}
       </main>
 
       {/* Enhanced Confirmation Modal */}
@@ -808,7 +920,7 @@ export default function ClubsPage() {
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 50 }}
               transition={{ type: "spring", duration: 0.5 }}
-              className="bg-slate-900/95 backdrop-blur-xl rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-slate-800/50"
+              className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-[#90CAF9]/30"
             >
               <div className="p-6">
                 {/* Header */}
@@ -817,11 +929,10 @@ export default function ClubsPage() {
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
                     transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-                    className={`p-2 rounded-full ${
-                      modalAction === 'join' 
-                        ? 'bg-purple-500/20 text-purple-400' 
-                        : 'bg-red-500/20 text-red-400'
-                    }`}
+                    className={`p-2 rounded-full ${modalAction === 'join'
+                      ? 'bg-[#90CAF9]/20 text-[#1E3A8A]'
+                      : 'bg-red-100 text-red-500'
+                      }`}
                   >
                     {modalAction === 'join' ? (
                       <Users className="h-5 w-5" />
@@ -834,7 +945,7 @@ export default function ClubsPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.3 }}
-                      className="text-xl font-bold text-slate-200"
+                      className="text-xl font-bold text-[#333333] font-['Nunito']"
                     >
                       {modalAction === 'join' ? 'Join Club' : 'Leave Club'}
                     </motion.h3>
@@ -842,7 +953,7 @@ export default function ClubsPage() {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="text-sm text-slate-400"
+                      className="text-sm text-[#333333]/70 font-['Open Sans']"
                     >
                       {selectedClub.name}
                     </motion.p>
@@ -857,37 +968,37 @@ export default function ClubsPage() {
                   className="mb-6"
                 >
                   {modalAction === 'join' ? (
-                    <div className="flex items-center gap-3 p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                      <Users className="h-5 w-5 text-purple-400 flex-shrink-0" />
-                      <p className="text-slate-300">
-                        You're about to join <span className="font-semibold text-purple-300">"{selectedClub.name}"</span>. 
+                    <div className="flex items-center gap-3 p-4 bg-[#90CAF9]/10 rounded-xl border border-[#90CAF9]/20">
+                      <Users className="h-5 w-5 text-[#1E3A8A] flex-shrink-0" />
+                      <p className="text-[#333333] font-['Open Sans']">
+                        You're about to join <span className="font-semibold text-[#1E3A8A]">"{selectedClub.name}"</span>.
                         You'll be able to participate in discussions and events.
                       </p>
                     </div>
                   ) : (
                     <div>
-                      <div className="flex items-center gap-3 p-4 bg-red-500/10 rounded-xl border border-red-500/20 mb-4">
-                        <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
-                        <p className="text-slate-300">
-                          You're about to leave <span className="font-semibold text-red-300">"{selectedClub.name}"</span>. 
+                      <div className="flex items-center gap-3 p-4 bg-red-50 rounded-xl border border-red-100 mb-4">
+                        <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0" />
+                        <p className="text-[#333333] font-['Open Sans']">
+                          You're about to leave <span className="font-semibold text-red-500">"{selectedClub.name}"</span>.
                           You'll lose access to club discussions and events.
                         </p>
                       </div>
 
                       {/* Reason Input */}
                       <div className="space-y-3">
-                        <Label htmlFor="leave-reason" className="text-sm font-medium text-slate-300">
-                          Why are you leaving? <span className="text-slate-500">(Optional)</span>
+                        <Label htmlFor="leave-reason" className="text-sm font-medium text-[#333333] font-['Open Sans']">
+                          Why are you leaving? <span className="text-[#333333]/50">(Optional)</span>
                         </Label>
                         <Textarea
                           id="leave-reason"
                           placeholder="Help us improve by sharing your reason for leaving..."
                           value={leaveReason}
                           onChange={(e) => setLeaveReason(e.target.value)}
-                          className="min-h-[80px] resize-none focus:ring-2 focus:ring-red-500 focus:border-red-500 bg-slate-800/50 border-slate-700/50 text-slate-200 placeholder-slate-400"
+                          className="min-h-[80px] resize-none focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] placeholder-[#90CAF9]/70 font-['Open Sans']"
                           maxLength={500}
                         />
-                        <p className="text-xs text-slate-500 text-right">
+                        <p className="text-xs text-[#333333]/50 text-right font-['Open Sans']">
                           {leaveReason.length}/500 characters
                         </p>
                       </div>
@@ -907,7 +1018,7 @@ export default function ClubsPage() {
                       variant="outline"
                       onClick={closeModal}
                       disabled={isLeavingClub}
-                      className="px-6 py-2 border-slate-600 hover:border-slate-500 text-slate-300 hover:text-slate-200 hover:bg-slate-800/50"
+                      className="px-6 py-2 border-[#90CAF9]/30 hover:border-[#1E3A8A] text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]/50 font-['Open Sans']"
                     >
                       Cancel
                     </Button>
@@ -916,11 +1027,10 @@ export default function ClubsPage() {
                     <Button
                       onClick={confirmAction}
                       disabled={isLeavingClub}
-                      className={`px-6 py-2 font-medium shadow-lg transition-all duration-200 ${
-                        modalAction === 'join' 
-                          ? 'bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white' 
-                          : 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white'
-                      }`}
+                      className={`px-6 py-2 font-medium shadow-md transition-all duration-200 ${modalAction === 'join'
+                        ? 'bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-["Nunito"]'
+                        : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-["Nunito"]'
+                        }`}
                     >
                       {isLeavingClub ? (
                         <div className="flex items-center gap-2">
@@ -930,7 +1040,7 @@ export default function ClubsPage() {
                           >
                             <Loader2 className="h-4 w-4" />
                           </motion.div>
-                          Leaving...
+                          <span className="font-['Open Sans']">Leaving...</span>
                         </div>
                       ) : (
                         modalAction === 'join' ? 'Join Club' : 'Leave Club'
@@ -943,6 +1053,17 @@ export default function ClubsPage() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Decorative Patterns */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Static decorative elements for SSR */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-40 right-20 w-48 h-48 bg-gradient-to-l from-[#1E3A8A]/5 to-[#90CAF9]/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-[#1E3A8A]/5 to-[#90CAF9]/5 rounded-full blur-3xl"></div>
+
+        {/* Client-side only animated dots */}
+        <AnimatedDots />
+      </div>
     </div>
   )
 }

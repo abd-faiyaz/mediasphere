@@ -4,13 +4,18 @@ const Root = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement> & { value?: number }
 >(({ className, value, ...props }, ref) => {
+  // Ensure value is properly handled for aria-valuenow
+  const ariaValueNow = React.useMemo(() => {
+    return value !== undefined ? Math.round(value) : undefined;
+  }, [value]);
+
   return (
     <div
       ref={ref}
       role="progressbar"
       aria-valuemin={0}
       aria-valuemax={100}
-      aria-valuenow={value !== undefined ? value : undefined}
+      aria-valuenow={ariaValueNow}
       className={className}
       {...props}
     >

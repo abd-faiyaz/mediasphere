@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { 
-  MessageSquare, Share, MoreHorizontal, Pin, ThumbsUp, ThumbsDown, Reply, ArrowLeft, 
-  Heart, Bookmark, Eye, Star, Sparkles, TrendingUp, Send, Edit3, Trash2, Loader2 
+import {
+  MessageSquare, Share, MoreHorizontal, Pin, ThumbsUp, ThumbsDown, Reply, ArrowLeft,
+  Heart, Bookmark, Eye, Star, Sparkles, TrendingUp, Send, Edit3, Trash2, Loader2
 } from "lucide-react"
 import Link from "next/link"
 import { use, useState, useRef, useEffect } from "react"
@@ -86,23 +86,23 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   const [dislikers, setDislikers] = useState<User[]>([])
   const [showLikers, setShowLikers] = useState(false)
   const [showDislikers, setShowDislikers] = useState(false)
-  const [showReplies, setShowReplies] = useState<{[key: string]: boolean}>({})
-  const [likedComments, setLikedComments] = useState<{[key: string]: boolean}>({})
-  
+  const [showReplies, setShowReplies] = useState<{ [key: string]: boolean }>({})
+  const [likedComments, setLikedComments] = useState<{ [key: string]: boolean }>({})
+
   // Bookmark/Save functionality
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [bookmarking, setBookmarking] = useState(false)
-  
+
   // Enhanced sharing
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareLoading, setShareLoading] = useState(false)
-  
+
   // Emoji reactions beyond like/dislike
   const reactions = ['👍', '👎', '❤️', '😂', '😮', '😢', '😡']
-  const [threadReactions, setThreadReactions] = useState<{[key: string]: number}>({})
+  const [threadReactions, setThreadReactions] = useState<{ [key: string]: number }>({})
   const [userReactions, setUserReactions] = useState<string[]>([])
   const [showReactionPicker, setShowReactionPicker] = useState(false)
-  
+
   // Comment sorting options
   const [sortBy, setSortBy] = useState('newest') // newest, oldest, most_liked, controversial
   const sortOptions = [
@@ -111,60 +111,60 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     { value: 'most_liked', label: 'Most liked', icon: '👍' },
     { value: 'controversial', label: 'Controversial', icon: '⚡' }
   ]
-  
+
   // Thread tags for categorization
   const threadTags = ['Discussion', 'Question', 'Announcement', 'Help', 'Tutorial', 'Bug Report']
-  
+
   // Better nested reply visualization
-  const [collapsedReplies, setCollapsedReplies] = useState<{[key: string]: boolean}>({})
-  const [replyDepth, setReplyDepth] = useState<{[key: string]: number}>({})
+  const [collapsedReplies, setCollapsedReplies] = useState<{ [key: string]: boolean }>({})
+  const [replyDepth, setReplyDepth] = useState<{ [key: string]: number }>({})
   const maxReplyDepth = 5 // Maximum nesting level
-  
+
   // Auto-save draft comments
   const [draftComment, setDraftComment] = useState("")
-  const [draftReply, setDraftReply] = useState<{[key: string]: string}>({})
+  const [draftReply, setDraftReply] = useState<{ [key: string]: string }>({})
   const draftKey = `thread-${resolvedParams.id}-draft`
-  
+
   // Comment editing functionality
   const [editingComment, setEditingComment] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState("")
   const [savingEdit, setSavingEdit] = useState(false)
-  
+
   // Follow thread for notifications
   const [isFollowing, setIsFollowing] = useState(false)
   const [following, setFollowing] = useState(false)
-  
+
   // Rich text editor state
   const [showRichEditor, setShowRichEditor] = useState(false)
   const [selectedText, setSelectedText] = useState("")
   const [richTextMode, setRichTextMode] = useState(false)
-  
+
   // @mentions functionality
   const [showMentions, setShowMentions] = useState(false)
   const [mentionQuery, setMentionQuery] = useState("")
   const [mentionUsers, setMentionUsers] = useState<User[]>([])
   const [mentionPosition, setMentionPosition] = useState({ x: 0, y: 0 })
-  
+
   // Image uploads
   const [uploadingImage, setUploadingImage] = useState(false)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
-  
+
   // Infinite scroll for comments
   const [commentsPage, setCommentsPage] = useState(1)
   const [loadingMoreComments, setLoadingMoreComments] = useState(false)
   const [hasMoreComments, setHasMoreComments] = useState(true)
   const commentsPerPage = 20
-  
+
   // Keyboard navigation
   const [selectedCommentIndex, setSelectedCommentIndex] = useState(-1)
   const [keyboardNavigationActive, setKeyboardNavigationActive] = useState(false)
-  const commentRefs = useRef<{[key: string]: HTMLDivElement | null}>({})
-  
+  const commentRefs = useRef<{ [key: string]: HTMLDivElement | null }>({})
+
   // Enhanced performance and image optimization
-  const [imageLoadingStates, setImageLoadingStates] = useState<{[key: string]: boolean}>({})
-  const [optimizedImages, setOptimizedImages] = useState<{[key: string]: string}>({})
-  
+  const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: string]: boolean }>({})
+  const [optimizedImages, setOptimizedImages] = useState<{ [key: string]: string }>({})
+
   const containerRef = useRef(null)
   const { scrollYProgress } = useScroll({ target: containerRef })
 
@@ -194,7 +194,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     setError("")
     try {
       const token = authService.getToken()
-      
+
       // Fetch thread details
       const threadRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}`, {
         headers: {
@@ -211,7 +211,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
         content: threadData.content,
         imageUrl: threadData.imageUrl || ""
       })
-      
+
       // Fetch comments
       const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/comments`, {
         headers: {
@@ -222,7 +222,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
         const commentsData = await commentsRes.json()
         setComments(commentsData)
       }
-      
+
     } catch (err: any) {
       setError(err.message || "Failed to load thread.")
     } finally {
@@ -385,8 +385,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
       if (response.ok) {
         const newReply = await response.json()
         // Update the comments state to include the new reply
-        setComments(comments.map(comment => 
-          comment.id === commentId 
+        setComments(comments.map(comment =>
+          comment.id === commentId
             ? { ...comment, replies: [...(comment.replies || []), newReply] }
             : comment
         ))
@@ -446,25 +446,25 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
   const handleCommentLike = async (commentId: string) => {
     if (!isAuthenticated) return
-    
+
     const isCurrentlyLiked = likedComments[commentId] || false
     const newLikedState = !isCurrentlyLiked
-    
+
     try {
       // Optimistically update the UI
       setLikedComments(prev => ({
         ...prev,
         [commentId]: newLikedState
       }))
-      
-      setComments(comments.map(comment => 
-        comment.id === commentId 
-          ? { 
-              ...comment, 
-              likeCount: newLikedState 
-                ? (comment.likeCount || 0) + 1 
-                : Math.max(0, (comment.likeCount || 0) - 1)
-            }
+
+      setComments(comments.map(comment =>
+        comment.id === commentId
+          ? {
+            ...comment,
+            likeCount: newLikedState
+              ? (comment.likeCount || 0) + 1
+              : Math.max(0, (comment.likeCount || 0) - 1)
+          }
           : comment
       ))
 
@@ -475,12 +475,12 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
           'Authorization': `Bearer ${token}`
         }
       })
-      
+
       if (response.ok) {
         const data = await response.json()
         // Update with server response
-        setComments(comments.map(comment => 
-          comment.id === commentId 
+        setComments(comments.map(comment =>
+          comment.id === commentId
             ? { ...comment, likeCount: data.likeCount }
             : comment
         ))
@@ -495,14 +495,14 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
         ...prev,
         [commentId]: isCurrentlyLiked
       }))
-      setComments(comments.map(comment => 
-        comment.id === commentId 
-          ? { 
-              ...comment, 
-              likeCount: isCurrentlyLiked 
-                ? (comment.likeCount || 0) + 1 
-                : Math.max(0, (comment.likeCount || 0) - 1)
-            }
+      setComments(comments.map(comment =>
+        comment.id === commentId
+          ? {
+            ...comment,
+            likeCount: isCurrentlyLiked
+              ? (comment.likeCount || 0) + 1
+              : Math.max(0, (comment.likeCount || 0) - 1)
+          }
           : comment
       ))
       toast({ title: "Error", description: "Failed to like comment", variant: "destructive" })
@@ -591,28 +591,69 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.8 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8 }}
-          className="text-center"
-        >
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
+        <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
           <motion.div
-            animate={{ rotate: 360 }}
-            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-            className="mb-4"
+            animate={{
+              rotate: 360,
+              scale: [1, 1.2, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: "easeInOut"
+            }}
+            className="relative inline-block"
           >
-            <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-400" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-full blur-xl opacity-50 animate-pulse"></div>
+            <div className="relative bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] p-6 rounded-full">
+              <Loader2 className="h-10 w-10 text-white" />
+            </div>
           </motion.div>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-            className="text-slate-300"
+            transition={{ delay: 0.5 }}
+            className="mt-8 space-y-3"
           >
-            Loading thread...
-          </motion.p>
+            <h3 className="text-xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent">
+              Loading Thread
+            </h3>
+            <p className="text-[#333333]/70 font-['Open Sans']">
+              Please wait while we fetch the thread details
+            </p>
+          </motion.div>
+        </div>
+
+        {/* Loading state background effects */}
+        <motion.div
+          className="absolute inset-0 z-0"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          {Array.from({ length: 5 }).map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-full blur-3xl"
+              style={{
+                width: Math.random() * 300 + 100,
+                height: Math.random() * 300 + 100,
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+              animate={{
+                scale: [1, 1.2, 1],
+                opacity: [0.3, 0.6, 0.3],
+              }}
+              transition={{
+                duration: 3,
+                repeat: Infinity,
+                delay: i * 0.5,
+                ease: "easeInOut",
+              }}
+            />
+          ))}
         </motion.div>
       </div>
     )
@@ -620,114 +661,115 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center"
-        >
-          <motion.h2 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-2xl font-bold text-red-400 mb-4"
-          >
-            Error
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-slate-300 mb-4"
-          >
-            {error}
-          </motion.p>
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
+        <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
           <motion.div
             initial={{ opacity: 0, scale: 0.8 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            transition={{ duration: 0.8 }}
+            className="relative"
           >
-            <Button 
-              onClick={() => window.history.back()}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            <motion.h2
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent mb-4"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
+              Error
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-[#333333]/70 font-['Open Sans'] mb-6"
+            >
+              {error}
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                onClick={() => window.history.back()}
+                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go Back
+              </Button>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     )
   }
 
   if (!thread) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className="text-center"
-        >
-          <motion.h2 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-2xl font-bold text-slate-200 mb-4"
-          >
-            Thread Not Found
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-            className="text-slate-400 mb-4"
-          >
-            The thread you're looking for doesn't exist.
-          </motion.p>
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
+        <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
           <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.6 }}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="relative"
           >
-            <Button 
-              onClick={() => window.history.back()}
-              className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            <motion.h2
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent mb-4"
             >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
+              Thread Not Found
+            </motion.h2>
+            <motion.p
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.4 }}
+              className="text-[#333333]/70 font-['Open Sans'] mb-6"
+            >
+              The thread you're looking for doesn't exist.
+            </motion.p>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.6 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              <Button
+                onClick={() => window.history.back()}
+                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Go Back
+              </Button>
+            </motion.div>
           </motion.div>
-        </motion.div>
+        </div>
       </div>
     )
   }
 
   return (
     <TooltipProvider>
-      <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-        {/* Animated Background Mesh */}
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 2 }}
-            className="absolute inset-0 bg-gradient-to-br from-purple-600/10 via-blue-600/10 to-indigo-600/10"
-          />
-          
+      <div ref={containerRef} className="relative min-h-screen bg-[#f7ecdf] overflow-hidden">
+        {/* Static decorative background elements */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          {/* Large gradient circles with fixed positions */}
+          <div className="absolute top-[10%] left-[15%] w-[40rem] h-[40rem] bg-gradient-to-r from-blue-400/30 to-purple-400/30 rounded-full filter blur-3xl opacity-50" />
+          <div className="absolute bottom-[15%] right-[10%] w-[35rem] h-[35rem] bg-gradient-to-r from-indigo-400/30 to-pink-400/30 rounded-full filter blur-3xl opacity-50" />
+
           {/* Floating Background Elements */}
           {floatingIcons.map((item, index) => (
             <motion.div
               key={index}
               initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
               animate={{
-                opacity: [0, 0.4, 0],
-                scale: [0, 1.5, 0],
+                opacity: [0, 0.3, 0],
+                scale: [0, 1, 0],
                 x: [0, item.x, item.x * 2],
                 y: [0, item.y, item.y * 2],
                 rotate: [0, 180, 360],
@@ -744,35 +786,15 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                 top: `${Math.random() * 100}%`,
               }}
             >
-              <item.icon className="w-8 h-8 text-purple-400/30" />
+              <item.icon className="w-8 h-8 text-[#1E3A8A]/20" />
             </motion.div>
           ))}
-          
-          {/* Animated Gradient Orbs */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 3, ease: "easeOut" }}
-            className="absolute top-20 left-20 w-72 h-72 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full blur-3xl"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 3, delay: 0.5, ease: "easeOut" }}
-            className="absolute bottom-20 right-20 w-96 h-96 bg-gradient-to-r from-blue-500/20 to-indigo-500/20 rounded-full blur-3xl"
-          />
-          <motion.div
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 3, delay: 1, ease: "easeOut" }}
-            className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-gradient-to-r from-cyan-500/15 to-teal-500/15 rounded-full blur-3xl"
-          />
         </div>
 
         {/* Header */}
-        <motion.header 
+        <motion.header
           style={{ y: headerY, opacity }}
-          className="bg-slate-900/80 backdrop-blur-xl border-b border-slate-700/50 sticky top-0 z-50 shadow-2xl"
+          className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
@@ -785,41 +807,36 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                     variant="ghost"
                     size="sm"
                     onClick={() => window.history.back()}
-                    className="hover:bg-slate-800/50 text-slate-300 hover:text-white transition-all duration-300"
+                    className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 rounded-xl px-3 py-2"
                   >
                     <motion.div
                       whileHover={{ x: -2 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      <ArrowLeft className="w-4 h-4" />
                     </motion.div>
-                    Back
+                    <span className="font-medium">Back</span>
                   </Button>
                 </motion.div>
-                <div className="h-8 w-px bg-gradient-to-b from-purple-500/50 to-blue-500/50" />
-                <Link href="/" className="text-2xl font-bold">
-                  <motion.span
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    className="bg-gradient-to-r from-purple-400 via-pink-400 to-cyan-400 bg-clip-text text-transparent"
-                  >
-                    MediaSphere
-                  </motion.span>
+                <div className="h-8 w-px bg-gradient-to-b from-[#1E3A8A]/30 to-[#90CAF9]/30" />
+                <Link href="/" className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block">
+                  MediaSphere
                 </Link>
               </div>
               <nav className="flex items-center space-x-4">
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link href="/clubs">
-                    <Button variant="ghost" className="hover:bg-slate-800/50 text-slate-300 hover:text-white transition-all duration-300">
-                      Clubs
+                    <Button variant="ghost" className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]">
+                      <span className="relative z-10">Clubs</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
                     </Button>
                   </Link>
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Link href="/notifications">
-                    <Button variant="ghost" className="hover:bg-slate-800/50 text-slate-300 hover:text-white transition-all duration-300">
-                      Notifications
+                    <Button variant="ghost" className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]">
+                      <span className="relative z-10">Notifications</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
                     </Button>
                   </Link>
                 </motion.div>
@@ -835,12 +852,12 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
           className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
         >
           {/* Breadcrumb */}
-          <motion.div 
-            variants={itemVariants} 
-            className="flex items-center gap-2 text-sm text-slate-400 mb-6"
+          <motion.div
+            variants={itemVariants}
+            className="flex items-center gap-2 text-sm text-[#333333]/70 mb-6"
           >
             <motion.div whileHover={{ scale: 1.05 }}>
-              <Link href="/clubs" className="hover:text-purple-400 transition-colors duration-300">
+              <Link href="/clubs" className="hover:text-[#1E3A8A] transition-colors duration-300 font-['Open Sans']">
                 Clubs
               </Link>
             </motion.div>
@@ -848,12 +865,12 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.3 }}
-              className="text-slate-600"
+              className="text-[#333333]/50"
             >
               /
             </motion.span>
             <motion.div whileHover={{ scale: 1.05 }}>
-              <Link href={`/clubs/${thread.club.id}`} className="hover:text-purple-400 transition-colors duration-300">
+              <Link href={`/clubs/${thread.club.id}`} className="hover:text-[#1E3A8A] transition-colors duration-300 font-['Open Sans']">
                 {thread.club.name}
               </Link>
             </motion.div>
@@ -861,7 +878,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
               initial={{ opacity: 0, scale: 0 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.6 }}
-              className="text-slate-600"
+              className="text-[#333333]/50"
             >
               /
             </motion.span>
@@ -869,26 +886,26 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
               initial={{ opacity: 0, x: -10 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.9 }}
-              className="text-slate-200 font-medium"
+              className="text-[#333333] font-medium font-['Open Sans']"
             >
               Discussion
             </motion.span>
           </motion.div>
 
           {/* Thread Card */}
-          <motion.div 
-            variants={cardVariants} 
+          <motion.div
+            variants={cardVariants}
             whileHover="hover"
             className="relative"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-xl blur-xl" />
-            <Card className="mb-8 overflow-hidden border-0 shadow-2xl bg-slate-800/90 backdrop-blur-xl relative z-10">
+            <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-xl blur-xl" />
+            <Card className="mb-8 overflow-hidden border-0 shadow-2xl bg-white/90 backdrop-blur-xl relative z-10 border border-[#90CAF9]/30">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
               >
-                <CardHeader className="pb-4 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
+                <CardHeader className="pb-4 bg-gradient-to-r from-white/50 to-[#F0F7FF]/50">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-3">
@@ -899,19 +916,19 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                             className="p-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
                           >
-                            <Pin className="h-4 w-4 text-slate-900" />
+                            <Pin className="h-4 w-4 text-white" />
                           </motion.div>
                         )}
-                        <motion.h1 
+                        <motion.h1
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ duration: 0.8, delay: 0.2 }}
-                          className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent"
+                          className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent"
                         >
                           {thread.title}
                         </motion.h1>
                       </div>
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
@@ -921,18 +938,18 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                           whileHover={{ scale: 1.1 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <Avatar className="h-10 w-10 ring-2 ring-purple-400/50 shadow-lg">
+                          <Avatar className="h-10 w-10 ring-2 ring-[#90CAF9]/50 shadow-lg">
                             <AvatarImage src={thread.createdBy.profilePic} />
-                            <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                            <AvatarFallback className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
                               {thread.createdBy.firstName?.[0] || thread.createdBy.username[0]}
                             </AvatarFallback>
                           </Avatar>
                         </motion.div>
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-medium text-slate-200">
-                              {thread.createdBy.firstName ? 
-                                `${thread.createdBy.firstName} ${thread.createdBy.lastName}` : 
+                            <span className="font-medium text-[#333333] font-['Nunito']">
+                              {thread.createdBy.firstName ?
+                                `${thread.createdBy.firstName} ${thread.createdBy.lastName}` :
                                 thread.createdBy.username
                               }
                             </span>
@@ -941,14 +958,14 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.6 }}
                             >
-                              <Badge variant="secondary" className="text-xs bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border-purple-400/30">
-                                Member
+                              <Badge variant="secondary" className="text-xs bg-gradient-to-r from-[#90CAF9]/20 to-[#1E3A8A]/20 text-[#1E3A8A] border-[#90CAF9]/30">
+                                Member & Author
                               </Badge>
                             </motion.div>
                           </div>
-                          <div className="text-sm text-slate-400">
+                          <div className="text-sm text-[#333333]/70 font-['Open Sans']">
                             in{" "}
-                            <Link href={`/clubs/${thread.club.id}`} className="hover:text-purple-400 font-medium transition-colors duration-300">
+                            <Link href={`/clubs/${thread.club.id}`} className="hover:text-[#1E3A8A] font-medium transition-colors duration-300">
                               {thread.club.name}
                             </Link>{" "}
                             • {new Date(thread.createdAt).toLocaleDateString()}
@@ -965,16 +982,16 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                       >
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="hover:bg-slate-700/50 text-slate-400 hover:text-white">
+                            <Button variant="ghost" size="sm" className="hover:bg-[#F0F7FF] text-[#333333]/70 hover:text-[#1E3A8A]">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-slate-800 border-slate-700">
-                            <DropdownMenuItem onClick={() => setShowEditModal(true)} className="text-slate-300 hover:text-white hover:bg-slate-700">
+                          <DropdownMenuContent className="bg-white border-[#90CAF9]/30">
+                            <DropdownMenuItem onClick={() => setShowEditModal(true)} className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">
                               <Edit3 className="w-4 h-4 mr-2" />
                               Edit Thread
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setShowDeleteModal(true)} className="text-red-400 hover:text-red-300 hover:bg-red-500/10">
+                            <DropdownMenuItem onClick={() => setShowDeleteModal(true)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
                               <Trash2 className="w-4 h-4 mr-2" />
                               Delete Thread
                             </DropdownMenuItem>
@@ -984,7 +1001,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="bg-slate-800/30">
+                <CardContent className="bg-white/30">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -992,36 +1009,36 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                     className="prose max-w-none mb-6"
                   >
                     {thread.content.split('\n').map((paragraph, index) => (
-                      <motion.p 
-                        key={index} 
+                      <motion.p
+                        key={index}
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                        className="mb-4 text-slate-300 leading-relaxed"
+                        className="mb-4 text-[#333333] leading-relaxed font-['Open Sans']"
                       >
                         {paragraph}
                       </motion.p>
                     ))}
                   </motion.div>
                   {thread.imageUrl && (
-                    <motion.div 
+                    <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.8, delay: 1 }}
                       className="mb-6 rounded-lg overflow-hidden shadow-xl"
                     >
-                      <img 
-                        src={thread.imageUrl} 
-                        alt="Thread image" 
+                      <img
+                        src={thread.imageUrl}
+                        alt="Thread image"
                         className="w-full h-auto max-h-96 object-cover"
                       />
                     </motion.div>
                   )}
-                  <motion.div 
+                  <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.8, delay: 1.2 }}
-                    className="flex items-center gap-6 pt-4 border-t border-slate-700/50"
+                    className="flex items-center gap-6 pt-4 border-t border-[#90CAF9]/30"
                   >
                     <Tooltip>
                       <TooltipTrigger asChild>
@@ -1030,12 +1047,11 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                           whileTap={{ scale: 0.95 }}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className={`flex items-center gap-2 transition-all duration-300 ${
-                                liking ? 'text-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20' : 'hover:text-blue-400 hover:bg-blue-500/10 text-slate-400'
-                              }`}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`flex items-center gap-2 transition-all duration-300 ${liking ? 'text-[#1E3A8A] bg-[#90CAF9]/20 shadow-lg shadow-[#1E3A8A]/20' : 'hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70'
+                                }`}
                               onClick={handleLike}
                               disabled={liking}
                             >
@@ -1046,8 +1062,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                 <span className="text-lg">👍</span>
                               </motion.div>
                             </Button>
-                            <motion.span 
-                              className="text-xs text-slate-400 cursor-pointer hover:text-blue-400 transition-colors"
+                            <motion.span
+                              className="text-xs text-[#333333]/70 cursor-pointer hover:text-[#1E3A8A] transition-colors font-['Open Sans']"
                               onClick={() => {
                                 fetchLikers()
                                 setShowLikers(true)
@@ -1059,11 +1075,11 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                           </div>
                         </motion.div>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                      <TooltipContent className="bg-white text-[#333333] border-[#90CAF9]/30">
                         <p>Like this thread</p>
                       </TooltipContent>
                     </Tooltip>
-                    
+
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <motion.div
@@ -1071,12 +1087,11 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                           whileTap={{ scale: 0.95 }}
                         >
                           <div className="flex flex-col items-center gap-1">
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className={`flex items-center gap-2 transition-all duration-300 ${
-                                disliked ? 'text-red-400 bg-red-500/10 shadow-lg shadow-red-500/20' : 'hover:text-red-400 hover:bg-red-500/10 text-slate-400'
-                              }`}
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className={`flex items-center gap-2 transition-all duration-300 ${disliked ? 'text-red-500 bg-red-100 shadow-lg shadow-red-500/20' : 'hover:text-red-500 hover:bg-red-50 text-[#333333]/70'
+                                }`}
                               onClick={handleDislike}
                               disabled={disliking}
                             >
@@ -1087,8 +1102,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                 <span className="text-lg">👎</span>
                               </motion.div>
                             </Button>
-                            <motion.span 
-                              className="text-xs text-slate-400 cursor-pointer hover:text-red-400 transition-colors"
+                            <motion.span
+                              className="text-xs text-[#333333]/70 cursor-pointer hover:text-red-500 transition-colors font-['Open Sans']"
                               onClick={() => {
                                 fetchDislikers()
                                 setShowDislikers(true)
@@ -1100,36 +1115,36 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                           </div>
                         </motion.div>
                       </TooltipTrigger>
-                      <TooltipContent className="bg-slate-800 text-slate-200 border-slate-700">
+                      <TooltipContent className="bg-white text-[#333333] border-[#90CAF9]/30">
                         <p>Dislike this thread</p>
                       </TooltipContent>
                     </Tooltip>
-                    
+
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-400 hover:bg-green-500/10 text-slate-400 transition-all duration-300">
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-600 hover:bg-green-50 text-[#333333]/70 transition-all duration-300">
                         <MessageSquare className="h-4 w-4" />
                         {comments.length}
                       </Button>
                     </motion.div>
-                    
+
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-purple-400 hover:bg-purple-500/10 text-slate-400 transition-all duration-300">
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70 transition-all duration-300">
                         <Eye className="h-4 w-4" />
                         {thread.viewCount}
                       </Button>
                     </motion.div>
-                    
+
                     <motion.div
                       whileHover={{ scale: 1.1 }}
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-cyan-400 hover:bg-cyan-500/10 text-slate-400 transition-all duration-300">
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-cyan-600 hover:bg-cyan-50 text-[#333333]/70 transition-all duration-300">
                         <Share className="h-4 w-4" />
                         Share
                       </Button>
@@ -1142,12 +1157,12 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
           {/* Add Comment */}
           {isAuthenticated && (
-            <motion.div 
+            <motion.div
               variants={cardVariants}
               className="relative"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl blur-xl" />
-              <Card className="mb-8 border-0 shadow-2xl bg-slate-800/90 backdrop-blur-xl relative z-10">
+              <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-xl blur-xl" />
+              <Card className="mb-8 border-0 shadow-2xl bg-white/90 backdrop-blur-xl relative z-10 border border-[#90CAF9]/30">
                 <CardContent className="pt-6">
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -1159,9 +1174,9 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                       whileHover={{ scale: 1.1 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <Avatar className="h-8 w-8 ring-2 ring-blue-400/50 shadow-lg">
+                      <Avatar className="h-8 w-8 ring-2 ring-[#90CAF9]/50 shadow-lg">
                         <AvatarImage src={user?.profilePic} />
-                        <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                        <AvatarFallback className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
                           {user?.firstName?.[0] || user?.username?.[0] || 'U'}
                         </AvatarFallback>
                       </Avatar>
@@ -1172,26 +1187,26 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ duration: 0.6, delay: 0.2 }}
                       >
-                        <Textarea 
-                          placeholder="Add your thoughts to the discussion..." 
-                          className="min-h-[100px] mb-4 bg-slate-700/50 border-slate-600 focus:border-purple-500 focus:ring-purple-500/20 text-slate-200 placeholder-slate-400"
+                        <Textarea
+                          placeholder="Add your thoughts to the discussion..."
+                          className="min-h-[100px] mb-4 bg-[#F0F7FF]/50 border-[#90CAF9]/30 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20 text-[#333333] placeholder-[#333333]/50 font-['Open Sans']"
                           value={newComment}
                           onChange={(e) => setNewComment(e.target.value)}
                         />
                       </motion.div>
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.4 }}
                         className="flex justify-between items-center"
                       >
-                        <div className="text-sm text-slate-400">Be respectful and constructive in your response</div>
+                        <div className="text-sm text-[#333333]/70 font-['Open Sans']">Be respectful and constructive in your response</div>
                         <motion.div
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                         >
-                          <Button 
-                            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg shadow-purple-500/25 transition-all duration-300"
+                          <Button
+                            className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)] transition-all duration-300"
                             onClick={handlePostComment}
                             disabled={postingComment || !newComment.trim()}
                           >
@@ -1218,18 +1233,18 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
           {/* Comments Section */}
           <motion.div variants={itemVariants} className="space-y-6">
-            <motion.h2 
+            <motion.h2
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
-              className="text-xl font-bold text-slate-200 flex items-center gap-2"
+              className="text-xl font-['Nunito'] font-bold text-[#333333] flex items-center gap-2"
             >
               <motion.div
                 initial={{ rotate: 0 }}
                 animate={{ rotate: 360 }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
               >
-                <MessageSquare className="w-5 h-5" />
+                <MessageSquare className="w-5 h-5 text-[#1E3A8A]" />
               </motion.div>
               Comments ({comments.length})
             </motion.h2>
@@ -1244,8 +1259,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                   transition={{ delay: index * 0.1, duration: 0.6 }}
                   className="relative"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 to-slate-600/5 rounded-xl blur-xl" />
-                  <Card className="border-0 shadow-2xl bg-slate-800/90 backdrop-blur-xl hover:shadow-3xl transition-all duration-500 relative z-10">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#90CAF9]/5 to-[#1E3A8A]/5 rounded-xl blur-xl" />
+                  <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-xl hover:shadow-3xl transition-all duration-500 relative z-10 border border-[#90CAF9]/20">
                     <CardContent className="pt-6">
                       <div className="flex gap-4">
                         <motion.div
@@ -1260,15 +1275,15 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                           </Avatar>
                         </motion.div>
                         <div className="flex-1">
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.2 }}
                             className="flex items-center gap-2 mb-2"
                           >
-                            <span className="font-medium text-slate-200">
-                              {comment.createdBy.firstName ? 
-                                `${comment.createdBy.firstName} ${comment.createdBy.lastName}` : 
+                            <span className="font-medium text-[#333333] font-['Nunito']">
+                              {comment.createdBy.firstName ?
+                                `${comment.createdBy.firstName} ${comment.createdBy.lastName}` :
                                 comment.createdBy.username
                               }
                             </span>
@@ -1277,12 +1292,18 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                               animate={{ opacity: 1, scale: 1 }}
                               transition={{ delay: 0.4 }}
                             >
-                              <Badge variant="secondary" className="text-xs bg-gradient-to-r from-green-500/20 to-teal-500/20 text-green-300 border-green-400/30">
-                                Member
+                              <Badge
+                                variant="secondary"
+                                className={`text-xs ${comment.createdBy.id === thread.createdBy.id
+                                    ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
+                                    : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
+                                  }`}
+                              >
+                                {comment.createdBy.id === thread.createdBy.id ? "Author" : "Member"}
                               </Badge>
                             </motion.div>
-                            <span className="text-sm text-slate-500">•</span>
-                            <span className="text-sm text-slate-400">
+                            <span className="text-sm text-[#333333]/50">•</span>
+                            <span className="text-sm text-[#333333]/70 font-['Open Sans']">
                               {new Date(comment.createdAt).toLocaleDateString()}
                             </span>
                             {canEditOrDelete && (
@@ -1304,15 +1325,15 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                               </motion.div>
                             )}
                           </motion.div>
-                          <motion.p 
+                          <motion.p
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.4 }}
-                            className="text-slate-300 mb-4 leading-relaxed"
+                            className="text-[#333333] mb-4 leading-relaxed font-['Open Sans']"
                           >
                             {comment.content}
                           </motion.p>
-                          <motion.div 
+                          <motion.div
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.6, delay: 0.6 }}
@@ -1322,14 +1343,13 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className={`flex items-center gap-2 transition-all duration-300 ${
-                                  likedComments[comment.id] 
-                                    ? 'text-blue-400 bg-blue-500/10 shadow-lg shadow-blue-500/20' 
-                                    : 'hover:text-blue-400 hover:bg-blue-500/10 text-slate-400'
-                                }`}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={`flex items-center gap-2 transition-all duration-300 ${likedComments[comment.id]
+                                    ? 'text-[#1E3A8A] bg-[#90CAF9]/20 shadow-lg shadow-[#1E3A8A]/20'
+                                    : 'hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70'
+                                  }`}
                                 onClick={() => handleCommentLike(comment.id)}
                               >
                                 <ThumbsUp className="h-3 w-3" />
@@ -1340,10 +1360,10 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                               whileHover={{ scale: 1.1 }}
                               whileTap={{ scale: 0.95 }}
                             >
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="flex items-center gap-2 hover:text-green-400 hover:bg-green-500/10 text-slate-400"
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex items-center gap-2 hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70"
                                 onClick={() => toggleReply(comment.id)}
                               >
                                 <Reply className="h-3 w-3" />
@@ -1360,7 +1380,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                 animate={{ opacity: 1, height: "auto", y: 0 }}
                                 exit={{ opacity: 0, height: 0, y: -10 }}
                                 transition={{ duration: 0.4, ease: "easeInOut" }}
-                                className="mt-4 pl-4 border-l-2 border-purple-500/30"
+                                className="mt-4 pl-4 border-l-2 border-[#90CAF9]/30"
                               >
                                 <div className="flex gap-3">
                                   <motion.div
@@ -1369,9 +1389,9 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                     transition={{ delay: 0.2 }}
                                     whileHover={{ scale: 1.1 }}
                                   >
-                                    <Avatar className="h-6 w-6 ring-1 ring-purple-400/50">
+                                    <Avatar className="h-6 w-6 ring-1 ring-[#90CAF9]/50">
                                       <AvatarImage src={user?.profilePic} />
-                                      <AvatarFallback className="text-xs bg-gradient-to-r from-purple-500 to-pink-500 text-white">
+                                      <AvatarFallback className="text-xs bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
                                         {user?.firstName?.[0] || user?.username?.[0] || 'U'}
                                       </AvatarFallback>
                                     </Avatar>
@@ -1384,12 +1404,12 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                     >
                                       <Textarea
                                         placeholder="Write a reply..."
-                                        className="min-h-[80px] mb-2 bg-slate-700/50 border-slate-600 focus:border-purple-500 focus:ring-purple-500/20 text-slate-200 placeholder-slate-400"
+                                        className="min-h-[80px] mb-2 bg-[#F0F7FF]/50 border-[#90CAF9]/30 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20 text-[#333333] placeholder-[#333333]/50 font-['Open Sans']"
                                         value={replyContent}
                                         onChange={(e) => setReplyContent(e.target.value)}
                                       />
                                     </motion.div>
-                                    <motion.div 
+                                    <motion.div
                                       initial={{ opacity: 0, y: 10 }}
                                       animate={{ opacity: 1, y: 0 }}
                                       transition={{ delay: 0.4 }}
@@ -1403,7 +1423,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                           size="sm"
                                           onClick={() => handleReply(comment.id)}
                                           disabled={postingComment || !replyContent.trim()}
-                                          className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg shadow-purple-500/25"
+                                          className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
                                         >
                                           {postingComment ? (
                                             <Loader2 className="w-3 h-3 mr-2 animate-spin" />
@@ -1424,7 +1444,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                             setReplyingTo(null)
                                             setReplyContent("")
                                           }}
-                                          className="border-slate-600 text-slate-300 hover:bg-slate-700/50"
+                                          className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] font-['Open Sans']"
                                         >
                                           Cancel
                                         </Button>
@@ -1438,15 +1458,15 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
                           {/* Nested Replies */}
                           {comment.replies && comment.replies.length > 0 && (
-                            <motion.div 
+                            <motion.div
                               initial={{ opacity: 0, x: -20 }}
                               animate={{ opacity: 1, x: 0 }}
                               transition={{ duration: 0.6, delay: 0.8 }}
                               className="mt-4 pl-4 border-l-2 border-slate-700/30 space-y-4"
                             >
                               {comment.replies.map((reply, replyIndex) => (
-                                <motion.div 
-                                  key={reply.id} 
+                                <motion.div
+                                  key={reply.id}
                                   initial={{ opacity: 0, y: 10 }}
                                   animate={{ opacity: 1, y: 0 }}
                                   transition={{ duration: 0.4, delay: replyIndex * 0.1 }}
@@ -1466,8 +1486,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
                                       <span className="font-medium text-sm text-slate-200">
-                                        {reply.createdBy.firstName ? 
-                                          `${reply.createdBy.firstName} ${reply.createdBy.lastName}` : 
+                                        {reply.createdBy.firstName ?
+                                          `${reply.createdBy.firstName} ${reply.createdBy.lastName}` :
                                           reply.createdBy.username
                                         }
                                       </span>
@@ -1476,9 +1496,22 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                         animate={{ opacity: 1, scale: 1 }}
                                         transition={{ delay: 0.3 + replyIndex * 0.1 }}
                                       >
-                                        <Badge variant="secondary" className="text-xs bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-400/30">
-                                          Member
+
+                                        <Badge
+                                          variant="secondary"
+                                          className={`text-xs ${reply.createdBy.id === thread.createdBy.id
+                                              ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
+                                              : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
+                                            }`}
+                                        >
+                                          {reply.createdBy.id === thread.createdBy.id ? "Author" : "Member"}
                                         </Badge>
+                                        {/* <Badge variant="secondary" className="text-xs bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-400/30">
+                                          Author
+                                        </Badge> */}
+
+
+
                                       </motion.div>
                                       <span className="text-xs text-slate-500">•</span>
                                       <span className="text-xs text-slate-400">
@@ -1522,13 +1555,13 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                   animate={{ y: 0 }}
                   transition={{ duration: 0.6, delay: 0.2 }}
                 >
-                  <MessageSquare className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                  <MessageSquare className="w-12 h-12 text-[#90CAF9]/50 mx-auto mb-4" />
                 </motion.div>
-                <motion.p 
+                <motion.p
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4 }}
-                  className="text-slate-400"
+                  className="text-[#333333]/70 font-['Open Sans']"
                 >
                   No comments yet. Be the first to share your thoughts!
                 </motion.p>
@@ -1539,42 +1572,42 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
         {/* Edit Thread Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700">
+          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
             <DialogHeader>
-              <DialogTitle className="text-slate-200">Edit Thread</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogTitle className="text-[#333333] font-['Nunito']">Edit Thread</DialogTitle>
+              <DialogDescription className="text-[#333333]/70 font-['Open Sans']">
                 Make changes to your thread here. Click save when you're done.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="title" className="text-right text-slate-300">
+                <Label htmlFor="title" className="text-right text-[#333333] font-['Open Sans']">
                   Title
                 </Label>
                 <Input
                   id="title"
                   value={editingThread.title}
-                  onChange={(e) => setEditingThread({...editingThread, title: e.target.value})}
-                  className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                  onChange={(e) => setEditingThread({ ...editingThread, title: e.target.value })}
+                  className="col-span-3 bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="content" className="text-right text-slate-300">
+                <Label htmlFor="content" className="text-right text-[#333333] font-['Open Sans']">
                   Content
                 </Label>
                 <Textarea
                   id="content"
                   value={editingThread.content}
-                  onChange={(e) => setEditingThread({...editingThread, content: e.target.value})}
-                  className="col-span-3 bg-slate-700 border-slate-600 text-slate-200"
+                  onChange={(e) => setEditingThread({ ...editingThread, content: e.target.value })}
+                  className="col-span-3 bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 onClick={handleEditThread}
-                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito']"
               >
                 Save changes
               </Button>
@@ -1584,25 +1617,25 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
         {/* Delete Thread Modal */}
         <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-          <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700">
+          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
             <DialogHeader>
-              <DialogTitle className="text-slate-200">Delete Thread</DialogTitle>
-              <DialogDescription className="text-slate-400">
+              <DialogTitle className="text-[#333333] font-['Nunito']">Delete Thread</DialogTitle>
+              <DialogDescription className="text-[#333333]/70 font-['Open Sans']">
                 Are you sure you want to delete this thread? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={() => setShowDeleteModal(false)}
-                className="border-slate-600 text-slate-300 hover:bg-slate-700"
+                className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] font-['Open Sans']"
               >
                 Cancel
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={handleDeleteThread}
-                className="bg-red-600 hover:bg-red-700"
+                className="bg-red-500 hover:bg-red-600 text-white font-['Nunito']"
               >
                 Delete
               </Button>
@@ -1612,32 +1645,32 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
         {/* Likers Modal */}
         <Dialog open={showLikers} onOpenChange={setShowLikers}>
-          <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700">
+          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
             <DialogHeader>
-              <DialogTitle className="text-slate-200">People who liked this thread ({likers.length})</DialogTitle>
+              <DialogTitle className="text-[#333333] font-['Nunito']">People who liked this thread ({likers.length})</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {likers.map((liker, index) => (
-                <motion.div 
-                  key={liker.id} 
+                <motion.div
+                  key={liker.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700/50 transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F0F7FF]/50 transition-colors"
                 >
-                  <Avatar className="h-8 w-8 ring-1 ring-blue-400/50">
+                  <Avatar className="h-8 w-8 ring-1 ring-[#90CAF9]/50">
                     <AvatarImage src={liker.profilePic} />
-                    <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                    <AvatarFallback className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
                       {liker.firstName?.[0] || liker.username[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium text-[#333333] font-['Nunito']">
                     {liker.username}
                   </span>
                 </motion.div>
               ))}
               {likers.length === 0 && (
-                <p className="text-slate-400 text-center py-4">No likes yet</p>
+                <p className="text-[#333333]/70 text-center py-4 font-['Open Sans']">No likes yet</p>
               )}
             </div>
           </DialogContent>
@@ -1645,18 +1678,18 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
         {/* Dislikers Modal */}
         <Dialog open={showDislikers} onOpenChange={setShowDislikers}>
-          <DialogContent className="sm:max-w-[425px] bg-slate-800 border-slate-700">
+          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
             <DialogHeader>
-              <DialogTitle className="text-slate-200">People who disliked this thread ({dislikers.length})</DialogTitle>
+              <DialogTitle className="text-[#333333] font-['Nunito']">People who disliked this thread ({dislikers.length})</DialogTitle>
             </DialogHeader>
             <div className="space-y-3 max-h-60 overflow-y-auto">
               {dislikers.map((disliker, index) => (
-                <motion.div 
-                  key={disliker.id} 
+                <motion.div
+                  key={disliker.id}
                   initial={{ opacity: 0, x: -20 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-700/50 transition-colors"
+                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 transition-colors"
                 >
                   <Avatar className="h-8 w-8 ring-1 ring-red-400/50">
                     <AvatarImage src={disliker.profilePic} />
@@ -1664,13 +1697,13 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                       {disliker.firstName?.[0] || disliker.username[0]}
                     </AvatarFallback>
                   </Avatar>
-                  <span className="font-medium text-slate-200">
+                  <span className="font-medium text-[#333333] font-['Nunito']">
                     {disliker.username}
                   </span>
                 </motion.div>
               ))}
               {dislikers.length === 0 && (
-                <p className="text-slate-400 text-center py-4">No dislikes yet</p>
+                <p className="text-[#333333]/70 text-center py-4 font-['Open Sans']">No dislikes yet</p>
               )}
             </div>
           </DialogContent>

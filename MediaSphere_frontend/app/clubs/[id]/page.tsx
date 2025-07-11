@@ -515,8 +515,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     },
     hover: {
       scale: 1.03,
-      rotateY: 5,
       y: -5,
+      boxShadow: "0 20px 40px rgba(30, 58, 138, 0.15)",
       transition: {
         duration: 0.3,
         ease: "easeInOut"
@@ -527,22 +527,28 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   // Generate background image based on media type
   const getMediaTypeGradient = (mediaType: string) => {
     const gradients: Record<string, string> = {
-      'Photography': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-      'Music': 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)',
-      'Video': 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)',
-      'Art': 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)',
-      'Writing': 'linear-gradient(135deg, #fa709a 0%, #fee140 100%)',
-      'Gaming': 'linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)',
-      'Technology': 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-      'Sports': 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)',
-      'Education': 'linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%)',
-      'default': 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'
+      'Photography': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Music': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Video': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Art': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Writing': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Gaming': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Technology': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Sports': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'Education': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
+      'default': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)'
     }
     return gradients[mediaType] || gradients.default
   }
 
   return (
-    <div ref={containerRef} className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
+    <div ref={containerRef} className="min-h-screen bg-[#f7ecdf] relative overflow-hidden">
+      {/* Static decorative background elements */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        {/* Large gradient circles with fixed positions */}
+        <div className="absolute top-[10%] left-[15%] w-[40rem] h-[40rem] bg-gradient-to-r from-[#1E3A8A]/30 to-[#90CAF9]/30 rounded-full filter blur-3xl opacity-50" />
+        <div className="absolute bottom-[15%] right-[10%] w-[35rem] h-[35rem] bg-gradient-to-r from-[#1E3A8A]/30 to-[#90CAF9]/30 rounded-full filter blur-3xl opacity-50" />
+      </div>
       {/* Floating Background Elements */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {floatingIcons.map((item, index) => (
@@ -568,7 +574,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               top: `${Math.random() * 100}%`,
             }}
           >
-            <item.icon className="w-8 h-8 text-purple-300/20" />
+            <item.icon className="w-8 h-8 text-[#1E3A8A]/20" />
           </motion.div>
         ))}
       </div>
@@ -601,7 +607,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   delay: Math.random() * 2,
                   ease: "easeOut",
                 }}
-                className="absolute w-3 h-3 bg-gradient-to-r from-yellow-400 to-pink-500 rounded-full"
+                className={`absolute w-${Math.random() > 0.5 ? '3' : '2'} h-${Math.random() > 0.5 ? '3' : '2'} ${
+                  Math.random() > 0.5 
+                    ? 'bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9]' 
+                    : 'bg-gradient-to-r from-[#90CAF9] to-[#1E3A8A]'
+                } ${Math.random() > 0.5 ? 'rounded-full' : 'rounded'}`}
               />
             ))}
           </motion.div>
@@ -613,7 +623,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-40 shadow-lg"
+        className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
@@ -624,7 +634,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               >
                 <Link 
                   href={isAuthenticated ? "/profile" : "/"} 
-                  className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                  className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent"
                 >
                   Mediasphere
                 </Link>
@@ -700,7 +710,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           initial={{ opacity: 0, scale: 0.8, y: 100 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative overflow-hidden bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-slate-800/50 mb-12 shadow-2xl"
+          className="relative overflow-hidden bg-white/90 backdrop-blur-xl rounded-3xl border border-[#90CAF9]/30 mb-12 shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] transform-gpu hover:scale-[1.01] transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(30,58,138,0.15)]"
         >
           {/* Animated Background Pattern */}
           <div className="absolute inset-0 overflow-hidden">
@@ -747,7 +757,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     delay: Math.random() * 4,
                     ease: "easeInOut",
                   }}
-                  className="absolute w-3 h-3 bg-white/40 rounded-full backdrop-blur-sm"
+                  className={`absolute ${Math.random() > 0.5 ? 'w-3 h-3' : 'w-2 h-2'} bg-gradient-to-r from-[#1E3A8A]/40 to-[#90CAF9]/40 rounded-full backdrop-blur-sm shadow-[0_0_8px_rgba(144,202,249,0.3)]`}
                   style={{
                     left: `${Math.random() * 100}%`,
                     top: `${Math.random() * 100}%`,
@@ -763,7 +773,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               transition={{ delay: 0.5, duration: 0.8, type: "spring", stiffness: 200 }}
               className="absolute top-8 right-8"
             >
-              <Badge variant="secondary" className="bg-white/95 text-gray-800 shadow-2xl text-lg px-6 py-3 backdrop-blur-sm border border-white/50">
+              <Badge variant="secondary" className="bg-white/15 text-white shadow-2xl text-lg px-6 py-3 backdrop-blur-md border border-white/20">
                 <Globe className="w-5 h-5 mr-2" />
                 {club?.mediaType.name}
               </Badge>
@@ -776,7 +786,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                 transition={{ delay: 0.7, duration: 0.8, type: "spring", stiffness: 150 }}
                 className="absolute top-8 left-8"
               >
-                <Badge variant="default" className="bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-2xl px-6 py-3 text-lg">
+                <Badge variant="default" className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white shadow-[0_4px_15px_-3px_rgba(30,58,138,0.3)] px-6 py-3 text-lg border border-white/20 backdrop-blur-md animate-pulse">
                   <Crown className="w-4 h-4 mr-2" />
                   ✓ Member
                 </Badge>
@@ -814,8 +824,16 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   className="mb-8"
                 >
                   <motion.h1 
-                    className="text-6xl font-bold bg-gradient-to-r from-slate-100 via-purple-300 to-pink-300 bg-clip-text text-transparent mb-6 leading-tight"
+                    className="text-6xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent mb-6 leading-tight relative"
                     whileHover={{ scale: 1.02 }}
+                    animate={{
+                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+                    }}
+                    transition={{
+                      duration: 5,
+                      repeat: Infinity,
+                      ease: "linear"
+                    }}
                   >
                     {club?.name}
                   </motion.h1>
@@ -823,7 +841,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.5, duration: 0.8 }}
-                    className="text-slate-300 text-xl leading-relaxed max-w-3xl"
+                    className="text-[#333333]/80 text-xl leading-relaxed max-w-3xl font-['Open Sans'] tracking-wide"
                   >
                     {club?.description}
                   </motion.p>
@@ -838,13 +856,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   className="flex items-center gap-8"
                 >
                   <motion.div 
-                    className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-slate-700/50"
+                    className="flex items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-[#90CAF9]/20 hover:border-[#90CAF9]/40 transition-all duration-300 hover:shadow-[0_8px_16px_-6px_rgba(30,58,138,0.15)]"
                     whileHover={{ scale: 1.05, y: -5 }}
                     transition={{ duration: 0.3 }}
                   >
                     <motion.div
                       whileHover={{ scale: 1.2, rotate: 15 }}
-                      className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl shadow-lg"
+                      className="p-3 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-xl shadow-lg"
                     >
                       <Users className="h-8 w-8 text-white" />
                     </motion.div>
@@ -863,7 +881,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   >
                     <motion.div
                       whileHover={{ scale: 1.2, rotate: -15 }}
-                      className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-xl shadow-lg"
+                      className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg"
                     >
                       <Calendar className="h-8 w-8 text-white" />
                     </motion.div>
@@ -884,7 +902,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   >
                     <motion.div
                       whileHover={{ scale: 1.2, rotate: 15 }}
-                      className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl shadow-lg"
+                      className="p-3 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-xl shadow-lg"
                     >
                       <Activity className="h-8 w-8 text-white" />
                     </motion.div>
@@ -911,10 +929,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     whileTap={{ scale: 0.95 }}
                     className="relative"
                   >
-                    <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-pink-600 rounded-2xl blur-lg opacity-40" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl blur-lg opacity-40" />
                     <Button 
                       size="lg" 
-                      className="relative bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-2xl px-10 py-4 text-xl rounded-2xl transition-all duration-300"
+                      className="relative overflow-hidden bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white shadow-[0_4px_20px_-4px_rgba(30,58,138,0.3)] hover:shadow-[0_8px_25px_-5px_rgba(30,58,138,0.4)] px-10 py-4 text-xl rounded-2xl transition-all duration-300 border border-white/20 backdrop-blur-sm before:absolute before:inset-0 before:bg-white/20 before:scale-x-0 hover:before:scale-x-100 before:origin-left before:transition-transform before:duration-300"
                       onClick={joinClub}
                     >
                       <motion.div
@@ -936,7 +954,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     <Button 
                       variant="outline" 
                       size="lg" 
-                      className="bg-slate-800/80 backdrop-blur-sm shadow-2xl border-2 border-slate-600 hover:border-slate-500 px-10 py-4 text-xl rounded-2xl transition-all duration-300 hover:bg-slate-800/90 text-slate-200 hover:text-white"
+                      className="bg-slate-800/80 backdrop-blur-sm shadow-2xl border border-indigo-900/50 hover:border-indigo-700/50 px-10 py-4 text-xl rounded-2xl transition-all duration-300 hover:bg-slate-800/90 text-slate-200 hover:text-white"
                       onClick={() => setShowSidePanel(true)}
                     >
                       <BarChart3 className="mr-3 h-6 w-6" />
@@ -954,7 +972,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     <Button 
                       variant="outline"
                       size="lg" 
-                      className="bg-white/60 backdrop-blur-sm shadow-xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-lg rounded-2xl transition-all duration-300"
+                      className="bg-white/10 backdrop-blur-sm shadow-xl border border-white/5 hover:bg-white/15 px-10 py-4 text-lg rounded-2xl transition-all duration-300 text-slate-200"
                       onClick={() => setShowSidePanel(true)}
                     >
                       <BarChart3 className="mr-3 h-5 w-5" />
@@ -972,7 +990,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     <Button 
                       variant="outline"
                       size="lg" 
-                      className="bg-white/60 backdrop-blur-sm shadow-xl border-2 border-gray-200 hover:border-gray-300 px-10 py-4 text-lg rounded-2xl transition-all duration-300"
+                      className="bg-white/10 backdrop-blur-sm shadow-xl border border-#eb509d/5 hover:bg-black/15 px-10 py-4 text-lg rounded-2xl transition-all duration-300 text-slate-200"
                     >
                       <Heart className="mr-3 h-5 w-5" />
                       Follow Updates
@@ -993,27 +1011,27 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             transition={{ delay: 1.2, duration: 0.8 }}
             className="lg:col-span-3"
           >
-            <div className="bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl border border-slate-800/50 overflow-hidden">
+            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] border border-[#90CAF9]/30 overflow-hidden transform-gpu hover:scale-[1.01] transition-all duration-300">
               <Tabs defaultValue="discussions" className="w-full">
-                <div className="bg-gradient-to-r from-slate-800/50 to-slate-700/50 px-8 py-6">
-                  <TabsList className="grid w-full grid-cols-3 bg-slate-800/50 backdrop-blur-sm rounded-2xl p-2">
+                <div className="bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 px-8 py-6">
+                  <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-md rounded-xl p-2 shadow-[0_4px_20px_-4px_rgba(30,58,138,0.15)] border border-[#90CAF9]/20">
                     <TabsTrigger 
                       value="discussions" 
-                      className="flex items-center gap-3 data-[state=active]:bg-slate-700 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-300 hover:text-white"
+                      className="flex items-center gap-3 data-[state=active]:bg-indigo-800/70 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-600 hover:text-white"
                     >
                       <MessageSquare className="h-5 w-5" />
                       <span className="font-medium">Discussions</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="events" 
-                      className="flex items-center gap-3 data-[state=active]:bg-slate-700 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-300 hover:text-white"
+                      className="flex items-center gap-3 data-[state=active]:bg-indigo-800/70 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-600 hover:text-white"
                     >
                       <Calendar className="h-5 w-5" />
                       <span className="font-medium">Events</span>
                     </TabsTrigger>
                     <TabsTrigger 
                       value="members" 
-                      className="flex items-center gap-3 data-[state=active]:bg-slate-700 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-300 hover:text-white"
+                      className="flex items-center gap-3 data-[state=active]:bg-indigo-800/70 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-600 hover:text-white"
                     >
                       <Users className="h-5 w-5" />
                       <span className="font-medium">Members</span>
@@ -1029,17 +1047,17 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                     className="flex justify-between items-center mb-8"
                   >
                     <div>
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent mb-2">
+                      <h2 className="text-3xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent mb-2">
                         Discussion Threads
                       </h2>
-                      <p className="text-slate-400">Join the conversation and share your thoughts</p>
+                      <p className="text-slate-600">Join the conversation and share your thoughts</p>
                     </div>
                     <motion.div 
                       whileHover={{ scale: 1.05, y: -2 }} 
                       whileTap={{ scale: 0.95 }}
                     >
                       <Button 
-                        className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg rounded-2xl px-6 py-3"
+                        className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg rounded-xl px-6 py-3"
                         onClick={() => setShowCreateThreadModal(true)}
                         disabled={!isMember}
                       >
@@ -1061,7 +1079,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       >
                         <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
                       </motion.div>
-                      <p className="text-slate-400 text-lg">Loading discussions...</p>
+                      <p className="text-slate-600 text-lg">Loading discussions...</p>
                     </motion.div>
                   ) : threads.length === 0 ? (
                     <motion.div 
@@ -1094,7 +1112,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                           {isAuthenticated && (
                             <Button 
                               onClick={joinClub}
-                              className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
                             >
                               <Users className="mr-2 h-4 w-4" />
                               Join Club
@@ -1123,7 +1141,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                           className="perspective-1000"
                         >
                           <Link href={`/threads/${thread.id}`}>
-                            <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-slate-900/90 backdrop-blur-xl border-slate-800/50 rounded-3xl shadow-2xl">
+                            <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/90 backdrop-blur-xl border border-[#90CAF9]/30 rounded-3xl shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)]">
                               {/* Enhanced gradient border effect */}
                               <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
                               
@@ -1150,7 +1168,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: 0.2 + index * 0.1 }}
                                       >
-                                        <CardTitle className="text-2xl group-hover:text-purple-400 transition-colors duration-300 font-bold bg-gradient-to-r from-slate-100 to-slate-300 bg-clip-text text-transparent group-hover:from-purple-400 group-hover:to-pink-400">
+                                        <CardTitle className="text-2xl transition-colors duration-300 font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent group-hover:from-[#15306E] group-hover:to-[#7FB9F8]">
                                           {thread.title}
                                         </CardTitle>
                                       </motion.div>
@@ -1167,8 +1185,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                             {thread.createdBy.firstName?.[0]}{thread.createdBy.lastName?.[0]}
                                           </AvatarFallback>
                                         </Avatar>
-                                        <span className="text-slate-300">by</span>
-                                        <span className="font-semibold text-slate-200">{thread.createdBy.firstName} {thread.createdBy.lastName}</span> 
+                                        <span className="text-custom-purple drop-shadow-sm">by</span>
+                                        <span className="font-semibold text-#eb509d drop-shadow-sm filter shadow-black">{thread.createdBy.firstName} {thread.createdBy.lastName}</span> 
                                         <span className="text-slate-500">•</span>
                                         <span className="text-slate-400">{new Date(thread.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                                       </CardDescription>
@@ -1182,7 +1200,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                       className="mb-6"
                                     >
                                       {thread.content && (
-                                        <p className="text-slate-300 text-base leading-relaxed line-clamp-3 mb-4">
+                                        <p className="text-[#1a1a1a] text-base leading-relaxed line-clamp-3 mb-4 font-['Open Sans']">
                                           {thread.content}
                                         </p>
                                       )}
@@ -1253,7 +1271,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                       <motion.div
                                         whileHover={{ scale: 1.1, y: -2 }}
                                         whileTap={{ scale: 0.95 }}
-                                        className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-blue-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-blue-500/30"
+                                        className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-[#1E3A8A]/10 transition-all duration-300 group bg-white/80 backdrop-blur-sm shadow-lg border border-[#90CAF9]/30"
                                         onClick={(e) => e.preventDefault()}
                                       >
                                         <motion.div
@@ -1367,7 +1385,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       whileHover={{ scale: 1.05, y: -2 }} 
                       whileTap={{ scale: 0.95 }}
                     >
-                      <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 shadow-lg rounded-2xl px-6 py-3">
+                      <Button className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)] rounded-2xl px-6 py-3 text-white">
                         <Plus className="mr-2 h-5 w-5" />
                         Create Event
                       </Button>
@@ -1533,7 +1551,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                           whileHover="hover"
                           className="perspective-1000"
                         >
-                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/90 backdrop-blur-sm border-0 h-full">
+                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/90 backdrop-blur-sm border border-[#90CAF9]/30 h-full rounded-3xl shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)]">
                             {/* Enhanced Background gradient overlay */}
                             <div 
                               className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"

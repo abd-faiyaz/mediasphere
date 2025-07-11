@@ -33,6 +33,9 @@ export default function CreateThreadModal({
   const [images, setImages] = useState<ImagePreview[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showPreview, setShowPreview] = useState(false)
+  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrlPreview, setImageUrlPreview] = useState<string | null>(null);
+  const [imageUrlError, setImageUrlError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const modalVariants = {
@@ -109,6 +112,40 @@ export default function CreateThreadModal({
     }
   }
 
+  // Handle image URL input and preview
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setImageUrl(e.target.value);
+    setImageUrlError("");
+    if (e.target.value.match(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)) {
+      setImageUrlPreview(e.target.value);
+    } else {
+      setImageUrlPreview(null);
+    }
+  };
+
+  const addImageByUrl = () => {
+    if (!imageUrlPreview) {
+      setImageUrlError("Please enter a valid image URL (jpg, png, gif, webp)");
+      return;
+    }
+    // Prevent duplicate or multiple URL images
+    if (images.some(img => (img as any).isUrl)) {
+      setImageUrlError("Only one image by link can be added");
+      return;
+    }
+    setImages(prev => [
+      ...prev,
+      {
+        id: Math.random().toString(36).substr(2, 9),
+        file: null as any, // Not a File
+        preview: imageUrlPreview,
+        isUrl: true
+      } as any
+    ]);
+    setImageUrl("");
+    setImageUrlPreview(null);
+  };
+
   const removeImage = (id: string) => {
     setImages(prev => prev.filter(img => img.id !== id))
   }
@@ -144,7 +181,11 @@ export default function CreateThreadModal({
       
       // Add images to form data
       images.forEach((image) => {
-        formData.append(`images`, image.file)
+        if ((image as any).isUrl && image.preview) {
+          formData.append('imageUrls', image.preview);
+        } else if (image.file) {
+          formData.append('images', image.file);
+        }
       })
 
       const apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${clubId}/threads`;
@@ -310,6 +351,47 @@ export default function CreateThreadModal({
                 onChange={handleImageUpload}
                 className="hidden"
               />
+            </motion.div>
+
+            {/* Image by Link */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.75 }}
+            >
+              <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-2">
+                <ImageIcon className="h-4 w-4 text-blue-500" /> Add Image by Link
+              </label>
+              <div className="flex gap-2 items-center">
+                <input
+                  type="text"
+                  value={imageUrl}
+                  onChange={handleImageUrlChange}
+                  placeholder="Paste image URL (jpg, png, gif, webp)"
+                  className="w-full p-3 border-2 border-gray-200 rounded-xl focus:border-purple-500 focus:ring-0 transition-all duration-300 bg-white/50 backdrop-blur-sm"
+                />
+                <motion.button
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  type="button"
+                  onClick={addImageByUrl}
+                  className="bg-gradient-to-r from-blue-500 to-purple-500 text-white px-4 py-2 rounded-xl shadow-md disabled:opacity-50"
+                  disabled={!imageUrlPreview || images.some(img => (img as any).isUrl)}
+                >
+                  Add
+                </motion.button>
+              </div>
+              {imageUrlError && <div className="text-red-500 text-xs mt-1">{imageUrlError}</div>}
+              {imageUrlPreview && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="mt-2 flex items-center gap-2"
+                >
+                  <img src={imageUrlPreview} alt="Preview" className="h-16 w-16 object-cover rounded-lg border-2 border-purple-200 shadow" />
+                  <span className="text-gray-600 text-xs">Preview</span>
+                </motion.div>
+              )}
             </motion.div>
 
             {/* Image Previews */}

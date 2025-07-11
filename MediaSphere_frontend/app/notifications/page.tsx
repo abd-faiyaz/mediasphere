@@ -31,7 +31,7 @@ function NotificationsContent() {
   const [newNotificationIds, setNewNotificationIds] = useState<Set<string>>(new Set())
   const [isSSEConnected, setIsSSEConnected] = useState(false)
   const eventSourceRef = useRef<EventSource | null>(null)
-  
+
   // Notification settings state
   const [notificationSettings, setNotificationSettings] = useState({
     emailNotifications: true,
@@ -60,7 +60,7 @@ function NotificationsContent() {
       ...prev,
       [key]: value
     }))
-    
+
     // Show feedback toast
     const settingNames = {
       emailNotifications: 'Email notifications',
@@ -68,12 +68,12 @@ function NotificationsContent() {
       soundAlerts: 'Sound alerts',
       pushNotifications: 'Push notifications'
     }
-    
+
     toast({
       title: `${settingNames[key]} ${value ? 'enabled' : 'disabled'}`,
       description: `Your ${settingNames[key].toLowerCase()} have been ${value ? 'turned on' : 'turned off'}.`,
     })
-    
+
     // Handle real-time connection based on setting
     if (key === 'realTimeNotifications') {
       if (value) {
@@ -611,58 +611,27 @@ function NotificationsContent() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center">
         <div className="text-center">
           <motion.div
             animate={{ rotate: 360 }}
             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
             className="inline-block"
           >
-            <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
+            <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-400" />
           </motion.div>
-          <p className="text-slate-400">Loading notifications...</p>
+          <p className="text-blue-400">Loading notifications...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 relative overflow-hidden">
-      {/* Floating Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[
-          { icon: Bell, delay: 0.5, x: -30, y: -40, size: 'h-8 w-8' },
-          { icon: MessageSquare, delay: 0.8, x: 40, y: -30, size: 'h-6 w-6' },
-          { icon: Heart, delay: 1.1, x: -40, y: 30, size: 'h-10 w-10' },
-          { icon: Users, delay: 1.4, x: 30, y: 40, size: 'h-7 w-7' },
-          { icon: ThumbsUp, delay: 1.7, x: 0, y: -50, size: 'h-5 w-5' },
-          { icon: Check, delay: 2.0, x: 50, y: 0, size: 'h-9 w-9' },
-        ].map((item, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, scale: 0, rotate: -180 }}
-            animate={{
-              opacity: [0, 0.3, 0.6, 0.3, 0],
-              scale: [0, 1.2, 1, 1.2, 0],
-              rotate: 360,
-              x: [item.x, item.x + 20, item.x - 10, item.x + 15, item.x],
-              y: [item.y, item.y - 15, item.y + 10, item.y - 20, item.y]
-            }}
-            transition={{
-              duration: 20,
-              delay: item.delay,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute"
-            style={{
-              left: `${50 + item.x}%`,
-              top: `${50 + item.y}%`,
-            }}
-          >
-            <item.icon className={`${item.size} text-purple-400/20`} />
-          </motion.div>
-        ))}
+    <div className="min-h-screen bg-[#f7ecdf] relative overflow-hidden">
+      {/* Decorative Background Circles */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[10%] left-[15%] w-[40rem] h-[40rem] bg-gradient-to-r from-blue-400/30 to-purple-400/30 rounded-full filter blur-3xl opacity-50" />
+        <div className="absolute bottom-[15%] right-[10%] w-[35rem] h-[35rem] bg-gradient-to-r from-indigo-400/30 to-pink-400/30 rounded-full filter blur-3xl opacity-50" />
       </div>
 
       {/* Header */}
@@ -670,15 +639,14 @@ function NotificationsContent() {
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800/50 sticky top-0 z-50 shadow-lg"
+        className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
+              <Link href="/" className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block">
                 Mediasphere
               </Link>
-
               {/* Back Button */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -691,7 +659,7 @@ function NotificationsContent() {
                   variant="ghost"
                   size="sm"
                   onClick={() => router.back()}
-                  className="flex items-center gap-2 text-slate-400 hover:text-purple-400 hover:bg-slate-800/50 transition-all duration-300 rounded-xl px-3 py-2"
+                  className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 rounded-xl px-3 py-2"
                 >
                   <ArrowLeft className="h-4 w-4" />
                   <span className="font-medium">Back</span>
@@ -700,13 +668,13 @@ function NotificationsContent() {
             </div>
             <nav className="flex items-center space-x-4">
               <Link href="/clubs">
-                <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Clubs</Button>
+                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">Clubs</Button>
               </Link>
               <Link href="/ai-services">
-                <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">AI Services</Button>
+                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">AI Services</Button>
               </Link>
               <Link href="/notifications">
-                <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50 relative">
+                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] relative">
                   Notifications
                   {unreadCount > 0 && (
                     <motion.div
@@ -734,7 +702,7 @@ function NotificationsContent() {
                 </Button>
               </Link>
               <Link href="/profile">
-                <Button variant="ghost" className="text-slate-300 hover:text-purple-400 hover:bg-slate-800/50">Profile</Button>
+                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">Profile</Button>
               </Link>
             </nav>
           </div>
@@ -754,13 +722,13 @@ function NotificationsContent() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent flex items-center gap-3"
+              className="text-3xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent flex items-center gap-3"
             >
               <motion.div
                 animate={{ rotate: [0, 15, -15, 0] }}
                 transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
               >
-                <Bell className="h-8 w-8 text-purple-400" />
+                <Bell className="h-8 w-8 text-[#90CAF9]" />
               </motion.div>
               Notifications
               {totalNewCount > 0 && (
@@ -793,7 +761,7 @@ function NotificationsContent() {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-slate-400 mt-2"
+              className="text-[#333333]/70 mt-2 font-['Open Sans']"
             >
               Stay updated with your community activity
             </motion.p>
@@ -881,14 +849,14 @@ function NotificationsContent() {
                     Settings
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-900/95 backdrop-blur-xl border-slate-800/50 text-slate-200 max-w-md">
+                <DialogContent className="bg-white/95 backdrop-blur-xl border-[#90CAF9]/30 text-[#333333] max-w-md">
                   <DialogHeader>
-                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent flex items-center gap-2">
-                      <Settings className="h-5 w-5 text-purple-400" />
+                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent flex items-center gap-2">
+                      <Settings className="h-5 w-5 text-[#90CAF9]" />
                       Notification Settings
                     </DialogTitle>
                   </DialogHeader>
-                  
+
                   <div className="space-y-6 mt-6">
                     {/* Email Notifications */}
                     <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
@@ -984,69 +952,75 @@ function NotificationsContent() {
           transition={{ delay: 0.5, duration: 0.6 }}
         >
           <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6 bg-slate-900/90 backdrop-blur-xl border-slate-800/50 p-1 rounded-xl">
+            <TabsList className="grid w-full grid-cols-6 bg-white/90 backdrop-blur-xl border border-[#90CAF9]/30 p-1 rounded-xl">
               <TabsTrigger
                 value="all"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 All
                 {tabCounts.all > 0 && (
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="secondary" className="bg-[#F0F7FF] text-[#1E3A8A] text-xs px-1.5 py-0.5 h-5">
                     {tabCounts.all}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="comment"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+//                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Comments
                 {tabCounts.comment > 0 && (
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="secondary" className="bg-[#F0F7FF] text-[#1E3A8A] text-xs px-1.5 py-0.5 h-5">
                     {tabCounts.comment}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="reaction"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-600 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+              
+               // className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-600 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Reactions
                 {tabCounts.reaction > 0 && (
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="secondary" className="bg-[#F0F7FF] text-[#1E3A8A] text-xs px-1.5 py-0.5 h-5">
                     {tabCounts.reaction}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="club"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                //className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Clubs
                 {tabCounts.club > 0 && (
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="secondary" className="bg-[#F0F7FF] text-[#1E3A8A] text-xs px-1.5 py-0.5 h-5">
                     {tabCounts.club}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="event"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                //className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Events
                 {tabCounts.event > 0 && (
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="secondary" className="bg-[#F0F7FF] text-[#1E3A8A] text-xs px-1.5 py-0.5 h-5">
                     {tabCounts.event}
                   </Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
                 value="ai"
-                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-600 data-[state=active]:to-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
+                //className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-600 data-[state=active]:to-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 AI Services
                 {tabCounts.ai > 0 && (
-                  <Badge variant="secondary" className="bg-slate-700 text-slate-300 text-xs px-1.5 py-0.5 h-5">
+                  <Badge variant="secondary" className="bg-[#F0F7FF] text-[#1E3A8A] text-xs px-1.5 py-0.5 h-5">
                     {tabCounts.ai}
                   </Badge>
                 )}
@@ -1066,23 +1040,16 @@ function NotificationsContent() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5 }}
                   >
-                    <Card className="bg-slate-900/90 backdrop-blur-xl border-slate-800/50">
-                      <CardContent className="p-12 text-center">
-                        <motion.div
-                          initial={{ scale: 0.8, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          transition={{ delay: 0.2, duration: 0.5 }}
-                          className="mb-6"
-                        >
-                          <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-slate-700 to-slate-800 rounded-full flex items-center justify-center">
-                            <Bell className="h-8 w-8 text-slate-500" />
-                          </div>
-                        </motion.div>
+                    <Card className="bg-white/90 backdrop-blur-xl border-[#90CAF9]/20">
+                      <CardContent className="p-12 text-center flex flex-col items-center justify-center">
+                        <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gradient-to-br from-[#90CAF9]/30 to-[#1E3A8A]/20">
+                          <Bell className="h-16 w-16 text-[#90CAF9]" />
+                        </div>
                         <motion.h3
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.3, duration: 0.5 }}
-                          className="text-lg font-medium text-slate-300 mb-2"
+                          className="text-lg font-medium text-[#333333] mb-2"
                         >
                           {activeTab === "all" ? "No notifications yet" : `No ${activeTab} notifications yet`}
                         </motion.h3>
@@ -1090,7 +1057,7 @@ function NotificationsContent() {
                           initial={{ opacity: 0, y: 10 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ delay: 0.4, duration: 0.5 }}
-                          className="text-slate-500 text-sm"
+                          className="text-[#333333]/60 text-sm"
                         >
                           {activeTab === "all"
                             ? "When you get notifications, they'll show up here"
@@ -1112,9 +1079,7 @@ function NotificationsContent() {
                     return (
                       <motion.div key={notification.id} variants={cardVariants} whileHover="hover" custom={index}>
                         <Card
-                          className={`transition-all duration-300 cursor-pointer bg-slate-900/90 backdrop-blur-xl border-slate-800/50 hover:bg-slate-800/60 hover:shadow-lg hover:border-slate-700/50 rounded-xl ${!notification.read ? "border-l-4 border-l-blue-500 bg-blue-500/5" : ""
-                            } ${newNotificationIds.has(notification.id) ? "border-2 border-red-500/50 shadow-red-500/20 shadow-lg" : ""
-                            }`}
+                          className={`transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-xl border-[#90CAF9]/20 hover:shadow-2xl hover:scale-[1.015] hover:border-[#1E3A8A]/30 rounded-xl ${!notification.read ? "border-l-4 border-l-blue-500 bg-blue-500/5" : ""} ${newNotificationIds.has(notification.id) ? "border-2 border-red-500/50 shadow-red-500/20 shadow-lg" : ""}`}
                           onClick={() => {
                             if (!notification.read) {
                               markAsRead(notification.id)
@@ -1123,6 +1088,32 @@ function NotificationsContent() {
                         >
                           <CardContent className="p-0">
                             <div className="flex items-start gap-0 relative">
+                              {/* Quick visual scanning icon */}
+                              <div className="flex flex-col items-center justify-center pl-4 pr-2 pt-6">
+                                <motion.div
+                                  initial={{ scale: 0, rotate: -180 }}
+                                  animate={{ scale: 1, rotate: 0 }}
+                                  transition={{ delay: 0.3 + index * 0.1, type: "spring", stiffness: 200 }}
+                                  className={`rounded-full p-2 ${getNotificationColor(notification.type)}`}
+                                >
+                                  <Icon className="h-5 w-5" />
+                                </motion.div>
+                                {/* Pulse for new notification */}
+                                {newNotificationIds.has(notification.id) && (
+                                  <motion.div
+                                    className="w-3 h-3 rounded-full bg-red-400 mt-2"
+                                    animate={{
+                                      scale: [1, 1.5, 1],
+                                      opacity: [1, 0.5, 1]
+                                    }}
+                                    transition={{
+                                      duration: 1.2,
+                                      repeat: Infinity,
+                                      ease: "easeInOut"
+                                    }}
+                                  />
+                                )}
+                              </div>
                               {/* User Avatar */}
                               <div className="relative p-4 pb-0">
                                 <motion.div
@@ -1142,16 +1133,6 @@ function NotificationsContent() {
                                       {userInitials}
                                     </div>
                                   )}
-
-                                  {/* Action Icon Overlay */}
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 300 }}
-                                    className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-slate-800 flex items-center justify-center ${getNotificationColor(notification.type)}`}
-                                  >
-                                    <Icon className="h-3 w-3" />
-                                  </motion.div>
                                 </motion.div>
                               </div>
 
