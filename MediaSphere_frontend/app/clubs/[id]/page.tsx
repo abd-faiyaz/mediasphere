@@ -5,10 +5,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Users, MessageSquare, Calendar, Settings, Plus, Pin, TrendingUp, Loader2, Star, Heart, Eye, Globe, Zap, Award, Sparkles, Crown, Trophy, Activity, ArrowLeft, X, BarChart3, Clock } from "lucide-react"
+import { Users, MessageSquare, Calendar, Plus, Pin, Eye, Globe, Crown, Activity, ArrowLeft, X, BarChart3, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
-import { useEffect, useState, use, useRef } from "react"
+import { useEffect, useState, use } from "react"
 import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
@@ -104,34 +103,12 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   const [threadsLoading, setThreadsLoading] = useState(false)
   const [eventsLoading, setEventsLoading] = useState(false)
   const [membersLoading, setMembersLoading] = useState(false)
-  const [showConfetti, setShowConfetti] = useState(false)
   const [showSidePanel, setShowSidePanel] = useState(false)
   const [showMembersPanel, setShowMembersPanel] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false)
-  const [showNewMemberPanel, setShowNewMemberPanel] = useState(false)
-  const [showLatestThreadPanel, setShowLatestThreadPanel] = useState(false)
-  const [showLatestEventPanel, setShowLatestEventPanel] = useState(false)
-  const [isMounted, setIsMounted] = useState(false)
-  const [iconPositions, setIconPositions] = useState<Array<{x: number, y: number}>>([])
   const { user, isAuthenticated } = useAuth()
   const router = useRouter()
-  const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll({ target: containerRef })
-  
-  // Parallax effects
-  const heroY = useTransform(scrollYProgress, [0, 1], ['0%', '50%'])
-  const statsOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0])
-
-  // Floating icons for background animation
-  const floatingIcons = [
-    { icon: Star, delay: 0.5, x: -30, y: -40 },
-    { icon: Heart, delay: 0.8, x: 40, y: -30 },
-    { icon: Trophy, delay: 1.1, x: -40, y: 30 },
-    { icon: Crown, delay: 1.4, x: 30, y: 40 },
-    { icon: Sparkles, delay: 1.7, x: 0, y: -50 },
-    { icon: Award, delay: 2.0, x: 50, y: 0 },
-  ]
 
   // Fetch club details
   const fetchClubDetails = async () => {
@@ -305,7 +282,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     }
   }
 
-  // Fetch club members with mutual clubs
+  // Fetch club members
   const fetchMembers = async () => {
     try {
       setMembersLoading(true)
@@ -367,10 +344,6 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         throw new Error('Failed to join club')
       }
 
-      // Trigger celebration effects
-      setShowConfetti(true)
-      setTimeout(() => setShowConfetti(false), 3000)
-
       toast({
         title: "🎉 Welcome to the club!",
         description: "You've successfully joined the community!",
@@ -378,6 +351,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       
       // Refresh membership status
       await checkMembership()
+      await fetchClubDetails()
     } catch (error) {
       console.error('Error joining club:', error)
       toast({
@@ -413,6 +387,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       
       // Refresh membership status
       await checkMembership()
+      await fetchClubDetails()
     } catch (error) {
       console.error('Error leaving club:', error)
       toast({
@@ -455,10 +430,10 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Loading club details...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#1E3A8A]" />
+          <p className="text-[#333333]/70 font-['Open Sans']">Loading club details...</p>
         </div>
       </div>
     )
@@ -466,2244 +441,485 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
 
   if (!club) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Club Not Found</h1>
-          <p className="text-gray-600 mb-6">The club you're looking for doesn't exist.</p>
+          <h1 className="text-2xl font-bold text-[#1E3A8A] mb-4">Club Not Found</h1>
+          <p className="text-[#333333]/70 mb-6">The club you're looking for doesn't exist.</p>
           <Link href="/clubs">
-            <Button>Back to Clubs</Button>
+            <Button className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">Back to Clubs</Button>
           </Link>
         </div>
       </div>
     )
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.2,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.95 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      },
-    },
-  }
-
-  const cardVariants = {
-    hidden: { opacity: 0, x: -20, rotateY: -15 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      rotateY: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut"
-      },
-    },
-    hover: {
-      scale: 1.03,
-      y: -5,
-      boxShadow: "0 20px 40px rgba(30, 58, 138, 0.15)",
-      transition: {
-        duration: 0.3,
-        ease: "easeInOut"
-      },
-    },
-  }
-
-  // Generate background image based on media type
-  const getMediaTypeGradient = (mediaType: string) => {
-    const gradients: Record<string, string> = {
-      'Photography': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Music': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Video': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Art': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Writing': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Gaming': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Technology': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Sports': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'Education': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)',
-      'default': 'linear-gradient(135deg, #1E3A8A 0%, #90CAF9 100%)'
-    }
-    return gradients[mediaType] || gradients.default
-  }
-
   return (
-    <div ref={containerRef} className="min-h-screen bg-[#f7ecdf] relative overflow-hidden">
-      {/* Static decorative background elements */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        {/* Large gradient circles with fixed positions */}
-        <div className="absolute top-[10%] left-[15%] w-[40rem] h-[40rem] bg-gradient-to-r from-[#1E3A8A]/30 to-[#90CAF9]/30 rounded-full filter blur-3xl opacity-50" />
-        <div className="absolute bottom-[15%] right-[10%] w-[35rem] h-[35rem] bg-gradient-to-r from-[#1E3A8A]/30 to-[#90CAF9]/30 rounded-full filter blur-3xl opacity-50" />
-      </div>
-      {/* Floating Background Elements */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {floatingIcons.map((item, index) => (
-          <motion.div
-            key={`floating-icon-${index}`}
-            initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-            animate={{
-              opacity: [0, 0.3, 0],
-              scale: [0, 1.5, 0],
-              x: [0, item.x, item.x * 2],
-              y: [0, item.y, item.y * 2],
-              rotate: [0, 180, 360],
-            }}
-            transition={{
-              duration: 8,
-              delay: item.delay,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
-            className="absolute"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          >
-            <item.icon className="w-8 h-8 text-[#1E3A8A]/20" />
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Confetti Effect */}
-      <AnimatePresence>
-        {showConfetti && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 pointer-events-none z-50"
-          >
-            {Array.from({ length: 50 }).map((_, i) => (
-              <motion.div
-                key={`confetti-${i}`}
-                initial={{
-                  opacity: 1,
-                  y: -100,
-                  x: Math.random() * window.innerWidth,
-                  rotate: 0,
-                }}
-                animate={{
-                  y: window.innerHeight + 100,
-                  rotate: 360,
-                  opacity: 0,
-                }}
-                transition={{
-                  duration: 3,
-                  delay: Math.random() * 2,
-                  ease: "easeOut",
-                }}
-                className={`absolute w-${Math.random() > 0.5 ? '3' : '2'} h-${Math.random() > 0.5 ? '3' : '2'} ${
-                  Math.random() > 0.5 
-                    ? 'bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9]' 
-                    : 'bg-gradient-to-r from-[#90CAF9] to-[#1E3A8A]'
-                } ${Math.random() > 0.5 ? 'rounded-full' : 'rounded'}`}
-              />
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Animated Header */}
-      <motion.header
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
-        className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
-      >
+    <div className="min-h-screen bg-[#f7ecdf]">
+      {/* Header */}
+      <header className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <motion.div
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Link
+                href={isAuthenticated ? "/profile" : "/"}
+                className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent"
               >
-                <Link 
-                  href={isAuthenticated ? "/profile" : "/"} 
-                  className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent"
-                >
-                  Mediasphere
-                </Link>
-              </motion.div>
-              
+                Mediasphere
+              </Link>
+
               {/* Back Button */}
-              <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => router.back()}
+                className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 rounded-xl px-3 py-2"
               >
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => router.back()}
-                  className="flex items-center gap-2 text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-300 rounded-xl px-3 py-2"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  <span className="font-medium">Back</span>
-                </Button>
-              </motion.div>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="font-medium">Back</span>
+              </Button>
             </div>
             <nav className="flex items-center space-x-4">
               {isAuthenticated ? (
                 <>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link href="/clubs">
-                      <Button variant="ghost" className="hover:bg-blue-50 transition-all duration-300">Clubs</Button>
-                    </Link>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link href="/ai-services">
-                      <Button variant="ghost" className="hover:bg-purple-50 transition-all duration-300">AI Services</Button>
-                    </Link>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link href="/notifications">
-                      <Button variant="ghost" className="hover:bg-yellow-50 transition-all duration-300">Notifications</Button>
-                    </Link>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link href="/profile">
-                      <Button variant="ghost" className="hover:bg-green-50 transition-all duration-300">Profile</Button>
-                    </Link>
-                  </motion.div>
+                  <Link href="/clubs">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Clubs
+                    </Button>
+                  </Link>
+                  <Link href="/ai-services">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      AI Services
+                    </Button>
+                  </Link>
+                  <Link href="/notifications">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Notifications
+                    </Button>
+                  </Link>
+                  <Link href="/profile">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Profile
+                    </Button>
+                  </Link>
                 </>
               ) : (
                 <>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link href="/">
-                      <Button variant="ghost">Home</Button>
-                    </Link>
-                  </motion.div>
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                    <Link href="/clubs">
-                      <Button variant="ghost">Clubs</Button>
-                    </Link>
-                  </motion.div>
-                  
+                  <Link href="/">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Home
+                    </Button>
+                  </Link>
+                  <Link href="/clubs">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Clubs
+                    </Button>
+                  </Link>
+                  <Link href="/sign-in">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/sign-up">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Sign Up
+                    </Button>
+                  </Link>
                 </>
               )}
             </nav>
           </div>
         </div>
-      </motion.header>
+      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 relative z-10">
-        {/* Hero Section with Parallax */}
-        <motion.div
-          style={{ y: heroY }}
-          initial={{ opacity: 0, scale: 0.8, y: 100 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.25, 0.46, 0.45, 0.94] }}
-          className="relative overflow-hidden bg-white/90 backdrop-blur-xl rounded-3xl border border-[#90CAF9]/30 mb-12 shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] transform-gpu hover:scale-[1.01] transition-all duration-300 hover:shadow-[0_12px_32px_-8px_rgba(30,58,138,0.15)]"
-        >
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 overflow-hidden">
-            <motion.div
-              animate={{
-                background: [
-                  `radial-gradient(circle at 20% 20%, ${getMediaTypeGradient(club?.mediaType.name || 'default').replace('linear-gradient(135deg, ', '').replace(')', '')})`,
-                  `radial-gradient(circle at 80% 80%, ${getMediaTypeGradient(club?.mediaType.name || 'default').replace('linear-gradient(135deg, ', '').replace(')', '')})`,
-                  `radial-gradient(circle at 20% 20%, ${getMediaTypeGradient(club?.mediaType.name || 'default').replace('linear-gradient(135deg, ', '').replace(')', '')})`,
-                ],
-              }}
-              transition={{
-                duration: 10,
-                repeat: Infinity,
-                ease: "linear",
-              }}
-              className="absolute inset-0 opacity-10"
-            />
-          </div>
-          
-          {/* Hero Header with Gradient */}
-          <div 
-            className="h-64 relative overflow-hidden"
-            style={{ 
-              background: `linear-gradient(135deg, ${getMediaTypeGradient(club?.mediaType.name || 'default')})`,
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-black/10 to-black/30" />
-            
-            {/* Enhanced Floating Particles in Hero */}
-            <div className="absolute inset-0">
-              {Array.from({ length: 20 }).map((_, i) => (
-                <motion.div
-                  key={`hero-particle-${i}`}
-                  animate={{
-                    y: [0, -40, 0],
-                    x: [0, Math.random() * 20 - 10, 0],
-                    opacity: [0.2, 0.6, 0.2],
-                    scale: [0.8, 1.2, 0.8],
-                  }}
-                  transition={{
-                    duration: 4 + Math.random() * 3,
-                    repeat: Infinity,
-                    delay: Math.random() * 4,
-                    ease: "easeInOut",
-                  }}
-                  className={`absolute ${Math.random() > 0.5 ? 'w-3 h-3' : 'w-2 h-2'} bg-gradient-to-r from-[#1E3A8A]/40 to-[#90CAF9]/40 rounded-full backdrop-blur-sm shadow-[0_0_8px_rgba(144,202,249,0.3)]`}
-                  style={{
-                    left: `${Math.random() * 100}%`,
-                    top: `${Math.random() * 100}%`,
-                  }}
-                />
-              ))}
-            </div>
-            
-            {/* Enhanced Badge and Member Status */}
-            <motion.div
-              initial={{ scale: 0, rotate: -90 }}
-              animate={{ scale: 1, rotate: 0 }}
-              transition={{ delay: 0.5, duration: 0.8, type: "spring", stiffness: 200 }}
-              className="absolute top-8 right-8"
-            >
-              <Badge variant="secondary" className="bg-white/15 text-white shadow-2xl text-lg px-6 py-3 backdrop-blur-md border border-white/20">
-                <Globe className="w-5 h-5 mr-2" />
-                {club?.mediaType.name}
-              </Badge>
-            </motion.div>
-            
-            {isMember && (
-              <motion.div
-                initial={{ x: -100, opacity: 0, scale: 0 }}
-                animate={{ x: 0, opacity: 1, scale: 1 }}
-                transition={{ delay: 0.7, duration: 0.8, type: "spring", stiffness: 150 }}
-                className="absolute top-8 left-8"
-              >
-                <Badge variant="default" className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white shadow-[0_4px_15px_-3px_rgba(30,58,138,0.3)] px-6 py-3 text-lg border border-white/20 backdrop-blur-md animate-pulse">
-                  <Crown className="w-4 h-4 mr-2" />
-                  ✓ Member
-                </Badge>
-              </motion.div>
-            )}
-            
-            {/* Decorative Geometric Elements */}
-            <motion.div
-              initial={{ scale: 0, rotate: 0 }}
-              animate={{ scale: 1, rotate: 360 }}
-              transition={{ delay: 1.2, duration: 3, ease: "easeOut" }}
-              className="absolute bottom-8 left-12 w-8 h-8 rounded-full bg-white/25 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0, rotate: 0 }}
-              animate={{ scale: 1, rotate: -180 }}
-              transition={{ delay: 1.5, duration: 2.5, ease: "easeOut" }}
-              className="absolute top-12 left-1/3 w-6 h-6 rotate-45 bg-white/20 backdrop-blur-sm"
-            />
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              transition={{ delay: 1.8, duration: 2, ease: "easeOut" }}
-              className="absolute bottom-12 right-1/4 w-4 h-4 rounded-full bg-white/30 backdrop-blur-sm"
-            />
-          </div>
-
-          <div className="relative z-10 p-12">
-            <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-8">
-              <div className="flex-1">
-                <motion.div
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3, duration: 0.8 }}
-                  className="mb-8"
-                >
-                  <motion.h1 
-                    className="text-6xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent mb-6 leading-tight relative"
-                    whileHover={{ scale: 1.02 }}
-                    animate={{
-                      backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
-                    }}
-                    transition={{
-                      duration: 5,
-                      repeat: Infinity,
-                      ease: "linear"
-                    }}
-                  >
-                    {club?.name}
-                  </motion.h1>
-                  <motion.p
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5, duration: 0.8 }}
-                    className="text-[#333333]/80 text-xl leading-relaxed max-w-3xl font-['Open Sans'] tracking-wide"
-                  >
-                    {club?.description}
-                  </motion.p>
-                </motion.div>
-                
-                {/* Enhanced Stats Section */}
-                <motion.div
-                  style={{ opacity: statsOpacity }}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.7, duration: 0.8 }}
-                  className="flex items-center gap-8"
-                >
-                  <motion.div 
-                    className="flex items-center gap-4 bg-white/80 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-[#90CAF9]/20 hover:border-[#90CAF9]/40 transition-all duration-300 hover:shadow-[0_8px_16px_-6px_rgba(30,58,138,0.15)]"
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 15 }}
-                      className="p-3 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-xl shadow-lg"
-                    >
-                      <Users className="h-8 w-8 text-white" />
-                    </motion.div>
-                    <div>
-                      <div className="text-3xl font-bold text-slate-200">
-                        {club?.memberCount?.toLocaleString() || "0"}
-                      </div>
-                      <div className="text-slate-400 font-medium">Members</div>
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div 
-                    className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-slate-700/50"
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: -15 }}
-                      className="p-3 bg-gradient-to-br from-teal-500 to-emerald-600 rounded-xl shadow-lg"
-                    >
-                      <Calendar className="h-8 w-8 text-white" />
-                    </motion.div>
-                    <div>
-                      <div className="text-lg font-semibold text-slate-200">
-                        Founded
-                      </div>
-                      <div className="text-slate-400">
-                        {club ? new Date(club.createdAt).toLocaleDateString() : ""}
-                      </div>
-                    </div>
-                  </motion.div>
-                  
-                  <motion.div 
-                    className="flex items-center gap-4 bg-slate-800/50 backdrop-blur-sm rounded-2xl px-6 py-4 shadow-lg border border-slate-700/50"
-                    whileHover={{ scale: 1.05, y: -5 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.2, rotate: 15 }}
-                      className="p-3 bg-gradient-to-br from-violet-500 to-fuchsia-600 rounded-xl shadow-lg"
-                    >
-                      <Activity className="h-8 w-8 text-white" />
-                    </motion.div>
-                    <div>
-                      <div className="text-3xl font-bold text-slate-200">
-                        {threads.length}
-                      </div>
-                      <div className="text-slate-400 font-medium">Discussions</div>
-                    </div>
-                  </motion.div>
-                </motion.div>
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Club Header */}
+        <div className="bg-white rounded-2xl border border-gray-200 p-8 mb-8 shadow-sm">
+          <div className="flex justify-between items-start mb-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-gradient-to-br from-[#1E3A8A] to-[#90CAF9] rounded-xl flex items-center justify-center">
+                <Globe className="h-8 w-8 text-white" />
               </div>
-              
-              {/* Action Buttons */}
-              <motion.div
-                initial={{ opacity: 0, x: 50, scale: 0.8 }}
-                animate={{ opacity: 1, x: 0, scale: 1 }}
-                transition={{ delay: 0.9, duration: 0.8 }}
-                className="flex flex-col gap-4"
-              >
-                {!isMember ? (
-                  <motion.div 
-                    whileHover={{ scale: 1.05, y: -3 }} 
-                    whileTap={{ scale: 0.95 }}
-                    className="relative"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-violet-600 to-indigo-600 rounded-2xl blur-lg opacity-40" />
-                    <Button 
-                      size="lg" 
-                      className="relative overflow-hidden bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white shadow-[0_4px_20px_-4px_rgba(30,58,138,0.3)] hover:shadow-[0_8px_25px_-5px_rgba(30,58,138,0.4)] px-10 py-4 text-xl rounded-2xl transition-all duration-300 border border-white/20 backdrop-blur-sm before:absolute before:inset-0 before:bg-white/20 before:scale-x-0 hover:before:scale-x-100 before:origin-left before:transition-transform before:duration-300"
-                      onClick={joinClub}
-                    >
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                        className="mr-3"
-                      >
-                        <Plus className="h-6 w-6" />
-                      </motion.div>
-                      Join Club
-                    </Button>
-                  </motion.div>
-                ) : (
-                  <motion.div 
-                    whileHover={{ scale: 1.05, y: -3 }} 
-                    whileTap={{ scale: 0.95 }}
-                    className="relative"
-                  >
-                    <Button 
-                      variant="outline" 
-                      size="lg" 
-                      className="bg-slate-800/80 backdrop-blur-sm shadow-2xl border border-indigo-900/50 hover:border-indigo-700/50 px-10 py-4 text-xl rounded-2xl transition-all duration-300 hover:bg-slate-800/90 text-slate-200 hover:text-white"
-                      onClick={() => setShowSidePanel(true)}
-                    >
-                      <BarChart3 className="mr-3 h-6 w-6" />
-                      Club Info
-                    </Button>
-                  </motion.div>
-                )}
-                
-                {/* Info button for non-members */}
-                {!isMember && (
-                  <motion.div 
-                    whileHover={{ scale: 1.05, y: -3 }} 
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button 
-                      variant="outline"
-                      size="lg" 
-                      className="bg-white/10 backdrop-blur-sm shadow-xl border border-white/5 hover:bg-white/15 px-10 py-4 text-lg rounded-2xl transition-all duration-300 text-slate-200"
-                      onClick={() => setShowSidePanel(true)}
-                    >
-                      <BarChart3 className="mr-3 h-5 w-5" />
-                      View Info
-                    </Button>
-                  </motion.div>
-                )}
-                
-                {/* Follow Updates button for members */}
-                {isMember && (
-                  <motion.div 
-                    whileHover={{ scale: 1.05, y: -3 }} 
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <Button 
-                      variant="outline"
-                      size="lg" 
-                      className="bg-white/10 backdrop-blur-sm shadow-xl border border-#eb509d/5 hover:bg-black/15 px-10 py-4 text-lg rounded-2xl transition-all duration-300 text-slate-200"
-                    >
-                      <Heart className="mr-3 h-5 w-5" />
-                      Follow Updates
-                    </Button>
-                  </motion.div>
-                )}
-              </motion.div>
+              <div>
+                <div className="flex items-center gap-3 mb-2">
+                  <h1 className="text-3xl font-bold text-gray-900">{club.name}</h1>
+                  {isMember && (
+                    <Badge className="bg-green-100 text-green-700 border border-green-200">
+                      <Crown className="w-3 h-3 mr-1" />
+                      Member
+                    </Badge>
+                  )}
+                </div>
+                <Badge variant="secondary" className="mb-2">
+                  {club.mediaType.name}
+                </Badge>
+                <p className="text-gray-600 max-w-2xl">{club.description}</p>
+              </div>
+            </div>
+            
+            <div className="flex flex-col gap-2">
+              {!isMember ? (
+                <Button onClick={joinClub} className="bg-[#1E3A8A] hover:bg-[#15306E]">
+                  <Plus className="h-4 w-4 mr-2" />
+                  Join Club
+                </Button>
+              ) : (
+                <Button variant="outline" onClick={() => setShowSidePanel(true)}>
+                  <BarChart3 className="mr-2 h-4 w-4" />
+                  Club Info
+                </Button>
+              )}
+              {!isMember && (
+                <Button variant="outline" onClick={() => setShowSidePanel(true)}>
+                  View Info
+                </Button>
+              )}
             </div>
           </div>
-        </motion.div>
 
-        {/* Enhanced Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <motion.div
-            initial={{ opacity: 0, x: -50 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 1.2, duration: 0.8 }}
-            className="lg:col-span-3"
-          >
-            <div className="bg-white/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] border border-[#90CAF9]/30 overflow-hidden transform-gpu hover:scale-[1.01] transition-all duration-300">
-              <Tabs defaultValue="discussions" className="w-full">
-                <div className="bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 px-8 py-6">
-                  <TabsList className="grid w-full grid-cols-3 bg-gradient-to-r from-white/80 to-white/60 backdrop-blur-md rounded-xl p-2 shadow-[0_4px_20px_-4px_rgba(30,58,138,0.15)] border border-[#90CAF9]/20">
-                    <TabsTrigger 
-                      value="discussions" 
-                      className="flex items-center gap-3 data-[state=active]:bg-indigo-800/70 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-600 hover:text-white"
-                    >
-                      <MessageSquare className="h-5 w-5" />
-                      <span className="font-medium">Discussions</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="events" 
-                      className="flex items-center gap-3 data-[state=active]:bg-indigo-800/70 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-600 hover:text-white"
-                    >
-                      <Calendar className="h-5 w-5" />
-                      <span className="font-medium">Events</span>
-                    </TabsTrigger>
-                    <TabsTrigger 
-                      value="members" 
-                      className="flex items-center gap-3 data-[state=active]:bg-indigo-800/70 data-[state=active]:shadow-lg data-[state=active]:text-white transition-all duration-300 rounded-xl py-3 text-slate-600 hover:text-white"
-                    >
-                      <Users className="h-5 w-5" />
-                      <span className="font-medium">Members</span>
-                    </TabsTrigger>
-                  </TabsList>
+          {/* Quick Stats */}
+          <div className="grid grid-cols-3 gap-6">
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Users className="h-5 w-5 text-[#1E3A8A]" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{club.memberCount?.toLocaleString() || "0"}</p>
+                  <p className="text-sm text-gray-600">Members</p>
                 </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="h-5 w-5 text-[#1E3A8A]" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{threads.length}</p>
+                  <p className="text-sm text-gray-600">Discussions</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-50 rounded-lg p-4">
+              <div className="flex items-center gap-3">
+                <Calendar className="h-5 w-5 text-[#1E3A8A]" />
+                <div>
+                  <p className="text-2xl font-bold text-gray-900">{events.length}</p>
+                  <p className="text-sm text-gray-600">Events</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-                <TabsContent value="discussions" className="p-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex justify-between items-center mb-8"
-                  >
-                    <div>
-                      <h2 className="text-3xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent mb-2">
-                        Discussion Threads
-                      </h2>
-                      <p className="text-slate-600">Join the conversation and share your thoughts</p>
-                    </div>
-                    <motion.div 
-                      whileHover={{ scale: 1.05, y: -2 }} 
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button 
-                        className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700 shadow-lg rounded-xl px-6 py-3"
-                        onClick={() => setShowCreateThreadModal(true)}
-                        disabled={!isMember}
-                      >
-                        <Plus className="mr-2 h-5 w-5" />
-                        New Thread
-                      </Button>
-                    </motion.div>
-                  </motion.div>
+        {/* Content Tabs */}
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm">
+          <Tabs defaultValue="discussions" className="w-full">
+            <div className="border-b border-gray-200 px-6 py-4">
+              <TabsList className="grid w-full grid-cols-3 bg-gray-100 rounded-lg">
+                <TabsTrigger value="discussions" className="flex items-center gap-2">
+                  <MessageSquare className="h-4 w-4" />
+                  Discussions
+                </TabsTrigger>
+                <TabsTrigger value="events" className="flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Events
+                </TabsTrigger>
+                <TabsTrigger value="members" className="flex items-center gap-2">
+                  <Users className="h-4 w-4" />
+                  Members
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-                  {threadsLoading ? (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-12"
-                    >
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
-                      </motion.div>
-                      <p className="text-slate-600 text-lg">Loading discussions...</p>
-                    </motion.div>
-                  ) : threads.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/30"
-                    >
-                      <motion.div
-                        animate={{ 
-                          y: [0, -10, 0],
-                          rotate: [0, 5, -5, 0] 
-                        }}
-                        transition={{ 
-                          duration: 3, 
-                          repeat: Infinity, 
-                          ease: "easeInOut" 
-                        }}
-                        className="mb-4"
-                      >
-                        {!isMember ? (
-                          <Users className="h-16 w-16 mx-auto text-slate-500" />
-                        ) : (
-                          <MessageSquare className="h-16 w-16 mx-auto text-slate-500" />
-                        )}
-                      </motion.div>
-                      {!isMember ? (
-                        <>
-                          <h3 className="text-xl font-semibold text-slate-300 mb-2">Join to View Discussions</h3>
-                          <p className="text-slate-400 mb-4">You need to be a club member to view and participate in discussions.</p>
-                          {isAuthenticated && (
-                            <Button 
-                              onClick={joinClub}
-                              className="bg-gradient-to-r from-violet-600 to-indigo-600 hover:from-violet-700 hover:to-indigo-700"
-                            >
-                              <Users className="mr-2 h-4 w-4" />
-                              Join Club
-                            </Button>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <h3 className="text-xl font-semibold text-slate-300 mb-2">No discussions yet</h3>
-                          <p className="text-slate-400">Be the first to start a conversation!</p>
-                        </>
+            <TabsContent value="discussions" className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Discussion Threads</h2>
+                  <p className="text-gray-600">Join the conversation and share your thoughts</p>
+                </div>
+                <Button 
+                  onClick={() => setShowCreateThreadModal(true)}
+                  disabled={!isMember}
+                  className="bg-[#1E3A8A] hover:bg-[#15306E]"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  New Thread
+                </Button>
+              </div>
+
+              {threadsLoading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 mx-auto mb-4 text-[#1E3A8A] animate-spin" />
+                  <p className="text-gray-600">Loading discussions...</p>
+                </div>
+              ) : threads.length === 0 ? (
+                <div className="text-center py-16 bg-gray-50 rounded-lg">
+                  {!isMember ? (
+                    <>
+                      <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Join to View Discussions</h3>
+                      <p className="text-gray-600 mb-4">You need to be a club member to view and participate in discussions.</p>
+                      {isAuthenticated && (
+                        <Button onClick={joinClub} className="bg-[#1E3A8A] hover:bg-[#15306E]">
+                          <Users className="mr-2 h-4 w-4" />
+                          Join Club
+                        </Button>
                       )}
-                    </motion.div>
+                    </>
                   ) : (
-                    <motion.div 
-                      variants={containerVariants} 
-                      initial="hidden" 
-                      animate="visible" 
-                      className="space-y-6"
-                    >
-                      {threads.map((thread, index) => (
-                        <motion.div 
-                          key={thread.id} 
-                          variants={cardVariants} 
-                          whileHover="hover"
-                          className="perspective-1000"
-                        >
-                          <Link href={`/threads/${thread.id}`}>
-                            <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/90 backdrop-blur-xl border border-[#90CAF9]/30 rounded-3xl shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)]">
-                              {/* Enhanced gradient border effect */}
-                              <div className="absolute inset-0 bg-gradient-to-r from-purple-500/10 to-pink-500/10 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-500" />
+                    <>
+                      <MessageSquare className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No discussions yet</h3>
+                      <p className="text-gray-600">Be the first to start a conversation!</p>
+                    </>
+                  )}
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {threads.map((thread) => (
+                    <Card key={thread.id} className="hover:shadow-md transition-shadow border border-gray-200">
+                      <Link href={`/threads/${thread.id}`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-2">
+                                {thread.isPinned && (
+                                  <Pin className="h-4 w-4 text-yellow-600" />
+                                )}
+                                <CardTitle className="text-lg font-medium text-gray-900 hover:text-[#1E3A8A]">
+                                  {thread.title}
+                                </CardTitle>
+                              </div>
                               
-                              {/* Background pattern */}
-                              <div className="absolute inset-0 bg-gradient-to-br from-purple-600/5 via-blue-600/5 to-indigo-600/5 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                              <CardDescription className="flex items-center gap-2 mb-2 text-sm text-gray-600">
+                                <Avatar className="w-5 h-5">
+                                  <AvatarFallback className="text-xs bg-gray-200 text-gray-700">
+                                    {thread.createdBy.firstName?.[0]}{thread.createdBy.lastName?.[0]}
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span>by {thread.createdBy.firstName} {thread.createdBy.lastName}</span>
+                                <span>•</span>
+                                <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
+                              </CardDescription>
                               
-                              <CardHeader className="pb-6 relative z-10">
-                                <div className="flex items-start justify-between">
-                                  <div className="flex-1">
-                                    <div className="flex items-center gap-4 mb-4">
-                                      {thread.isPinned && (
-                                        <motion.div
-                                          initial={{ rotate: -45, scale: 0 }}
-                                          animate={{ rotate: 0, scale: 1 }}
-                                          transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 200 }}
-                                          whileHover={{ rotate: 360, scale: 1.3 }}
-                                          className="p-3 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 rounded-2xl shadow-xl"
-                                        >
-                                          <Pin className="h-5 w-5 text-white" />
-                                        </motion.div>
-                                      )}
-                                      <motion.div
-                                        initial={{ opacity: 0, x: -20 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: 0.2 + index * 0.1 }}
-                                      >
-                                        <CardTitle className="text-2xl transition-colors duration-300 font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent group-hover:from-[#15306E] group-hover:to-[#7FB9F8]">
-                                          {thread.title}
-                                        </CardTitle>
-                                      </motion.div>
-                                    </div>
-                                    
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: 0.3 + index * 0.1 }}
-                                    >
-                                      <CardDescription className="text-base flex items-center gap-3 mb-4">
-                                        <Avatar className="w-8 h-8 ring-2 ring-purple-400/50 shadow-lg">
-                                          <AvatarFallback className="text-sm bg-gradient-to-br from-purple-500 to-pink-500 text-white font-semibold">
-                                            {thread.createdBy.firstName?.[0]}{thread.createdBy.lastName?.[0]}
-                                          </AvatarFallback>
-                                        </Avatar>
-                                        <span className="text-custom-purple drop-shadow-sm">by</span>
-                                        <span className="font-semibold text-#eb509d drop-shadow-sm filter shadow-black">{thread.createdBy.firstName} {thread.createdBy.lastName}</span> 
-                                        <span className="text-slate-500">•</span>
-                                        <span className="text-slate-400">{new Date(thread.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                                      </CardDescription>
-                                    </motion.div>
-                                    
-                                    {/* Enhanced Thread Content */}
-                                    <motion.div 
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: 0.4 + index * 0.1 }}
-                                      className="mb-6"
-                                    >
-                                      {thread.content && (
-                                        <p className="text-[#1a1a1a] text-base leading-relaxed line-clamp-3 mb-4 font-['Open Sans']">
-                                          {thread.content}
-                                        </p>
-                                      )}
-                                      
-                                      {/* Enhanced Thread Images */}
-                                      {thread.images && thread.images.length > 0 && (
-                                        <div className="mt-4">
-                                          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-                                            {thread.images.slice(0, 4).map((image, imgIndex) => (
-                                              <motion.div
-                                                key={image.id}
-                                                initial={{ opacity: 0, scale: 0.8 }}
-                                                animate={{ opacity: 1, scale: 1 }}
-                                                transition={{ delay: 0.5 + imgIndex * 0.1 }}
-                                                whileHover={{ scale: 1.05, rotate: 2 }}
-                                                className="relative group cursor-pointer"
-                                              >
-                                                <div className="aspect-square overflow-hidden rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 shadow-lg">
-                                                  <img
-                                                    src={image.fileUrl}
-                                                    alt={image.fileName}
-                                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
-                                                    onError={(e) => {
-                                                      const target = e.target as HTMLImageElement;
-                                                      target.src = "/placeholder.svg";
-                                                    }}
-                                                  />
-                                                </div>
-                                                {/* Enhanced overlay for image count */}
-                                                {imgIndex === 3 && thread.images!.length > 4 && (
-                                                  <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/80 rounded-xl flex items-center justify-center backdrop-blur-sm">
-                                                    <span className="text-white font-bold text-lg">
-                                                      +{thread.images!.length - 4}
-                                                    </span>
-                                                  </div>
-                                                )}
-                                              </motion.div>
-                                            ))}
-                                          </div>
+                              {thread.content && (
+                                <p className="text-gray-700 text-sm line-clamp-2 mb-3">
+                                  {thread.content}
+                                </p>
+                              )}
+                              
+                              {/* Thread Images */}
+                              {thread.images && thread.images.length > 0 && (
+                                <div className="grid grid-cols-4 gap-2 mb-3">
+                                  {thread.images.slice(0, 4).map((image, imgIndex) => (
+                                    <div key={image.id} className="relative group">
+                                      <div className="aspect-square overflow-hidden rounded bg-gray-100">
+                                        <img
+                                          src={image.fileUrl}
+                                          alt={image.fileName}
+                                          className="w-full h-full object-cover"
+                                          onError={(e) => {
+                                            const target = e.target as HTMLImageElement;
+                                            target.src = "/placeholder.svg";
+                                          }}
+                                        />
+                                      </div>
+                                      {imgIndex === 3 && thread.images!.length > 4 && (
+                                        <div className="absolute inset-0 bg-black/60 rounded flex items-center justify-center">
+                                          <span className="text-white font-medium text-sm">
+                                            +{thread.images!.length - 4}
+                                          </span>
                                         </div>
                                       )}
-                                    </motion.div>
-                                  </div>
-                                  
-                                  <motion.div 
-                                    initial={{ opacity: 0, scale: 0 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    transition={{ delay: 0.7 + index * 0.1 }}
-                                    className="flex items-center gap-6"
-                                  >
-                                    <motion.div
-                                      whileHover={{ scale: 1.1, y: -3 }}
-                                      className="flex items-center gap-2 text-purple-400 hover:text-purple-300 transition-colors bg-slate-800/90 backdrop-blur-sm rounded-xl px-4 py-3 shadow-lg border border-purple-500/20"
-                                    >
-                                      <Eye className="h-5 w-5" />
-                                      <span className="font-semibold">{thread.viewCount}</span>
-                                    </motion.div>
-                                  </motion.div>
-                                </div>
-                              </CardHeader>
-                              
-                              {/* Enhanced Thread Actions */}
-                              <div className="px-8 pb-6">
-                                <div className="flex items-center justify-between border-t border-slate-700/50 pt-6">
-                                  <div className="flex items-center gap-4">
-                                    {/* Enhanced Like/Dislike */}
-                                    <div className="flex items-center gap-2">
-                                      <motion.div
-                                        whileHover={{ scale: 1.1, y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-[#1E3A8A]/10 transition-all duration-300 group bg-white/80 backdrop-blur-sm shadow-lg border border-[#90CAF9]/30"
-                                        onClick={(e) => e.preventDefault()}
-                                      >
-                                        <motion.div
-                                          whileHover={{ y: -2, rotate: 15, scale: 1.2 }}
-                                          transition={{ duration: 0.3 }}
-                                          className="text-blue-400 group-hover:text-blue-300 text-lg"
-                                        >
-                                          👍
-                                        </motion.div>
-                                        <span className="text-sm font-semibold text-blue-400 group-hover:text-blue-300">
-                                          {thread.likeCount || 0}
-                                        </span>
-                                      </motion.div>
-                                      
-                                      <motion.div
-                                        whileHover={{ scale: 1.1, y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        className="flex items-center gap-2 px-4 py-3 rounded-xl hover:bg-red-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-red-500/30"
-                                        onClick={(e) => e.preventDefault()}
-                                      >
-                                        <motion.div
-                                          whileHover={{ y: -2, rotate: -15, scale: 1.2 }}
-                                          transition={{ duration: 0.3 }}
-                                          className="text-red-400 group-hover:text-red-300 text-lg"
-                                        >
-                                          👎
-                                        </motion.div>
-                                        <span className="text-sm font-semibold text-red-400 group-hover:text-red-300">
-                                          {thread.dislikeCount || 0}
-                                        </span>
-                                      </motion.div>
                                     </div>
-                                    
-                                    {/* Enhanced Comments */}
-                                    <motion.div
-                                      whileHover={{ scale: 1.1, y: -2 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-green-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-green-500/30"
-                                    >
-                                      <MessageSquare className="h-5 w-5 text-green-400 group-hover:text-green-300" />
-                                      <span className="text-sm font-semibold text-green-400 group-hover:text-green-300">
-                                        {thread.commentCount || 0} Comments
-                                      </span>
-                                    </motion.div>
-                                    
-                                    {/* Enhanced Share */}
-                                    <motion.div
-                                      whileHover={{ scale: 1.1, y: -2, rotateZ: 5 }}
-                                      whileTap={{ scale: 0.95 }}
-                                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-cyan-950/30 transition-all duration-300 group bg-slate-900/50 backdrop-blur-sm shadow-lg border border-cyan-500/30"
-                                      onClick={(e) => e.preventDefault()}
-                                    >
-                                      <motion.div
-                                        whileHover={{ rotate: 15, scale: 1.1 }}
-                                        className="text-cyan-400 group-hover:text-cyan-300 text-lg"
-                                      >
-                                        🔗
-                                      </motion.div>
-                                      <span className="text-sm font-semibold text-cyan-400 group-hover:text-cyan-300">
-                                        Share
-                                      </span>
-                                    </motion.div>
-                                  </div>
-                                  
-                                  {/* Enhanced View Details Button */}
-                                  <motion.div
-                                    whileHover={{ scale: 1.05, x: 5, rotateY: 5 }}
-                                    whileTap={{ scale: 0.95 }}
-                                    className="bg-gradient-to-r from-purple-600 via-pink-600 to-purple-600 text-white px-6 py-3 rounded-xl text-sm font-semibold hover:from-purple-700 hover:via-pink-700 hover:to-purple-700 transition-all duration-300 shadow-xl"
-                                  >
-                                    View Details →
-                                  </motion.div>
+                                  ))}
                                 </div>
-                              </div>
-                              
-                              {/* Enhanced Decorative elements */}
-                              <motion.div
-                                initial={{ scale: 0, rotate: 0 }}
-                                animate={{ scale: 1, rotate: 360 }}
-                                transition={{ delay: 1 + index * 0.1, duration: 2, ease: "easeOut" }}
-                                className="absolute top-6 right-6 w-4 h-4 rounded-full opacity-20 group-hover:opacity-40 transition-opacity bg-gradient-to-r from-indigo-400 to-purple-500"
-                              />
-                              <motion.div
-                                initial={{ scale: 0, rotate: 0 }}
-                                animate={{ scale: 1, rotate: -180 }}
-                                transition={{ delay: 1.2 + index * 0.1, duration: 1.5, ease: "easeOut" }}
-                                className="absolute bottom-6 left-6 w-3 h-3 rounded-full opacity-30 group-hover:opacity-60 transition-opacity bg-gradient-to-r from-purple-400 to-pink-500"
-                              />
-                            </Card>
-                          </Link>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="events" className="p-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex justify-between items-center mb-8"
-                  >
-                    <div>
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent mb-2">
-                        Upcoming Events
-                      </h2>
-                      <p className="text-slate-400">Don't miss out on exciting happenings</p>
-                    </div>
-                    <motion.div 
-                      whileHover={{ scale: 1.05, y: -2 }} 
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)] rounded-2xl px-6 py-3 text-white">
-                        <Plus className="mr-2 h-5 w-5" />
-                        Create Event
-                      </Button>
-                    </motion.div>
-                  </motion.div>
-
-                  {eventsLoading ? (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-12"
-                    >
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
-                      </motion.div>
-                      <p className="text-slate-400 text-lg">Loading events...</p>
-                    </motion.div>
-                  ) : events.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/30"
-                    >
-                      <motion.div
-                        animate={{ 
-                          y: [0, -10, 0],
-                          rotate: [0, -5, 5, 0] 
-                        }}
-                        transition={{ 
-                          duration: 4, 
-                          repeat: Infinity, 
-                          ease: "easeInOut" 
-                        }}
-                        className="mb-4"
-                      >
-                        <Calendar className="h-16 w-16 mx-auto text-slate-500" />
-                      </motion.div>
-                      <h3 className="text-xl font-semibold text-slate-300 mb-2">No upcoming events</h3>
-                      <p className="text-slate-400">Stay tuned for exciting events!</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      variants={containerVariants} 
-                      initial="hidden" 
-                      animate="visible" 
-                      className="space-y-6"
-                    >
-                      {events.map((event, index) => (
-                        <motion.div 
-                          key={event.id} 
-                          variants={cardVariants} 
-                          whileHover="hover"
-                          className="perspective-1000"
-                        >
-                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/80 backdrop-blur-sm border-0">
-                            {/* Enhanced Background gradient overlay */}
-                            <div 
-                              className="absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
-                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
-                            />
-                            
-                            <CardHeader className="relative z-10">
-                              <div className="flex justify-between items-start">
-                                <div className="flex-1">
-                                  <CardTitle className="text-2xl group-hover:text-purple-600 transition-colors duration-300 font-bold mb-3">
-                                    <Link href={`/events/${event.id}`} className="hover:underline">
-                                      {event.title}
-                                    </Link>
-                                  </CardTitle>
-                                  
-                                  <div className="flex items-center gap-6 text-gray-600 mb-4">
-                                    <div className="flex items-center gap-2 bg-blue-50 rounded-lg px-3 py-2">
-                                      <Calendar className="h-4 w-4 text-blue-600" />
-                                      <span className="font-medium">{new Date(event.date).toLocaleDateString()}</span>
-                                    </div>
-                                    <div className="flex items-center gap-2 bg-green-50 rounded-lg px-3 py-2">
-                                      <Users className="h-4 w-4 text-green-600" />
-                                      <span className="font-medium">{event.currentAttendees}/{event.maxAttendees}</span>
-                                    </div>
-                                  </div>
-                                  
-                                  <p className="text-gray-700">{event.description}</p>
-                                </div>
-                              </div>
-                            </CardHeader>
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-                </TabsContent>
-
-                <TabsContent value="members" className="p-8">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6 }}
-                    className="flex justify-between items-center mb-8"
-                  >
-                    <div>
-                      <h2 className="text-3xl font-bold bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent mb-2">
-                        Club Members
-                      </h2>
-                      <p className="text-slate-400">Connect with fellow club members</p>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Users className="h-5 w-5 text-purple-400" />
-                      <span className="font-semibold">{members.length} member{members.length !== 1 ? 's' : ''}</span>
-                    </div>
-                  </motion.div>
-
-                  {membersLoading ? (
-                    <motion.div 
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="text-center py-12"
-                    >
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                      >
-                        <Loader2 className="h-8 w-8 mx-auto mb-4 text-purple-400" />
-                      </motion.div>
-                      <p className="text-slate-400 text-lg">Loading members...</p>
-                    </motion.div>
-                  ) : members.length === 0 ? (
-                    <motion.div 
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      className="text-center py-16 bg-gradient-to-br from-slate-800/50 to-slate-700/50 rounded-2xl border border-slate-700/30"
-                    >
-                      <motion.div
-                        animate={{ 
-                          y: [0, -10, 0],
-                          rotate: [0, 5, -5, 0] 
-                        }}
-                        transition={{ 
-                          duration: 3, 
-                          repeat: Infinity, 
-                          ease: "easeInOut" 
-                        }}
-                        className="mb-4"
-                      >
-                        <Users className="h-16 w-16 mx-auto text-slate-500" />
-                      </motion.div>
-                      <h3 className="text-xl font-semibold text-slate-300 mb-2">No members yet</h3>
-                      <p className="text-slate-400">Be the first to join this club!</p>
-                    </motion.div>
-                  ) : (
-                    <motion.div 
-                      variants={containerVariants} 
-                      initial="hidden" 
-                      animate="visible" 
-                      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-                    >
-                      {members.map((member, index) => (
-                        <motion.div 
-                          key={member.id} 
-                          variants={cardVariants} 
-                          whileHover="hover"
-                          className="perspective-1000"
-                        >
-                          <Card className="overflow-hidden hover:shadow-2xl transition-all duration-500 cursor-pointer relative group bg-white/90 backdrop-blur-sm border border-[#90CAF9]/30 h-full rounded-3xl shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)]">
-                            {/* Enhanced Background gradient overlay */}
-                            <div 
-                              className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-500"
-                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
-                            />
-                            
-                            <CardHeader className="relative z-10 pb-4">
-                              <div className="flex items-start gap-4">
-                                <motion.div
-                                  whileHover={{ scale: 1.1 }}
-                                  transition={{ duration: 0.2 }}
-                                >
-                                  <Avatar className="w-16 h-16 border-4 border-white shadow-lg">
-                                    <AvatarFallback className="text-xl font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                      {member.user.firstName?.[0]}{member.user.lastName?.[0]}
-                                    </AvatarFallback>
-                                  </Avatar>
-                                </motion.div>
-                                
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <h3 className="text-xl font-bold text-gray-900 truncate">
-                                      {member.user.firstName} {member.user.lastName}
-                                    </h3>
-                                    {member.user.id === club?.createdBy.id && (
-                                      <motion.div
-                                        initial={{ scale: 0 }}
-                                        animate={{ scale: 1 }}
-                                        transition={{ delay: 0.3 + index * 0.1 }}
-                                      >
-                                        <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
-                                          <Crown className="w-3 h-3 mr-1" />
-                                          Owner
-                                        </Badge>
-                                      </motion.div>
-                                    )}
-                                  </div>
-                                  
-                                  <p className="text-gray-600 font-medium mb-3">
-                                    @{member.user.username}
-                                  </p>
-                                  
-                                  <div className="text-sm text-gray-500 mb-3">
-                                    Joined {new Date(member.joinedAt).toLocaleDateString()}
-                                  </div>
-                                  
-                                  {/* Mutual Clubs */}
-                                  {member.mutualClubs && member.mutualClubs.length > 0 && (
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: 0.4 + index * 0.1 }}
-                                      className="mt-4"
-                                    >
-                                      <p className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                                        Mutual Clubs
-                                      </p>
-                                      <div className="flex flex-wrap gap-1">
-                                        {member.mutualClubs.slice(0, 3).map((mutualClub, clubIndex) => (
-                                          <motion.div
-                                            key={mutualClub.id}
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ delay: 0.5 + index * 0.1 + clubIndex * 0.05 }}
-                                            whileHover={{ scale: 1.05 }}
-                                          >
-                                            <Badge 
-                                              variant="secondary" 
-                                              className="text-xs bg-blue-50 text-blue-700 hover:bg-blue-100 transition-colors duration-200 cursor-pointer"
-                                            >
-                                              {mutualClub.name}
-                                            </Badge>
-                                          </motion.div>
-                                        ))}
-                                        {member.mutualClubs.length > 3 && (
-                                          <motion.div
-                                            initial={{ opacity: 0, scale: 0.8 }}
-                                            animate={{ opacity: 1, scale: 1 }}
-                                            transition={{ delay: 0.5 + index * 0.1 + 0.15 }}
-                                          >
-                                            <Badge 
-                                              variant="outline" 
-                                              className="text-xs text-gray-500 border-gray-300"
-                                            >
-                                              +{member.mutualClubs.length - 3} more
-                                            </Badge>
-                                          </motion.div>
-                                        )}
-                                      </div>
-                                    </motion.div>
-                                  )}
-                                </div>
-                              </div>
-                            </CardHeader>
-                            
-                            {/* Decorative elements */}
-                            <motion.div
-                              initial={{ scale: 0, rotate: 0 }}
-                              animate={{ scale: 1, rotate: 360 }}
-                              transition={{ delay: 0.6 + index * 0.1, duration: 2, ease: "easeOut" }}
-                              className="absolute top-4 right-4 w-2 h-2 rounded-full opacity-30 group-hover:opacity-60 transition-opacity"
-                              style={{ background: getMediaTypeGradient(club?.mediaType.name || 'default') }}
-                            />
-                          </Card>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}                  </TabsContent>
-                </Tabs>
-              </div>
-            </motion.div>
-          </div>
-
-          {/* Sliding Side Panel for Club Info */}
-          <AnimatePresence>
-            {showSidePanel && (
-              <>
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                  onClick={() => setShowSidePanel(false)}
-                />
-                
-                {/* Side Panel */}
-                <motion.div
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="fixed right-0 top-0 h-full w-96 bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
-                >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                        Club Information
-                      </h2>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setShowSidePanel(false)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </motion.button>
-                    </div>
-
-                    {/* Club Statistics */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl p-6 shadow-lg mb-6"
-                    >
-                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                        Club Statistics
-                      </h3>
-                      <div className="space-y-4">
-                        {[
-                          { 
-                            label: "Total Members", 
-                            value: club?.memberCount?.toLocaleString() || "0", 
-                            icon: "👥", 
-                            color: "from-blue-500 to-blue-600",
-                            clickable: true,
-                            onClick: () => setShowMembersPanel(true)
-                          },
-                          { label: "Active Discussions", value: threads.length.toString(), icon: "💬", color: "from-green-500 to-green-600" },
-                          { label: "Upcoming Events", value: events.length.toString(), icon: "📅", color: "from-purple-500 to-purple-600" },
-                          { label: "Founded", value: club ? new Date(club.createdAt).getFullYear().toString() : "", icon: "🏆", color: "from-yellow-500 to-yellow-600" },
-                        ].map((stat, index) => (
-                          <motion.div
-                            key={stat.label}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + index * 0.1 }}
-                            whileHover={{ scale: stat.clickable ? 1.05 : 1.02, x: 5 }}
-                            onClick={stat.clickable ? stat.onClick : undefined}
-                            className={`flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 ${stat.clickable ? 'cursor-pointer hover:bg-blue-50' : ''}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <motion.div
-                                whileHover={{ scale: 1.2, rotate: 10 }}
-                                className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg shadow-lg`}
-                              >
-                                <span className="text-lg">{stat.icon}</span>
-                              </motion.div>
-                              <span className="font-medium text-gray-700">{stat.label}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-xl text-gray-900">{stat.value}</span>
-                              {stat.clickable && (
-                                <motion.div
-                                  animate={{ x: [0, 3, 0] }}
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                >
-                                  <ArrowLeft className="h-4 w-4 text-purple-600 rotate-180" />
-                                </motion.div>
                               )}
                             </div>
-                          </motion.div>
-                        ))}
-
-                        {/* Enhanced Member Count Animation */}
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.2, duration: 0.8 }}
-                          className="flex items-center justify-between p-4 bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-                          onClick={() => setShowMembersPanel(true)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg">
-                              <Users className="h-5 w-5 text-white" />
+                            
+                            <div className="flex items-center gap-2 ml-4 text-sm text-gray-500">
+                              <Eye className="h-4 w-4" />
+                              <span>{thread.viewCount}</span>
                             </div>
-                            <span className="font-medium text-gray-700">Total Members</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
-                              className="font-bold text-2xl text-gray-900"
-                            >
-                              {club?.memberCount?.toLocaleString() || "0"}
-                            </motion.span>
-                            <ArrowLeft className="h-4 w-4 text-purple-600 rotate-180" />
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    {/* Recent Activity */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg"
-                    >
-                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-gray-900 to-purple-600 bg-clip-text text-transparent">
-                        Recent Activity
-                      </h3>
-                      <div className="space-y-4">
-                        {[
-                          { action: "New member joined", time: "2 hours ago", icon: Users },
-                          { action: "Discussion started", time: "5 hours ago", icon: MessageSquare },
-                          { action: "Event created", time: "1 day ago", icon: Calendar },
-                        ].map((activity, index) => (
-                          <motion.div
-                            key={index}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 + index * 0.1 }}
-                            whileHover={{ scale: 1.02, x: 5 }}
-                            className="flex items-center gap-3 p-3 bg-white rounded-lg hover:shadow-md transition-all duration-300"
-                          >
-                            <motion.div
-                              whileHover={{ scale: 1.2, rotate: 10 }}
-                              className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-lg"
-                            >
-                              <activity.icon className="h-4 w-4 text-purple-400" />
-                            </motion.div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-slate-300">{activity.action}</p>
-                              <p className="text-xs text-slate-500">{activity.time}</p>
+                        </CardHeader>
+                        
+                        <CardContent className="pt-0">
+                          <div className="flex items-center justify-between border-t border-gray-200 pt-3">
+                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <span>👍</span>
+                                <span>{thread.likeCount || 0}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <span>👎</span>
+                                <span>{thread.dislikeCount || 0}</span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <MessageSquare className="h-4 w-4" />
+                                <span>{thread.commentCount || 0} Comments</span>
+                              </div>
                             </div>
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
+                            
+                            <div className="text-sm text-[#1E3A8A] font-medium">
+                              View Details →
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Link>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-                    {/* Member Actions */}
-                    {isMember && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="mt-6 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl border border-red-100"
-                      >
-                        <h4 className="font-semibold text-gray-800 mb-3">Member Actions</h4>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleLeaveClub}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                        >
-                          Leave Club
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
+            <TabsContent value="events" className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Upcoming Events</h2>
+                  <p className="text-gray-600">Don't miss out on exciting happenings</p>
+                </div>
+                <Button className="bg-[#1E3A8A] hover:bg-[#15306E]">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Event
+                </Button>
+              </div>
 
-          {/* Sliding Members Panel */}
-          <AnimatePresence>
-            {showMembersPanel && (
-              <>
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                  onClick={() => setShowMembersPanel(false)}
-                />
-                
-                {/* Members Panel */}
-                <motion.div
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="fixed right-0 top-0 h-full w-[500px] bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
-                >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
-                      <div>
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                          Club Members
-                        </h2>
-                        <p className="text-gray-600 mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setShowMembersPanel(false)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </motion.button>
-                    </div>
+              {eventsLoading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 mx-auto mb-4 text-[#1E3A8A] animate-spin" />
+                  <p className="text-gray-600">Loading events...</p>
+                </div>
+              ) : events.length === 0 ? (
+                <div className="text-center py-16 bg-gray-50 rounded-lg">
+                  <Calendar className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming events</h3>
+                  <p className="text-gray-600">Stay tuned for exciting events!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {events.map((event) => (
+                    <Card key={event.id} className="hover:shadow-md transition-shadow border border-gray-200">
+                      <CardHeader>
+                        <div className="flex justify-between items-start">
+                          <div className="flex-1">
+                            <CardTitle className="text-lg font-medium text-gray-900 mb-2">
+                              <Link href={`/events/${event.id}`} className="hover:text-[#1E3A8A]">
+                                {event.title}
+                              </Link>
+                            </CardTitle>
+                            
+                            <div className="flex items-center gap-4 text-gray-600 mb-3">
+                              <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
+                                <Calendar className="h-4 w-4" />
+                                <span>{new Date(event.date).toLocaleDateString()}</span>
+                              </div>
+                              <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
+                                <Users className="h-4 w-4" />
+                                <span>{event.currentAttendees}/{event.maxAttendees}</span>
+                              </div>
+                            </div>
+                            
+                            <p className="text-gray-700">{event.description}</p>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
 
-                    {/* Members List */}
-                    {membersLoading ? (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-12"
-                      >
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
-                        </motion.div>
-                        <p className="text-gray-600">Loading members...</p>
-                      </motion.div>
-                    ) : members.length === 0 ? (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl"
-                      >
-                        <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No members yet</h3>
-                        <p className="text-gray-600">Be the first to join this club!</p>
-                      </motion.div>
-                    ) : (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-4"
-                      >
-                        {members.map((member, index) => (
-                          <motion.div
-                            key={`member-${member.id}`}
-                            initial={{ opacity: 0, x: 50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            whileHover={{ scale: 1.02 }}
-                            className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
-                          >
-                            <div className="flex items-center gap-4">
-                              <Avatar className="w-12 h-12 border-2 border-white shadow-md">
-                                <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                  {member.user.firstName?.[0]}{member.user.lastName?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-lg font-bold text-gray-900">
-                                    {member.user.firstName} {member.user.lastName}
-                                  </h3>
-                                  {member.user.id === club?.createdBy.id && (
-                                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
-                                      <Crown className="w-3 h-3 mr-1" />
-                                      Owner
+            <TabsContent value="members" className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Club Members</h2>
+                  <p className="text-gray-600">Connect with fellow club members</p>
+                </div>
+                <div className="flex items-center gap-2 text-gray-600">
+                  <Users className="h-5 w-5" />
+                  <span className="font-medium">{members.length} member{members.length !== 1 ? 's' : ''}</span>
+                </div>
+              </div>
+
+              {membersLoading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 mx-auto mb-4 text-[#1E3A8A] animate-spin" />
+                  <p className="text-gray-600">Loading members...</p>
+                </div>
+              ) : members.length === 0 ? (
+                <div className="text-center py-16 bg-gray-50 rounded-lg">
+                  <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No members yet</h3>
+                  <p className="text-gray-600">Be the first to join this club!</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {members.map((member) => (
+                    <Card key={member.id} className="hover:shadow-md transition-shadow border border-gray-200">
+                      <CardHeader className="pb-4">
+                        <div className="flex items-start gap-3">
+                          <Avatar className="w-12 h-12">
+                            <AvatarFallback className="text-lg font-medium bg-gray-200 text-gray-700">
+                              {member.user.firstName?.[0]}{member.user.lastName?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="text-lg font-medium text-gray-900 truncate">
+                                {member.user.firstName} {member.user.lastName}
+                              </h3>
+                              {member.user.id === club?.createdBy.id && (
+                                <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                  <Crown className="w-3 h-3 mr-1" />
+                                  Owner
+                                </Badge>
+                              )}
+                            </div>
+                            
+                            <p className="text-gray-600 font-medium mb-2 truncate">
+                              @{member.user.username}
+                            </p>
+                            
+                            <div className="text-sm text-gray-500 mb-3">
+                              Joined {new Date(member.joinedAt).toLocaleDateString()}
+                            </div>
+                            
+                            {/* Mutual Clubs */}
+                            {member.mutualClubs && member.mutualClubs.length > 0 && (
+                              <div>
+                                <p className="text-xs font-medium text-gray-500 mb-2">
+                                  Mutual Clubs
+                                </p>
+                                <div className="flex flex-wrap gap-1">
+                                  {member.mutualClubs.slice(0, 2).map((mutualClub) => (
+                                    <Badge 
+                                      key={mutualClub.id}
+                                      variant="secondary" 
+                                      className="text-xs bg-gray-100 text-gray-700"
+                                    >
+                                      {mutualClub.name}
+                                    </Badge>
+                                  ))}
+                                  {member.mutualClubs.length > 2 && (
+                                    <Badge 
+                                      variant="outline" 
+                                      className="text-xs text-gray-500"
+                                    >
+                                      +{member.mutualClubs.length - 2} more
                                     </Badge>
                                   )}
                                 </div>
-                                
-                                <p className="text-gray-600 text-sm">@{member.user.username}</p>
-                                
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Joined {new Date(member.joinedAt).toLocaleDateString()}
-                                </p>
-                                
-                                {/* Mutual Clubs */}
-                                {member.mutualClubs && member.mutualClubs.length > 0 && (
-                                  <div className="mt-2">
-                                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                                      Mutual Clubs ({member.mutualClubs.length})
-                                    </p>
-                                    <div className="flex flex-wrap gap-1">
-                                      {member.mutualClubs.slice(0, 2).map((mutualClub) => (
-                                        <Badge 
-                                          key={`mutual-${mutualClub.id}`}
-                                          variant="secondary" 
-                                          className="text-xs bg-blue-50 text-blue-700"
-                                        >
-                                          {mutualClub.name}
-                                        </Badge>
-                                      ))}
-                                      {member.mutualClubs.length > 2 && (
-                                        <Badge 
-                                          variant="outline" 
-                                          className="text-xs text-gray-500 border-gray-300"
-                                        >
-                                          +{member.mutualClubs.length - 2}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
                               </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* Sliding Side Panel for Club Info */}
-          <AnimatePresence>
-            {showSidePanel && (
-              <>
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                  onClick={() => setShowSidePanel(false)}
-                />
-                
-                {/* Side Panel */}
-                <motion.div
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="fixed right-0 top-0 h-full w-96 bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
-                >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
-                      <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                        Club Information
-                      </h2>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setShowSidePanel(false)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </motion.button>
-                    </div>
-
-                    {/* Club Statistics */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className="bg-gradient-to-br from-slate-800/50 to-slate-700/50 backdrop-blur-xl rounded-2xl p-6 shadow-lg mb-6 border border-slate-700/30"
-                    >
-                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
-                        Club Statistics
-                      </h3>
-                      <div className="space-y-4">
-                        {[
-                          { 
-                            label: "Total Members", 
-                            value: club?.memberCount?.toLocaleString() || "0", 
-                            icon: "👥", 
-                            color: "from-blue-500 to-blue-600",
-                            clickable: true,
-                            onClick: () => setShowMembersPanel(true)
-                          },
-                          { label: "Active Discussions", value: threads.length.toString(), icon: "💬", color: "from-green-500 to-green-600" },
-                          { label: "Upcoming Events", value: events.length.toString(), icon: "📅", color: "from-purple-500 to-purple-600" },
-                          { label: "Founded", value: club ? new Date(club.createdAt).getFullYear().toString() : "", icon: "🏆", color: "from-yellow-500 to-yellow-600" },
-                        ].map((stat, index) => (
-                          <motion.div
-                            key={`stat-${stat.label}-${index}`}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.2 + index * 0.1 }}
-                            whileHover={{ scale: stat.clickable ? 1.05 : 1.02, x: 5 }}
-                            onClick={stat.clickable ? stat.onClick : undefined}
-                            className={`flex items-center justify-between p-4 bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-300 border border-slate-700/30 ${stat.clickable ? 'cursor-pointer hover:bg-slate-700/50 hover:border-purple-500/30' : ''}`}
-                          >
-                            <div className="flex items-center gap-3">
-                              <motion.div
-                                whileHover={{ scale: 1.2, rotate: 10 }}
-                                className={`p-2 bg-gradient-to-r ${stat.color} rounded-lg shadow-lg`}
-                              >
-                                <span className="text-lg">{stat.icon}</span>
-                              </motion.div>
-                              <span className="font-medium text-slate-300">{stat.label}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="font-bold text-xl text-slate-100">{stat.value}</span>
-                              {stat.clickable && (
-                                <motion.div
-                                  animate={{ x: [0, 3, 0] }}
-                                  transition={{ duration: 2, repeat: Infinity }}
-                                >
-                                  <ArrowLeft className="h-4 w-4 text-purple-400 rotate-180" />
-                                </motion.div>
-                              )}
-                            </div>
-                          </motion.div>
-                        ))}
-
-                        {/* Enhanced Member Count Animation */}
-                        <motion.div
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ delay: 0.2, duration: 0.8 }}
-                          className="flex items-center justify-between p-4 bg-slate-800/50 backdrop-blur-sm rounded-xl shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer"
-                          onClick={() => setShowMembersPanel(true)}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow-lg">
-                              <Users className="h-5 w-5 text-white" />
-                            </div>
-                            <span className="font-medium text-gray-700">Total Members</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <motion.span
-                              initial={{ scale: 0 }}
-                              animate={{ scale: 1 }}
-                              transition={{ delay: 0.4, type: "spring", stiffness: 300 }}
-                              className="font-bold text-2xl text-gray-900"
-                            >
-                              {club?.memberCount?.toLocaleString() || "0"}
-                            </motion.span>
-                            <ArrowLeft className="h-4 w-4 text-purple-600 rotate-180" />
-                          </div>
-                        </motion.div>
-                      </div>
-                    </motion.div>
-
-                    {/* Recent Activity */}
-                    <motion.div
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.3 }}
-                      className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-2xl p-6 shadow-lg border border-slate-700/30"
-                    >
-                      <h3 className="text-xl font-bold mb-4 bg-gradient-to-r from-slate-100 to-purple-400 bg-clip-text text-transparent">
-                        Recent Activity
-                      </h3>
-                      <div className="space-y-4">
-                        {[
-                          { 
-                            action: "New member joined", 
-                            time: members.length > 0 ? `${new Date(members[0].joinedAt).toLocaleDateString()}` : "Recently", 
-                            icon: Users, 
-                            clickable: true,
-                            onClick: () => setShowNewMemberPanel(true)
-                          },
-                          { 
-                            action: "Discussion started", 
-                            time: threads.length > 0 ? `${new Date(threads[0].createdAt).toLocaleDateString()}` : "Recently", 
-                            icon: MessageSquare, 
-                            clickable: true,
-                            onClick: () => setShowLatestThreadPanel(true)
-                          },
-                          { 
-                            action: "Latest event", 
-                            time: events.length > 0 ? `${new Date(events[0].createdAt).toLocaleDateString()}` : "Recently", 
-                            icon: Calendar, 
-                            clickable: true,
-                            onClick: () => setShowLatestEventPanel(true)
-                          },
-                        ].map((activity, index) => (
-                          <motion.div
-                            key={`activity-${activity.action}-${index}`}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: 0.4 + index * 0.1 }}
-                            whileHover={{ scale: activity.clickable ? 1.05 : 1.02, x: activity.clickable ? 8 : 5 }}
-                            onClick={activity.clickable ? activity.onClick : undefined}
-                            className={`flex items-center gap-3 p-3 bg-slate-800/50 backdrop-blur-sm rounded-lg hover:shadow-md transition-all duration-300 border border-slate-700/30 ${
-                              activity.clickable ? 'cursor-pointer hover:bg-gradient-to-r hover:from-purple-500/20 hover:to-pink-500/20 hover:border-purple-400/50' : ''
-                            }`}
-                          >
-                            <motion.div
-                              whileHover={{ scale: 1.2, rotate: 10 }}
-                              className="p-2 bg-gradient-to-br from-purple-500/20 to-pink-500/20 backdrop-blur-sm rounded-lg"
-                            >
-                              <activity.icon className="h-4 w-4 text-purple-400" />
-                            </motion.div>
-                            <div className="flex-1">
-                              <p className="text-sm font-medium text-slate-300">{activity.action}</p>
-                              <p className="text-xs text-slate-500">{activity.time}</p>
-                            </div>
-                            {activity.clickable && (
-                              <motion.div
-                                animate={{ x: [0, 3, 0] }}
-                                transition={{ duration: 2, repeat: Infinity }}
-                                className="text-purple-400"
-                              >
-                                <ArrowLeft className="h-4 w-4 rotate-180" />
-                              </motion.div>
                             )}
-                          </motion.div>
-                        ))}
-                      </div>
-                    </motion.div>
-
-                    {/* Member Actions */}
-                    {isMember && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: 0.5 }}
-                        className="mt-6 p-4 bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl border border-red-100"
-                      >
-                        <h4 className="font-semibold text-gray-800 mb-3">Member Actions</h4>
-                        <motion.button
-                          whileHover={{ scale: 1.02 }}
-                          whileTap={{ scale: 0.98 }}
-                          onClick={handleLeaveClub}
-                          className="w-full bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200"
-                        >
-                          Leave Club
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* Sliding Members Panel */}
-          <AnimatePresence>
-            {showMembersPanel && (
-              <>
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                  onClick={() => setShowMembersPanel(false)}
-                />
-                
-                {/* Members Panel */}
-                <motion.div
-                  initial={{ x: "100%" }}
-                  animate={{ x: 0 }}
-                  exit={{ x: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                  className="fixed right-0 top-0 h-full w-[500px] bg-white/95 backdrop-blur-xl shadow-2xl z-50 overflow-y-auto"
-                >
-                  <div className="p-6">
-                    {/* Header */}
-                    <div className="flex justify-between items-center mb-6">
-                      <div>
-                        <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-blue-600 bg-clip-text text-transparent">
-                          Club Members
-                        </h2>
-                        <p className="text-gray-600 mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
-                      </div>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => setShowMembersPanel(false)}
-                        className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-                      >
-                        <X className="h-5 w-5" />
-                      </motion.button>
-                    </div>
-
-                    {/* Members List */}
-                    {membersLoading ? (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="text-center py-12"
-                      >
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                        >
-                          <Loader2 className="h-8 w-8 mx-auto mb-4 text-blue-600" />
-                        </motion.div>
-                        <p className="text-gray-600">Loading members...</p>
-                      </motion.div>
-                    ) : members.length === 0 ? (
-                      <motion.div 
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        className="text-center py-16 bg-gradient-to-br from-blue-50 to-purple-50 rounded-2xl"
-                      >
-                        <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-                        <h3 className="text-xl font-semibold text-gray-700 mb-2">No members yet</h3>
-                        <p className="text-gray-600">Be the first to join this club!</p>
-                      </motion.div>
-                    ) : (
-                      <motion.div 
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="space-y-4"
-                      >
-                        {members.map((member, index) => (
-                          <motion.div
-                            key={`member-${member.id}`}
-                            initial={{ opacity: 0, x: 50 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.1 }}
-                            whileHover={{ scale: 1.02 }}
-                            className="bg-white rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 border border-gray-100"
-                          >
-                            <div className="flex items-center gap-4">
-                              <Avatar className="w-12 h-12 border-2 border-white shadow-md">
-                                <AvatarFallback className="text-lg font-bold bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                                  {member.user.firstName?.[0]}{member.user.lastName?.[0]}
-                                </AvatarFallback>
-                              </Avatar>
-                              
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h3 className="text-lg font-bold text-gray-900">
-                                    {member.user.firstName} {member.user.lastName}
-                                  </h3>
-                                  {member.user.id === club?.createdBy.id && (
-                                    <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs">
-                                      <Crown className="w-3 h-3 mr-1" />
-                                      Owner
-                                    </Badge>
-                                  )}
-                                </div>
-                                
-                                <p className="text-gray-600 text-sm">@{member.user.username}</p>
-                                
-                                <p className="text-xs text-gray-500 mt-1">
-                                  Joined {new Date(member.joinedAt).toLocaleDateString()}
-                                </p>
-                                
-                                {/* Mutual Clubs */}
-                                {member.mutualClubs && member.mutualClubs.length > 0 && (
-                                  <div className="mt-2">
-                                    <p className="text-xs font-semibold text-gray-600 mb-1">
-                                      Mutual Clubs ({member.mutualClubs.length})
-                                    </p>
-                                    <div className="flex flex-wrap gap-1">
-                                      {member.mutualClubs.slice(0, 2).map((mutualClub) => (
-                                        <Badge 
-                                          key={`mutual-${mutualClub.id}`}
-                                          variant="secondary" 
-                                          className="text-xs bg-blue-50 text-blue-700"
-                                        >
-                                          {mutualClub.name}
-                                        </Badge>
-                                      ))}
-                                      {member.mutualClubs.length > 2 && (
-                                        <Badge 
-                                          variant="outline" 
-                                          className="text-xs text-gray-500 border-gray-300"
-                                        >
-                                          +{member.mutualClubs.length - 2}
-                                        </Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    )}
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* Leave Club Confirmation Dialog */}
-          <AnimatePresence>
-            {showLeaveConfirmation && (
-              <>
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                  onClick={cancelLeaveClub}
-                />
-                
-                {/* Confirmation Dialog */}
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                  transition={{ duration: 0.3 }}
-                  className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-slate-900/95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl border border-slate-800/50 z-50 w-96"
-                >
-                  <div className="text-center">
-                    <h3 className="text-xl font-semibold text-slate-200 mb-4">Leave Club</h3>
-                    <p className="text-slate-400 mb-6">Are you sure you want to leave this club?</p>
-                    <div className="flex gap-4 justify-center">
-                      <Button 
-                        variant="outline" 
-                        onClick={cancelLeaveClub}
-                        className="bg-slate-800 border-slate-700 hover:bg-slate-700 text-slate-200"
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={confirmLeaveClub}
-                        className="bg-red-600 hover:bg-red-700 text-white"
-                      >
-                        Leave Club
-                      </Button>
-                    </div>
-                  </div>
-                </motion.div>
-              </>
-            )}
-          </AnimatePresence>
-
-          {/* New Member Panel */}
-          <AnimatePresence>
-            {showNewMemberPanel && (
-              <>
-                {/* Backdrop */}
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                  onClick={() => setShowNewMemberPanel(false)}
-                />
-                
-                {/* Panel */}
-                <motion.div
-                  initial={{ opacity: 0, x: "100%" }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: "100%" }}
-                  transition={{ type: "spring", damping: 25, stiffness: 400 }}
-                  className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
-                >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  Latest Member
-                </h2>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowNewMemberPanel(false)}
-                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors duration-200"
-                >
-                  <X className="h-6 w-6 text-slate-400" />
-                </motion.button>
-              </div>
-              
-              {members.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50"
-                >
-                  <div className="flex items-center gap-4 mb-4">
-                    <Avatar className="h-16 w-16 border-2 border-purple-500/50">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${members[0].user.username}`} />
-                      <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xl">
-                        {members[0].user.firstName[0]}{members[0].user.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <h3 className="text-xl font-bold text-slate-200">
-                        {members[0].user.firstName} {members[0].user.lastName}
-                      </h3>
-                      <p className="text-slate-400">@{members[0].user.username}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Calendar className="h-4 w-4 text-purple-400" />
-                      <span>Joined {new Date(members[0].joinedAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Users className="h-4 w-4 text-blue-400" />
-                      <span>{members[0].mutualClubs?.length || 0} mutual clubs</span>
-                    </div>
-                  </div>
-                  
-                  {members[0].mutualClubs && members[0].mutualClubs.length > 0 && (
-                    <div className="mt-4">
-                      <h4 className="text-sm font-semibold text-slate-300 mb-2">Mutual Clubs</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {members[0].mutualClubs.map((club) => (
-                          <Badge key={club.id} className="bg-purple-600/20 text-purple-300 border-purple-500/50">
-                            {club.name}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </motion.div>
-              ) : (
-                <div className="text-center py-8 text-slate-400">
-                  <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No members yet</p>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </Card>
+                  ))}
                 </div>
               )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Latest Thread Panel */}
-      <AnimatePresence>
-        {showLatestThreadPanel && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={() => setShowLatestThreadPanel(false)}
-            />
-            
-            {/* Panel */}
-            <motion.div
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">
-                  Latest Thread
-                </h2>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowLatestThreadPanel(false)}
-                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors duration-200"
-                >
-                  <X className="h-6 w-6 text-slate-400" />
-                </motion.button>
-              </div>
-              
-              {threads.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50"
-                >
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-slate-200 mb-2">
-                      {threads[0].title}
-                    </h3>
-                    <p className="text-slate-400 line-clamp-3">
-                      {threads[0].content}
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center gap-4 mb-4">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${threads[0].createdBy.username}`} />
-                      <AvatarFallback className="bg-gradient-to-r from-green-500 to-blue-500 text-white text-sm">
-                        {threads[0].createdBy.firstName[0]}{threads[0].createdBy.lastName[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200">
-                        {threads[0].createdBy.firstName} {threads[0].createdBy.lastName}
-                      </p>
-                      <p className="text-xs text-slate-400">@{threads[0].createdBy.username}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Calendar className="h-4 w-4 text-green-400" />
-                      <span>Created {new Date(threads[0].createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-4 text-slate-300">
-                      <div className="flex items-center gap-1">
-                        <Eye className="h-4 w-4 text-blue-400" />
-                        <span>{threads[0].viewCount}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <MessageSquare className="h-4 w-4 text-purple-400" />
-                        <span>{threads[0].commentCount}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Heart className="h-4 w-4 text-red-400" />
-                        <span>{threads[0].likeCount}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {threads[0].isPinned && (
-                    <div className="mt-4 flex items-center gap-2 text-yellow-400">
-                      <Pin className="h-4 w-4" />
-                      <span className="text-sm">Pinned thread</span>
-                    </div>
-                  )}
-                  
-                  <Link href={`/threads/${threads[0].id}`} className="block mt-4">
-                    <Button className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600">
-                      View Thread
-                    </Button>
-                  </Link>
-                </motion.div>
-              ) : (
-                <div className="text-center py-8 text-slate-400">
-                  <MessageSquare className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No threads yet</p>
-                </div>
-              )}
-            </motion.div>
-          </>
-        )}
-      </AnimatePresence>
-
-      {/* Latest Event Panel */}
-      <AnimatePresence>
-        {showLatestEventPanel && (
-          <>
-            {/* Backdrop */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-              onClick={() => setShowLatestEventPanel(false)}
-            />
-            
-            {/* Panel */}
-            <motion.div
-              initial={{ opacity: 0, x: "100%" }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 400 }}
-              className="fixed right-0 top-0 h-full w-96 bg-slate-900/95 backdrop-blur-xl shadow-2xl border-l border-slate-800/50 z-50 p-6 overflow-y-auto"
-            >
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-                  Latest Event
-                </h2>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowLatestEventPanel(false)}
-                  className="p-2 hover:bg-slate-800 rounded-lg transition-colors duration-200"
-                >
-                  <X className="h-6 w-6 text-slate-400" />
-                </motion.button>
-              </div>
-              
-              {events.length > 0 ? (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50"
-                >
-                  <div className="mb-4">
-                    <h3 className="text-xl font-bold text-slate-200 mb-2">
-                      {events[0].title}
-                    </h3>
-                    <p className="text-slate-400 line-clamp-3">
-                      {events[0].description}
-                    </p>
-                  </div>
-                  
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Calendar className="h-4 w-4 text-orange-400" />
-                      <span>{new Date(events[0].date).toLocaleDateString()}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Clock className="h-4 w-4 text-blue-400" />
-                      <span>{events[0].time}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Globe className="h-4 w-4 text-green-400" />
-                      <span>{events[0].location}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-slate-300">
-                      <Users className="h-4 w-4 text-purple-400" />
-                      <span>{events[0].currentAttendees}/{events[0].maxAttendees} attendees</span>
-                    </div>
-                  </div>
-                  
-                  <div className="mt-4 flex items-center gap-4">
-                    <Avatar className="h-8 w-8">
-                      <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${events[0].createdBy.username}`} />
-                      <AvatarFallback className="bg-gradient-to-r from-orange-500 to-red-500 text-white text-sm">
-                        {events[0].createdBy.username[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-sm font-semibold text-slate-200">
-                        Organized by @{events[0].createdBy.username}
-                      </p>
-                      <p className="text-xs text-slate-400">
-                        Created {new Date(events[0].createdAt).toLocaleDateString()}
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <Link href={`/events/${events[0].id}`} className="block mt-4">
-                    <Button className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600">
-                      View Event
-                    </Button>
-                  </Link>
-                </motion.div>
-              ) : (
-                <div className="text-center py-8 text-slate-400">
-                  <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                  <p>No events yet</p>
-                </div>
-              )}
-            </motion.div>
-          </>          )}
-        </AnimatePresence>
+            </TabsContent>
+          </Tabs>
+        </div>
       </main>
       
       {/* Create Thread Modal */}
@@ -2717,6 +933,238 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           setShowCreateThreadModal(false)
         }}
       />
+
+      {/* Side Panel for Club Info */}
+      {showSidePanel && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setShowSidePanel(false)}
+          />
+          
+          <div className="fixed right-0 top-0 h-full w-[500px] bg-white shadow-xl z-50 overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-semibold text-gray-900">Club Information</h2>
+                <button
+                  onClick={() => setShowSidePanel(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {/* Club Statistics */}
+              <div className="bg-gray-50 rounded-lg p-6 mb-6">
+                <h3 className="text-lg font-medium mb-4 text-gray-900">Club Statistics</h3>
+                <div className="space-y-4">
+                  {[
+                    { 
+                      label: "Total Members", 
+                      value: club?.memberCount?.toLocaleString() || "0", 
+                      icon: "👥",
+                      clickable: true,
+                      onClick: () => setShowMembersPanel(true)
+                    },
+                    { label: "Active Discussions", value: threads.length.toString(), icon: "💬" },
+                    { label: "Upcoming Events", value: events.length.toString(), icon: "📅" },
+                    { label: "Founded", value: club ? new Date(club.createdAt).getFullYear().toString() : "", icon: "🏆" },
+                  ].map((stat, index) => (
+                    <div
+                      key={stat.label}
+                      onClick={stat.clickable ? stat.onClick : undefined}
+                      className={`flex items-center justify-between p-4 bg-white rounded-lg border border-gray-200 ${stat.clickable ? 'cursor-pointer hover:bg-gray-50' : ''}`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <span className="text-lg">{stat.icon}</span>
+                        <span className="font-medium text-gray-700">{stat.label}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-lg text-gray-900">{stat.value}</span>
+                        {stat.clickable && (
+                          <ArrowLeft className="h-4 w-4 text-gray-500 rotate-180" />
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Recent Activity */}
+              <div className="bg-gray-50 rounded-lg p-6">
+                <h3 className="text-lg font-medium mb-4 text-gray-900">Recent Activity</h3>
+                <div className="space-y-3">
+                  {[
+                    { action: "New member joined", time: "2 hours ago", icon: Users },
+                    { action: "Discussion started", time: "5 hours ago", icon: MessageSquare },
+                    { action: "Event created", time: "1 day ago", icon: Calendar },
+                  ].map((activity, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-3 p-3 bg-white rounded-lg border border-gray-200"
+                    >
+                      <activity.icon className="h-4 w-4 text-gray-600" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">{activity.action}</p>
+                        <p className="text-xs text-gray-500">{activity.time}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Member Actions */}
+              {isMember && (
+                <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                  <h4 className="font-medium text-gray-900 mb-3">Member Actions</h4>
+                  <button
+                    onClick={handleLeaveClub}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg"
+                  >
+                    Leave Club
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Members Panel */}
+      {showMembersPanel && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={() => setShowMembersPanel(false)}
+          />
+          
+          <div className="fixed right-0 top-0 h-full w-[500px] bg-white shadow-xl z-50 overflow-y-auto">
+            <div className="p-6">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Club Members</h2>
+                  <p className="text-gray-600 mt-1">{members.length} member{members.length !== 1 ? 's' : ''}</p>
+                </div>
+                <button
+                  onClick={() => setShowMembersPanel(false)}
+                  className="p-2 hover:bg-gray-100 rounded-lg"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+
+              {membersLoading ? (
+                <div className="text-center py-12">
+                  <Loader2 className="h-8 w-8 mx-auto mb-4 text-[#1E3A8A] animate-spin" />
+                  <p className="text-gray-600">Loading members...</p>
+                </div>
+              ) : members.length === 0 ? (
+                <div className="text-center py-16 bg-gray-50 rounded-lg">
+                  <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No members yet</h3>
+                  <p className="text-gray-600">Be the first to join this club!</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {members.map((member) => (
+                    <div
+                      key={member.id}
+                      className="bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar className="w-12 h-12">
+                          <AvatarFallback className="text-lg font-medium bg-gray-200 text-gray-700">
+                            {member.user.firstName?.[0]}{member.user.lastName?.[0]}
+                          </AvatarFallback>
+                        </Avatar>
+                        
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-lg font-medium text-gray-900">
+                              {member.user.firstName} {member.user.lastName}
+                            </h3>
+                            {member.user.id === club?.createdBy.id && (
+                              <Badge className="bg-yellow-100 text-yellow-800 text-xs">
+                                <Crown className="w-3 h-3 mr-1" />
+                                Owner
+                              </Badge>
+                            )}
+                          </div>
+                          
+                          <p className="text-gray-600 text-sm">@{member.user.username}</p>
+                          
+                          <p className="text-xs text-gray-500 mt-1">
+                            Joined {new Date(member.joinedAt).toLocaleDateString()}
+                          </p>
+                          
+                          {member.mutualClubs && member.mutualClubs.length > 0 && (
+                            <div className="mt-2">
+                              <p className="text-xs font-medium text-gray-500 mb-1">
+                                Mutual Clubs ({member.mutualClubs.length})
+                              </p>
+                              <div className="flex flex-wrap gap-1">
+                                {member.mutualClubs.slice(0, 2).map((mutualClub) => (
+                                  <Badge 
+                                    key={mutualClub.id}
+                                    variant="secondary" 
+                                    className="text-xs bg-gray-100 text-gray-700"
+                                  >
+                                    {mutualClub.name}
+                                  </Badge>
+                                ))}
+                                {member.mutualClubs.length > 2 && (
+                                  <Badge 
+                                    variant="outline" 
+                                    className="text-xs text-gray-500"
+                                  >
+                                    +{member.mutualClubs.length - 2}
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Leave Club Confirmation Dialog */}
+      {showLeaveConfirmation && (
+        <>
+          <div
+            className="fixed inset-0 bg-black/50 z-50"
+            onClick={cancelLeaveClub}
+          />
+          
+          <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 shadow-xl z-50 w-96">
+            <div className="text-center">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Leave Club</h3>
+              <p className="text-gray-600 mb-6">Are you sure you want to leave this club?</p>
+              <div className="flex gap-3 justify-center">
+                <Button 
+                  variant="outline" 
+                  onClick={cancelLeaveClub}
+                  className="border-gray-300"
+                >
+                  Cancel
+                </Button>
+                <Button 
+                  onClick={confirmLeaveClub}
+                  className="bg-red-600 hover:bg-red-700 text-white"
+                >
+                  Leave Club
+                </Button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

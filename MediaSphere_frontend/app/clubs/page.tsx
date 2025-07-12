@@ -467,7 +467,7 @@ export default function ClubsPage() {
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        // transition={{ duration: 0.3, ease: "easeOut" }}
         className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -590,13 +590,13 @@ export default function ClubsPage() {
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="flex justify-between items-center mb-8"
         >
           <motion.div
             initial={{ x: -50, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.6 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
           >
             <div className="relative">
               <h1 className="text-5xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent pb-2 relative">
@@ -616,17 +616,19 @@ export default function ClubsPage() {
           <motion.div
             initial={{ x: 50, opacity: 0, scale: 0.8 }}
             animate={{ x: 0, opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            transition={{ delay: 0.15, duration: 0.3 }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
           >
             <div className="flex flex-col items-end gap-2">
-              <Link href="/clubs/create">
-                <Button className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]">
+              { isAuthenticated && (
+                <Link href="/clubs/create">
+                <Button className="bg-[#1E3A8A] hover:bg-[#15306E] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]">
                   <Plus className="mr-2 h-4 w-4" />
                   Create Club
                 </Button>
               </Link>
+              )}
               {/* Club View Segmented Toggle Button */}
               <div className="mt-2 flex rounded-lg overflow-hidden border border-[#90CAF9]/30 bg-white shadow-sm">
                 <button
@@ -652,14 +654,14 @@ export default function ClubsPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
           className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-xl border border-[#90CAF9]/30 p-6 mb-8 shadow-[0_5px_20px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.1)] transition-shadow duration-300"
         >
           <div className="flex flex-col md:flex-row gap-4">
-            <motion.div
-              initial={{ width: 0, opacity: 0 }}
-              animate={{ width: "100%", opacity: 1 }}
-              transition={{ delay: 0.4, duration: 0.5 }}
+          <motion.div
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: "100%", opacity: 1 }}
+            transition={{ delay: 0.15, duration: 0.3 }}
               className="flex-1"
             >
               <div className="relative">
@@ -672,10 +674,10 @@ export default function ClubsPage() {
                 />
               </div>
             </motion.div>
-            <motion.div
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6, duration: 0.5 }}
+          <motion.div
+            initial={{ x: 50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.3 }}
               className="flex gap-4"
             >
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>
@@ -710,6 +712,7 @@ export default function ClubsPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
             className="text-center py-16"
           >
             <motion.div
@@ -720,12 +723,18 @@ export default function ClubsPage() {
             >
               <Users className="h-12 w-12 mx-auto mb-4 text-[#1E3A8A] opacity-50" />
               <h3 className="text-xl font-['Nunito'] font-bold text-[#1E3A8A] mb-2">
-                {searchTerm || selectedCategory !== "All" ? "No Matches Found" : "Coming Soon"}
+                {clubView === 'my' && !isAuthenticated
+                  ? "Please login first"
+                  : searchTerm || selectedCategory !== "All"
+                    ? "No Matches Found"
+                    : "Coming Soon"}
               </h3>
               <p className="text-[#333333] text-lg font-['Open Sans']">
-                {searchTerm || selectedCategory !== "All"
-                  ? "No clubs match your search criteria."
-                  : "No clubs available at the moment."}
+                {clubView === 'my' && !isAuthenticated
+                  ? "You need to be logged in to view your clubs."
+                  : searchTerm || selectedCategory !== "All"
+                    ? "No clubs match your search criteria."
+                    : "No clubs available at the moment."}
               </p>
             </motion.div>
           </motion.div>
@@ -734,6 +743,7 @@ export default function ClubsPage() {
             variants={containerVariants}
             initial="hidden"
             animate="visible"
+            transition={{ duration: 0.3 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             {filteredClubs.slice(0, visibleCount).map((club, index) => (
@@ -742,7 +752,6 @@ export default function ClubsPage() {
                 variants={cardVariants}
                 whileHover="hover"
                 custom={index}
-                transition={{ delay: index * 0.1 }}
                 className="perspective-1000"
               >
                 <Card className="overflow-hidden hover:shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] hover:scale-[1.02] transition-all duration-500 cursor-pointer h-full relative group bg-white/90 backdrop-blur-xl border-[#90CAF9]/30 rounded-xl transform hover:-translate-y-1">
@@ -761,10 +770,10 @@ export default function ClubsPage() {
                     <motion.div
                       initial={{ y: -20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.3 + index * 0.1, duration: 0.6 }}
+                      transition={{ duration: 0.6 }}
                       className="absolute top-4 right-4"
                     >
-                      <Badge variant="secondary" className="bg-gradient-to-r from-[#90CAF9] to-[#1E3A8A] text-white font-['Nunito'] font-medium shadow-[0_2px_8px_-1px_rgba(30,58,138,0.25)] px-4 py-1 rounded-full hover:scale-105 transition-transform">
+                      <Badge variant="secondary" className="bg-[#1E3A8A] text-white font-['Nunito'] font-medium shadow-[0_2px_8px_-1px_rgba(30,58,138,0.25)] px-4 py-1 rounded-full hover:scale-105 transition-transform">
                         {club.mediaType.name}
                       </Badge>
                     </motion.div>
@@ -772,7 +781,7 @@ export default function ClubsPage() {
                       <motion.div
                         initial={{ scale: 0, rotate: -180 }}
                         animate={{ scale: 1, rotate: 0 }}
-                        transition={{ delay: 0.5 + index * 0.1, type: "spring", stiffness: 200 }}
+                        transition={{ type: "spring", stiffness: 200 }}
                         className="absolute top-4 left-4"
                       >
                         <Badge variant="default" className="bg-[#1E3A8A] text-white font-['Nunito'] font-medium shadow-md">
@@ -786,7 +795,7 @@ export default function ClubsPage() {
                     <motion.div
                       initial={{ x: -20, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ delay: 0.4 + index * 0.1, duration: 0.6 }}
+                      transition={{ duration: 0.6 }}
                     >
                       <CardTitle className="text-xl mb-2 group-hover:text-[#1E3A8A] transition-colors text-[#333333] font-['Nunito']">
                         <Link href={`/clubs/${club.id}`}>
@@ -803,7 +812,7 @@ export default function ClubsPage() {
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.5 + index * 0.1, duration: 0.6 }}
+                      transition={{ duration: 0.6 }}
                       className="flex justify-between items-center mb-4"
                     >
                       <div className="flex items-center text-sm text-[#333333]/70">
@@ -822,7 +831,7 @@ export default function ClubsPage() {
                     <motion.div
                       initial={{ y: 20, opacity: 0 }}
                       animate={{ y: 0, opacity: 1 }}
-                      transition={{ delay: 0.6 + index * 0.1, duration: 0.6 }}
+                      transition={{ duration: 0.6 }}
                       className="flex gap-2"
                     >
                       <Link href={`/clubs/${club.id}`} className="flex-1">
@@ -845,14 +854,14 @@ export default function ClubsPage() {
                           <motion.div
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: 0.7 + index * 0.1, duration: 0.5 }}
+                            transition={{ duration: 0.5 }}
                             whileHover={{
                               boxShadow: "0 10px 30px rgba(239, 68, 68, 0.3)",
                               transition: { duration: 0.2 }
                             }}
                           >
                             <Button
-                              className="w-full bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 shadow-md group relative overflow-hidden transition-all duration-300 text-white"
+                              className="w-full bg-red-500 hover:bg-red-600 shadow-md group relative overflow-hidden transition-all duration-300 text-white"
                               onClick={() => leaveClub(club)}
                             >
                               <motion.div
@@ -876,7 +885,7 @@ export default function ClubsPage() {
                           whileTap={{ scale: 0.98 }}
                           className="flex-1"
                         >                              <Button
-                          className="w-full bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
+                          className="w-full bg-[#1E3A8A] hover:bg-[#15306E] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
                           onClick={() => joinClub(club)}
                         >
                             Join Club
@@ -890,14 +899,14 @@ export default function ClubsPage() {
                   <motion.div
                     initial={{ scale: 0, rotate: 0 }}
                     animate={{ scale: 1, rotate: 360 }}
-                    transition={{ delay: 0.8 + index * 0.1, duration: 1, ease: "easeOut" }}
+                    transition={{ duration: 1, ease: "easeOut" }}
                     className="absolute -top-2 -right-2 w-8 h-8 rounded-full opacity-20 group-hover:opacity-40 transition-opacity"
                     style={{ background: getClubBackgroundImage(club.mediaType.name) }}
                   />
                   <motion.div
                     initial={{ scale: 0, rotate: 0 }}
                     animate={{ scale: 1, rotate: -360 }}
-                    transition={{ delay: 1 + index * 0.1, duration: 1.2, ease: "easeOut" }}
+                    transition={{ duration: 1.2, ease: "easeOut" }}
                     className="absolute -bottom-2 -left-2 w-6 h-6 rounded-full opacity-20 group-hover:opacity-40 transition-opacity"
                     style={{ background: getClubBackgroundImage(club.mediaType.name) }}
                   />
@@ -1028,8 +1037,8 @@ export default function ClubsPage() {
                       onClick={confirmAction}
                       disabled={isLeavingClub}
                       className={`px-6 py-2 font-medium shadow-md transition-all duration-200 ${modalAction === 'join'
-                        ? 'bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-["Nunito"]'
-                        : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white font-["Nunito"]'
+                        ? 'bg-[#1E3A8A] hover:bg-[#15306E] text-white font-["Nunito"]'
+                        : 'bg-red-500 hover:bg-red-600 text-white font-["Nunito"]'
                         }`}
                     >
                       {isLeavingClub ? (
