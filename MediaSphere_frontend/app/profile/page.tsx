@@ -59,96 +59,6 @@ export default function ProfilePage() {
     website: ""
   })
 
-  // Redirect to sign in if not authenticated
-  useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
-      router.push('/sign-in')
-      return
-    }
-  }, [isAuthenticated, authLoading, router])
-
-  // Load user data effect
-  useEffect(() => {
-    if (isAuthenticated && !authLoading) {
-      loadUserData()
-    }
-  }, [isAuthenticated, authLoading])
-
-  // Generate floating particles on client side only
-  useEffect(() => {
-    setFloatingParticles(Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      delay: Math.random() * 5,
-      duration: 3 + Math.random() * 4
-    })))
-  }, [])
-
-  // Show loading while checking authentication or loading user data
-  if (authLoading || loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
-        <motion.div
-          animate={{
-            rotate: 360,
-            scale: [1, 1.2, 1]
-          }}
-          transition={{
-            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
-            scale: { duration: 1, repeat: Infinity }
-          }}
-          className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full"
-        />
-      </div>
-    )
-  }
-
-  // Don't render if not authenticated (will redirect)
-  if (!isAuthenticated) {
-    return null
-  }
-
-  const loadUserData = async () => {
-    try {
-      setLoading(true)
-      const currentUser = await apiService.getCurrentUser()
-      if (!currentUser) return
-
-      const [userData, statsData, clubsData, threadsData, achievementsData] = await Promise.all([
-        apiService.getUserProfile(currentUser.id),
-        apiService.getUserStats(currentUser.id),
-        fetchUserClubsWithDetails(currentUser.id),
-        fetchUserThreadsWithClubNames(currentUser.id),
-        Promise.resolve(apiService.getUserAchievements(currentUser.id))
-      ])
-
-      setUser(userData)
-      setUserStats(statsData)
-      setClubs(clubsData || [])
-      setThreads(threadsData || [])
-      setAchievements(achievementsData || [])
-
-      if (userData) {
-        setFormData({
-          username: userData.username || "",
-          email: userData.email || "",
-          bio: userData.bio || "",
-          location: "", // Add these when available in API
-          website: ""
-        })
-      }
-    } catch (error) {
-      console.error("Error loading user data:", error)
-      toast({
-        title: "Error",
-        description: "Failed to load profile data",
-        variant: "destructive"
-      })
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Fetch user clubs with member count and join date from backend
   const fetchUserClubsWithDetails = async (userId: string): Promise<Club[]> => {
@@ -328,6 +238,104 @@ export default function ProfilePage() {
       return []
     }
   }
+
+
+
+
+  const loadUserData = async () => {
+    try {
+      setLoading(true)
+      const currentUser = await apiService.getCurrentUser()
+      if (!currentUser) return
+
+      const [userData, statsData, clubsData, threadsData, achievementsData] = await Promise.all([
+        apiService.getUserProfile(currentUser.id),
+        apiService.getUserStats(currentUser.id),
+        fetchUserClubsWithDetails(currentUser.id),
+        fetchUserThreadsWithClubNames(currentUser.id),
+        Promise.resolve(apiService.getUserAchievements(currentUser.id))
+      ])
+
+      setUser(userData)
+      setUserStats(statsData)
+      setClubs(clubsData || [])
+      setThreads(threadsData || [])
+      setAchievements(achievementsData || [])
+
+      if (userData) {
+        setFormData({
+          username: userData.username || "",
+          email: userData.email || "",
+          bio: userData.bio || "",
+          location: "", // Add these when available in API
+          website: ""
+        })
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error)
+      toast({
+        title: "Error",
+        description: "Failed to load profile data",
+        variant: "destructive"
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Redirect to sign in if not authenticated
+  useEffect(() => {
+    if (!authLoading && !isAuthenticated) {
+      router.push('/sign-in')
+      return
+    }
+  }, [isAuthenticated, authLoading, router])
+
+  // Load user data effect
+  useEffect(() => {
+    if (isAuthenticated && !authLoading) {
+      loadUserData()
+    }
+  }, [isAuthenticated, authLoading])
+
+  // Generate floating particles on client side only
+  useEffect(() => {
+    setFloatingParticles(Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      delay: Math.random() * 5,
+      duration: 3 + Math.random() * 4
+    })))
+  }, [])
+
+  // Show loading while checking authentication or loading user data
+  if (authLoading || loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900 flex items-center justify-center">
+        <motion.div
+          animate={{
+            rotate: 360,
+            scale: [1, 1.2, 1]
+          }}
+          transition={{
+            rotate: { duration: 2, repeat: Infinity, ease: "linear" },
+            scale: { duration: 1, repeat: Infinity }
+          }}
+          className="w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full"
+        />
+      </div>
+    )
+  }
+
+  // Don't render if not authenticated (will redirect)
+  if (!isAuthenticated) {
+    return null
+  }
+
+  
+
+  
 
   const handleProfilePicSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
