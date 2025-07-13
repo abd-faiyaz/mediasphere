@@ -20,6 +20,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
 import { authService } from "@/lib/auth-service"
 import { toast } from "@/hooks/use-toast"
+import { useUser } from "@clerk/nextjs" 
 
 interface User {
   id: string
@@ -61,6 +62,8 @@ interface Comment {
 export default function ThreadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const { user, isLoading: isAuthLoading, isAuthenticated, isReady } = useAuth()
+  const { user: currentUser } = useUser()
+  const isSignedIn = !!currentUser
   const [thread, setThread] = useState<Thread | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
