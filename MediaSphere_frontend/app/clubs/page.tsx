@@ -16,6 +16,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth-service"
@@ -57,27 +58,28 @@ export default function ClubsPage() {
   // Leave club modal states
   const [leaveReason, setLeaveReason] = useState("")
   const [isLeavingClub, setIsLeavingClub] = useState(false)
-  const { user, isAuthenticated, isLoading: authLoading } = useAuth()
+  const { user, isLoading: authLoading } = useAuth()
+  const { isSignedIn } = useUser()
   const router = useRouter()
 
   // Debug authentication state
   useEffect(() => {
     console.log('Auth State Debug:', {
       user,
-      isAuthenticated,
+      isSignedIn,
       authLoading,
       hasToken: !!authService.getToken()
     })
-  }, [user, isAuthenticated, authLoading])
+  }, [user, isSignedIn, authLoading])
 
   // Redirect to home if user logs out while on a protected area
   useEffect(() => {
     // Only check after auth is loaded and if we're not loading
-    if (!authLoading && !isAuthenticated && user === null) {
+    if (!authLoading && !isSignedIn && user === null) {
       // User has explicitly logged out, refresh clubs data for non-authenticated view
       fetchClubs()
     }
-  }, [isAuthenticated, authLoading, user])
+  }, [isSignedIn, authLoading, user])
 
   // Get unique categories from clubs (using mediaType.name)
   const categories = ["All", ...Array.from(new Set(clubs.map(club => club.mediaType.name)))]
@@ -179,7 +181,7 @@ export default function ClubsPage() {
 
   // Perform join club action
   const performJoinClub = async (clubId: string) => {
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       router.push('/sign-in')
       return
     }
@@ -286,7 +288,7 @@ export default function ClubsPage() {
 
       // Use different endpoints based on authentication status
       let apiUrl: string
-      if (isAuthenticated && token) {
+      if (isSignedIn && token) {
         apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/with-membership`
       } else {
         apiUrl = `${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/`
@@ -474,7 +476,7 @@ export default function ClubsPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <Link
-                href={isAuthenticated ? "/profile" : "/"}
+                href={isSignedIn ? "/profile" : "/"}
                 className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block"
               >
                 Mediasphere
@@ -499,7 +501,7 @@ export default function ClubsPage() {
               </motion.div>
             </div>
             <nav className="flex items-center space-x-4">
-              {isAuthenticated ? (
+              {isSignedIn ? (
                 // Authenticated user navigation
                 <>
                   <Link href="/clubs">
@@ -621,7 +623,7 @@ export default function ClubsPage() {
             whileTap={{ scale: 0.95 }}
           >
             <div className="flex flex-col items-end gap-2">
-              { isAuthenticated && (
+              { isSignedIn && (
                 <Link href="/clubs/create">
                 <Button className="bg-[#1E3A8A] hover:bg-[#15306E] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]">
                   <Plus className="mr-2 h-4 w-4" />
@@ -723,14 +725,14 @@ export default function ClubsPage() {
             >
               <Users className="h-12 w-12 mx-auto mb-4 text-[#1E3A8A] opacity-50" />
               <h3 className="text-xl font-['Nunito'] font-bold text-[#1E3A8A] mb-2">
-                {clubView === 'my' && !isAuthenticated
+                {clubView === 'my' && !isSignedIn
                   ? "Please login first"
                   : searchTerm || selectedCategory !== "All"
                     ? "No Matches Found"
                     : "Coming Soon"}
               </h3>
               <p className="text-[#333333] text-lg font-['Open Sans']">
-                {clubView === 'my' && !isAuthenticated
+                {clubView === 'my' && !isSignedIn
                   ? "You need to be logged in to view your clubs."
                   : searchTerm || selectedCategory !== "All"
                     ? "No clubs match your search criteria."

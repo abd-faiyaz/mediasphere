@@ -107,7 +107,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   const [showMembersPanel, setShowMembersPanel] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false)
-  const { user, isAuthenticated } = useAuth()
+  const { user, isLoading: isAuthLoading, isAuthenticated, isReady } = useAuth()
   const router = useRouter()
 
   // Fetch club details
@@ -117,7 +117,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       console.log('Fetching club details for ID:', resolvedParams.id)
       
       const headers: { [key: string]: string } = {}
-      if (isAuthenticated) {
+      if (isSignedIn) {
         const token = authService.getToken()
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
@@ -139,7 +139,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       setClub(clubData)
       
       // Set membership status from the response
-      if (isAuthenticated && clubData.isMember !== undefined) {
+      if (isSignedIn && clubData.isMember !== undefined) {
         setIsMember(clubData.isMember)
       }
       
@@ -161,7 +161,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
 
   // Check membership status
   const checkMembership = async () => {
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       setIsMember(false)
       return
     }
@@ -194,7 +194,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         'Content-Type': 'application/json'
       }
       
-      if (isAuthenticated) {
+      if (isSignedIn) {
         const token = authService.getToken()
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
@@ -214,7 +214,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       } else if (response.status === 401) {
         console.log('Authentication required for viewing threads')
         setThreads([])
-        if (isAuthenticated) {
+        if (isSignedIn) {
           toast({
             title: "Authentication Error",
             description: "Please log in again to view discussions",
@@ -289,7 +289,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       console.log('Fetching members for club:', resolvedParams.id)
       
       const headers: { [key: string]: string } = {}
-      if (isAuthenticated) {
+      if (isSignedIn) {
         const token = authService.getToken()
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
@@ -325,7 +325,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
 
   // Join club
   const joinClub = async () => {
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       router.push('/sign-in')
       return
     }
@@ -416,6 +416,12 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
 
   // Load data on component mount
   useEffect(() => {
+    // Guard clause: Wait for authentication to be completely ready
+    if (!isReady) {
+      console.log("Authentication is not ready yet, waiting...")
+      return
+    }
+
     console.log('Loading club data for ID:', resolvedParams.id)
     console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080')
     console.log('Is authenticated:', isAuthenticated)
@@ -426,7 +432,18 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     fetchThreads()
     fetchEvents()
     fetchMembers()
-  }, [resolvedParams.id, isAuthenticated])
+  }, [resolvedParams.id, isReady])
+
+  if (!isReady) {
+    return (
+      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#1E3A8A]" />
+          <p className="text-[#333333]/70 font-['Open Sans']">Authenticating...</p>
+        </div>
+      </div>
+    )
+  }
 
   if (loading) {
     return (
@@ -461,7 +478,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <Link
-                href={isAuthenticated ? "/profile" : "/"}
+                href={isSignedIn ? "/profile" : "/"}
                 className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent"
               >
                 Mediasphere
@@ -479,7 +496,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               </Button>
             </div>
             <nav className="flex items-center space-x-4">
-              {isAuthenticated ? (
+              {isSignedIn ? (
                 <>
                   <Link href="/clubs">
                     <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
@@ -656,7 +673,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                       <Users className="h-12 w-12 mx-auto text-gray-400 mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">Join to View Discussions</h3>
                       <p className="text-gray-600 mb-4">You need to be a club member to view and participate in discussions.</p>
-                      {isAuthenticated && (
+                      {isSignedIn && (
                         <Button onClick={joinClub} className="bg-[#1E3A8A] hover:bg-[#15306E]">
                           <Users className="mr-2 h-4 w-4" />
                           Join Club

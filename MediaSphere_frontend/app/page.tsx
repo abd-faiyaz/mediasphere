@@ -6,16 +6,15 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Search, Users, MessageSquare, Calendar, TrendingUp, Star, Lock } from "lucide-react"
 import Link from "next/link"
-import { useUser, UserButton } from "@clerk/nextjs"
+import { UserButton } from "@clerk/nextjs"
 import { useAuth } from "@/lib/auth-context"
 import { PageLoader } from "@/components/ui/loading"
 
 export default function HomePage() {
-  const { isSignedIn, user, isLoaded } = useUser()
-  const { isLoading: authLoading } = useAuth()
+  const { isAuthenticated, isReady } = useAuth()
 
   // Show loading state while authentication is being determined
-  if (!isLoaded || authLoading) {
+  if (!isReady) {
     return <PageLoader text="Loading Mediasphere..." />
   }
 

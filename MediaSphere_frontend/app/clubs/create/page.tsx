@@ -16,6 +16,7 @@ import Link from "next/link"
 import { motion, AnimatePresence } from "framer-motion"
 import { useEffect, useState } from "react"
 import { useAuth } from "@/lib/auth-context"
+import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth-service"
@@ -44,7 +45,8 @@ export default function CreateClub() {
   const [currentStep, setCurrentStep] = useState(1)
   const [focusedField, setFocusedField] = useState<string | null>(null)
   const [showConfetti, setShowConfetti] = useState(false);
-  const { user, isAuthenticated } = useAuth()
+  const { user } = useAuth()
+  const { isSignedIn } = useUser()
   const router = useRouter()
 
   // Animation variants
@@ -90,10 +92,10 @@ export default function CreateClub() {
 
   // Redirect to login if not authenticated
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       router.push('/sign-in')
     }
-  }, [isAuthenticated, router])
+  }, [isSignedIn, router])
 
   const fetchMediaTypes = async () => {
     try {
@@ -186,7 +188,7 @@ export default function CreateClub() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!isAuthenticated) {
+    if (!isSignedIn) {
       router.push('/sign-in')
       return
     }

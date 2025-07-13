@@ -31,6 +31,7 @@ type Thread = {
 import { authService } from "@/lib/auth-service"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/lib/auth-context"
+import { useUser } from "@clerk/nextjs"
 import { useRouter } from "next/navigation"
 
 export default function ProfilePage() {
@@ -47,7 +48,8 @@ export default function ProfilePage() {
   const [floatingParticles, setFloatingParticles] = useState<Array<{ id: number, x: number, y: number, delay: number, duration: number }>>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const { toast } = useToast()
-  const { isAuthenticated, isLoading: authLoading, user: authUser, logout } = useAuth()
+  const { isLoading: authLoading, user: authUser, logout } = useAuth()
+  const { isSignedIn } = useUser()
   const router = useRouter()
 
   // Enhanced form state
@@ -285,18 +287,18 @@ export default function ProfilePage() {
 
   // Redirect to sign in if not authenticated
   useEffect(() => {
-    if (!authLoading && !isAuthenticated) {
+    if (!authLoading && !isSignedIn) {
       router.push('/sign-in')
       return
     }
-  }, [isAuthenticated, authLoading, router])
+  }, [isSignedIn, authLoading, router])
 
   // Load user data effect
   useEffect(() => {
-    if (isAuthenticated && !authLoading) {
+    if (isSignedIn && !authLoading) {
       loadUserData()
     }
-  }, [isAuthenticated, authLoading])
+  }, [isSignedIn, authLoading])
 
   // Generate floating particles on client side only
   useEffect(() => {
@@ -329,7 +331,7 @@ export default function ProfilePage() {
   }
 
   // Don't render if not authenticated (will redirect)
-  if (!isAuthenticated) {
+  if (!isSignedIn) {
     return null
   }
 

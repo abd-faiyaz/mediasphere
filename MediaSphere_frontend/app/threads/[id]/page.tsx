@@ -60,7 +60,7 @@ interface Comment {
 
 export default function ThreadDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
-  const { user, isAuthenticated } = useAuth()
+  const { user, isLoading: isAuthLoading, isAuthenticated, isReady } = useAuth()
   const [thread, setThread] = useState<Thread | null>(null)
   const [comments, setComments] = useState<Comment[]>([])
   const [loading, setLoading] = useState(true)
@@ -183,11 +183,19 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   ]
 
   useEffect(() => {
+    // Guard clause: Wait for authentication to be completely ready
+    if (!isReady) {
+      console.log("Authentication is not ready yet, waiting...")
+      return
+    }
+
     if (isAuthenticated) {
       fetchThreadAndComments()
       fetchLikeStatus()
+    } else {
+      setLoading(false)
     }
-  }, [resolvedParams.id, isAuthenticated])
+  }, [resolvedParams.id, isReady])
 
   const fetchThreadAndComments = async () => {
     setLoading(true)
@@ -195,14 +203,20 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     try {
       const token = authService.getToken()
 
+      if (!token) {
+        setError("Authentication failed. Please try logging in again.")
+        setLoading(false)
+        return
+      }
+
       // Fetch thread details
-      const threadRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}`, {
+      const threadResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}`, {
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
       })
-      if (!threadRes.ok) throw new Error("Thread not found")
-      const threadData = await threadRes.json()
+      if (!threadResponse.ok) throw new Error("Thread not found")
+      const threadData = await threadResponse.json()
       setThread(threadData)
       setLikeCount(threadData.likeCount || 0)
       setDislikeCount(threadData.dislikeCount || 0)
@@ -213,28 +227,29 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
       })
 
       // Fetch comments
-      const commentsRes = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/comments`, {
+      const commentsResponse = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/comments`, {
         headers: {
           ...(token ? { 'Authorization': `Bearer ${token}` } : {})
         }
       })
-      if (commentsRes.ok) {
-        const commentsData = await commentsRes.json()
+      if (commentsResponse.ok) {
+        const commentsData = await commentsResponse.json()
         setComments(commentsData)
       }
 
-    } catch (err: any) {
-      setError(err.message || "Failed to load thread.")
+    } catch (error) {
+      console.error("Failed to fetch thread:", error)
+      setError("Failed to load thread. Please try again later.")
     } finally {
       setLoading(false)
     }
   }
 
   const fetchLikeStatus = async () => {
-    if (!isAuthenticated) return
+    if (!isSignedIn) return
     try {
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/like-status`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/like-status`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -252,7 +267,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   const handleLike = async () => {
-    if (!isAuthenticated || liking) return
+    if (!isSignedIn || liking) return
     setLiking(true)
     try {
       // Simple increment logic - no toggling
@@ -260,7 +275,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
       setLiked(true)
 
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/like`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -281,7 +296,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   const handleDislike = async () => {
-    if (!isAuthenticated || disliking) return
+    if (!isSignedIn || disliking) return
     setDisliking(true)
     try {
       // Simple increment logic - no toggling
@@ -289,7 +304,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
       setDisliked(true)
 
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/dislike`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/dislike`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -311,7 +326,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
   const fetchLikers = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/likers`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/likers`)
       if (response.ok) {
         const data = await response.json()
         setLikers(data)
@@ -324,7 +339,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
 
   const fetchDislikers = async () => {
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/dislikers`)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/dislikers`)
       if (response.ok) {
         const data = await response.json()
         setDislikers(data)
@@ -340,7 +355,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     setPostingComment(true)
     try {
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/comments`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -371,7 +386,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     setPostingComment(true)
     try {
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${resolvedParams.id}/comments`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${resolvedParams.id}/comments`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -402,10 +417,10 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   const handleEditThread = async () => {
-    if (!isAuthenticated || !thread) return
+    if (!isSignedIn || !thread) return
     try {
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${thread.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${thread.id}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -425,10 +440,10 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   const handleDeleteThread = async () => {
-    if (!isAuthenticated || !thread) return
+    if (!isSignedIn || !thread) return
     try {
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/threads/${thread.id}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/threads/${thread.id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -445,7 +460,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   const handleCommentLike = async (commentId: string) => {
-    if (!isAuthenticated) return
+    if (!isSignedIn) return
 
     const isCurrentlyLiked = likedComments[commentId] || false
     const newLikedState = !isCurrentlyLiked
@@ -469,7 +484,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
       ))
 
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/comments/${commentId}/like`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/comments/${commentId}/like`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -510,10 +525,10 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   }
 
   const handleDeleteComment = async (commentId: string) => {
-    if (!isAuthenticated) return
+    if (!isSignedIn) return
     try {
       const token = authService.getToken()
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/comments/${commentId}`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/comments/${commentId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -589,72 +604,19 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     },
   }
 
+  if (!isReady) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin" />
+        <p className="ml-4">Authenticating...</p>
+      </div>
+    )
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
-        <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
-          <motion.div
-            animate={{
-              rotate: 360,
-              scale: [1, 1.2, 1],
-            }}
-            transition={{
-              duration: 2,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="relative inline-block"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-full blur-xl opacity-50 animate-pulse"></div>
-            <div className="relative bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] p-6 rounded-full">
-              <Loader2 className="h-10 w-10 text-white" />
-            </div>
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="mt-8 space-y-3"
-          >
-            <h3 className="text-xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent">
-              Loading Thread
-            </h3>
-            <p className="text-[#333333]/70 font-['Open Sans']">
-              Please wait while we fetch the thread details
-            </p>
-          </motion.div>
-        </div>
-
-        {/* Loading state background effects */}
-        <motion.div
-          className="absolute inset-0 z-0"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-        >
-          {Array.from({ length: 5 }).map((_, i) => (
-            <motion.div
-              key={i}
-              className="absolute bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-full blur-3xl"
-              style={{
-                width: Math.random() * 300 + 100,
-                height: Math.random() * 300 + 100,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-              animate={{
-                scale: [1, 1.2, 1],
-                opacity: [0.3, 0.6, 0.3],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                delay: i * 0.5,
-                ease: "easeInOut",
-              }}
-            />
-          ))}
-        </motion.div>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin" />
       </div>
     )
   }
@@ -1156,7 +1118,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
           </motion.div>
 
           {/* Add Comment */}
-          {isAuthenticated && (
+          {isSignedIn && (
             <motion.div
               variants={cardVariants}
               className="relative"
