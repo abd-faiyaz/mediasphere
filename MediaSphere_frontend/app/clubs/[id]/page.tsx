@@ -12,6 +12,7 @@ import { useAuth } from "@/lib/auth-context"
 import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth-service"
+import { useUser } from "@clerk/nextjs"
 import CreateThreadModal from "@/components/CreateThreadModal"
 
 interface Club {
@@ -109,6 +110,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false)
   const { user, isLoading: isAuthLoading, isAuthenticated, isReady } = useAuth()
   const router = useRouter()
+  const { isSignedIn } = useUser()
 
   // Fetch club details
   const fetchClubDetails = async () => {
