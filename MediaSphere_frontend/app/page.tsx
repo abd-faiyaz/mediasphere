@@ -9,10 +9,11 @@ import Link from "next/link"
 import { UserButton } from "@clerk/nextjs"
 import { useAuth } from "@/lib/auth-context"
 import { PageLoader } from "@/components/ui/loading"
+import { useUser } from "@clerk/nextjs"
 
 export default function HomePage() {
   const { isAuthenticated, isReady } = useAuth()
-
+  const { isSignedIn } = useUser()
   // Show loading state while authentication is being determined
   if (!isReady) {
     return <PageLoader text="Loading Mediasphere..." />
