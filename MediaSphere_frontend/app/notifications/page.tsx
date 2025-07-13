@@ -627,26 +627,31 @@ function NotificationsContent() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f7ecdf] relative overflow-hidden">
-      {/* Decorative Background Circles */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[10%] left-[15%] w-[40rem] h-[40rem] bg-gradient-to-r from-blue-400/30 to-purple-400/30 rounded-full filter blur-3xl opacity-50" />
-        <div className="absolute bottom-[15%] right-[10%] w-[35rem] h-[35rem] bg-gradient-to-r from-indigo-400/30 to-pink-400/30 rounded-full filter blur-3xl opacity-50" />
+    <div className="relative min-h-screen bg-[#f7ecdf] overflow-hidden">
+      {/* Decorative Patterns */}
+      <div className="fixed inset-0 z-0 pointer-events-none">
+        {/* Static decorative elements for SSR */}
+        <div className="absolute top-20 left-10 w-32 h-32 bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-full blur-3xl"></div>
+        <div className="absolute top-40 right-20 w-48 h-48 bg-gradient-to-l from-[#1E3A8A]/5 to-[#90CAF9]/5 rounded-full blur-3xl"></div>
+        <div className="absolute bottom-20 left-1/3 w-64 h-64 bg-gradient-to-tr from-[#1E3A8A]/5 to-[#90CAF9]/5 rounded-full blur-3xl"></div>
       </div>
 
       {/* Header */}
       <motion.header
         initial={{ y: -100, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
         className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
-              <Link href="/" className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block">
+              <Link
+                href="/"
+                className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block"
+              >
                 Mediasphere
               </Link>
+
               {/* Back Button */}
               <motion.div
                 initial={{ opacity: 0, x: -20 }}
@@ -668,14 +673,30 @@ function NotificationsContent() {
             </div>
             <nav className="flex items-center space-x-4">
               <Link href="/clubs">
-                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">Clubs</Button>
+                <Button
+                  variant="ghost"
+                  className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                >
+                  <span className="relative z-10">Clubs</span>
+                  <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                </Button>
               </Link>
               <Link href="/ai-services">
-                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">AI Services</Button>
+                <Button
+                  variant="ghost"
+                  className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                >
+                  <span className="relative z-10">AI Services</span>
+                  <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                </Button>
               </Link>
               <Link href="/notifications">
-                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] relative">
-                  Notifications
+                <Button
+                  variant="ghost"
+                  className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A] relative"
+                >
+                  <span className="relative z-10">Notifications</span>
+                  <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
                   {unreadCount > 0 && (
                     <motion.div
                       initial={{ scale: 0 }}
@@ -702,74 +723,82 @@ function NotificationsContent() {
                 </Button>
               </Link>
               <Link href="/profile">
-                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">Profile</Button>
+                <Button
+                  variant="ghost"
+                  className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                >
+                  <span className="relative z-10">Profile</span>
+                  <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                </Button>
               </Link>
             </nav>
           </div>
         </div>
       </motion.header>
 
-      <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Page Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
+          transition={{ duration: 0.3, ease: "easeOut" }}
           className="flex justify-between items-center mb-8"
         >
-          <div>
-            <motion.h1
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-3xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent flex items-center gap-3"
-            >
-              <motion.div
-                animate={{ rotate: [0, 15, -15, 0] }}
-                transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
-              >
-                <Bell className="h-8 w-8 text-[#90CAF9]" />
-              </motion.div>
-              Notifications
-              {totalNewCount > 0 && (
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
-                >
-                  <Badge className="bg-red-500 text-white relative">
-                    {totalNewCount}
-                    {newNotificationIds.size > 0 && (
-                      <motion.div
-                        className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full"
-                        animate={{
-                          scale: [1, 1.2, 1],
-                          opacity: [1, 0.7, 1]
-                        }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          ease: "easeInOut"
-                        }}
-                      />
-                    )}
-                  </Badge>
-                </motion.div>
-              )}
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-[#333333]/70 mt-2 font-['Open Sans']"
-            >
-              Stay updated with your community activity
-            </motion.p>
-          </div>
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.4, duration: 0.6 }}
+            initial={{ x: -50, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{ delay: 0.1, duration: 0.3 }}
+          >
+            <div className="relative">
+              <h1 className="text-5xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] via-[#4E6FBA] to-[#90CAF9] bg-clip-text text-transparent pb-2 relative flex items-center gap-4">
+                <motion.div
+                  animate={{ rotate: [0, 15, -15, 0] }}
+                  transition={{ duration: 2, repeat: Number.POSITIVE_INFINITY, repeatDelay: 3 }}
+                >
+                  <Bell className="h-10 w-10 text-[#90CAF9]" />
+                </motion.div>
+                Notifications
+                {totalNewCount > 0 && (
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
+                  >
+                    <Badge className="bg-red-500 text-white relative">
+                      {totalNewCount}
+                      {newNotificationIds.size > 0 && (
+                        <motion.div
+                          className="absolute -top-1 -right-1 w-3 h-3 bg-red-600 rounded-full"
+                          animate={{
+                            scale: [1, 1.2, 1],
+                            opacity: [1, 0.7, 1]
+                          }}
+                          transition={{
+                            duration: 1,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+                      )}
+                    </Badge>
+                  </motion.div>
+                )}
+                <div className="absolute bottom-0 left-0 w-1/4 h-1 bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] rounded-full"></div>
+              </h1>
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, duration: 0.5 }}
+                className="text-[#333333] mt-4 font-['Open Sans'] text-lg tracking-wide"
+              >
+                Stay updated with your community activity
+              </motion.p>
+            </div>
+          </motion.div>
+          <motion.div
+            initial={{ x: 50, opacity: 0, scale: 0.8 }}
+            animate={{ x: 0, opacity: 1, scale: 1 }}
+            transition={{ delay: 0.15, duration: 0.3 }}
             className="flex gap-3"
           >
             {newNotificationIds.size > 0 && (
@@ -795,7 +824,7 @@ function NotificationsContent() {
             )}
 
             {/* Connection Status */}
-            <div className="flex items-center gap-2 px-3 py-2 bg-slate-800/50 rounded-lg">
+            <div className="flex items-center gap-2 px-3 py-2 bg-[#F0F7FF]/50 border border-[#90CAF9]/30 rounded-lg">
               <motion.div
                 className={`w-2 h-2 rounded-full ${isSSEConnected && notificationSettings.realTimeNotifications ? 'bg-green-500' : 'bg-red-500'}`}
                 animate={{
@@ -808,7 +837,7 @@ function NotificationsContent() {
                   ease: "easeInOut"
                 }}
               />
-              <span className={`text-xs font-medium ${isSSEConnected && notificationSettings.realTimeNotifications ? 'text-green-400' : 'text-red-400'}`}>
+              <span className={`text-xs font-medium ${isSSEConnected && notificationSettings.realTimeNotifications ? 'text-green-600' : 'text-red-600'}`}>
                 {isSSEConnected && notificationSettings.realTimeNotifications ? 'Connected' : 'Disconnected'}
               </span>
             </div>
@@ -817,7 +846,7 @@ function NotificationsContent() {
                 variant="outline"
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800/50 hover:text-purple-400"
+                className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] font-['Open Sans']"
               >
                 <RefreshCw className={`mr-2 h-4 w-4 ${refreshing ? 'animate-spin' : ''}`} />
                 Refresh
@@ -828,7 +857,7 @@ function NotificationsContent() {
                 variant="outline"
                 onClick={markAllAsRead}
                 disabled={markingAllRead || totalNewCount === 0}
-                className="border-slate-700 text-slate-300 hover:bg-slate-800/50 hover:text-purple-400"
+                className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] font-['Open Sans']"
               >
                 {markingAllRead ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -843,7 +872,7 @@ function NotificationsContent() {
                 <DialogTrigger asChild>
                   <Button
                     variant="outline"
-                    className="border-slate-700 text-slate-300 hover:bg-slate-800/50 hover:text-purple-400"
+                    className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] font-['Open Sans']"
                   >
                     <Settings className="mr-2 h-4 w-4" />
                     Settings
@@ -851,7 +880,7 @@ function NotificationsContent() {
                 </DialogTrigger>
                 <DialogContent className="bg-white/95 backdrop-blur-xl border-[#90CAF9]/30 text-[#333333] max-w-md">
                   <DialogHeader>
-                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent flex items-center gap-2">
+                    <DialogTitle className="text-xl font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent flex items-center gap-2 font-['Nunito']">
                       <Settings className="h-5 w-5 text-[#90CAF9]" />
                       Notification Settings
                     </DialogTitle>
@@ -859,83 +888,83 @@ function NotificationsContent() {
 
                   <div className="space-y-6 mt-6">
                     {/* Email Notifications */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                    <div className="flex items-center justify-between p-4 bg-[#F0F7FF]/50 rounded-lg border border-[#90CAF9]/30">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-blue-500/10 rounded-lg flex items-center justify-center">
-                          <Mail className="h-5 w-5 text-blue-400" />
+                          <Mail className="h-5 w-5 text-blue-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-slate-200">Email Notifications</h3>
-                          <p className="text-sm text-slate-400">Receive notifications via email</p>
+                          <h3 className="font-medium text-[#333333] font-['Open Sans']">Email Notifications</h3>
+                          <p className="text-sm text-[#333333]/70 font-['Open Sans']">Receive notifications via email</p>
                         </div>
                       </div>
                       <Switch
                         checked={notificationSettings.emailNotifications}
                         onCheckedChange={(checked) => updateSetting('emailNotifications', checked)}
-                        className="data-[state=checked]:bg-purple-600"
+                        className="data-[state=checked]:bg-[#1E3A8A]"
                       />
                     </div>
 
                     {/* Real-time Notifications */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                    <div className="flex items-center justify-between p-4 bg-[#F0F7FF]/50 rounded-lg border border-[#90CAF9]/30">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                          <Bell className="h-5 w-5 text-green-400" />
+                          <Bell className="h-5 w-5 text-green-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-slate-200">Real-time Updates</h3>
-                          <p className="text-sm text-slate-400">Live notification updates</p>
+                          <h3 className="font-medium text-[#333333] font-['Open Sans']">Real-time Updates</h3>
+                          <p className="text-sm text-[#333333]/70 font-['Open Sans']">Live notification updates</p>
                         </div>
                       </div>
                       <Switch
                         checked={notificationSettings.realTimeNotifications}
                         onCheckedChange={(checked) => updateSetting('realTimeNotifications', checked)}
-                        className="data-[state=checked]:bg-purple-600"
+                        className="data-[state=checked]:bg-[#1E3A8A]"
                       />
                     </div>
 
                     {/* Sound Alerts */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                    <div className="flex items-center justify-between p-4 bg-[#F0F7FF]/50 rounded-lg border border-[#90CAF9]/30">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-yellow-500/10 rounded-lg flex items-center justify-center">
-                          <Volume2 className="h-5 w-5 text-yellow-400" />
+                          <Volume2 className="h-5 w-5 text-yellow-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-slate-200">Sound Alerts</h3>
-                          <p className="text-sm text-slate-400">Play sound for new notifications</p>
+                          <h3 className="font-medium text-[#333333] font-['Open Sans']">Sound Alerts</h3>
+                          <p className="text-sm text-[#333333]/70 font-['Open Sans']">Play sound for new notifications</p>
                         </div>
                       </div>
                       <Switch
                         checked={notificationSettings.soundAlerts}
                         onCheckedChange={(checked) => updateSetting('soundAlerts', checked)}
-                        className="data-[state=checked]:bg-purple-600"
+                        className="data-[state=checked]:bg-[#1E3A8A]"
                       />
                     </div>
 
                     {/* Push Notifications */}
-                    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border border-slate-700/50">
+                    <div className="flex items-center justify-between p-4 bg-[#F0F7FF]/50 rounded-lg border border-[#90CAF9]/30">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 bg-purple-500/10 rounded-lg flex items-center justify-center">
-                          <Smartphone className="h-5 w-5 text-purple-400" />
+                          <Smartphone className="h-5 w-5 text-purple-600" />
                         </div>
                         <div>
-                          <h3 className="font-medium text-slate-200">Push Notifications</h3>
-                          <p className="text-sm text-slate-400">Browser push notifications</p>
+                          <h3 className="font-medium text-[#333333] font-['Open Sans']">Push Notifications</h3>
+                          <p className="text-sm text-[#333333]/70 font-['Open Sans']">Browser push notifications</p>
                         </div>
                       </div>
                       <Switch
                         checked={notificationSettings.pushNotifications}
                         onCheckedChange={(checked) => updateSetting('pushNotifications', checked)}
-                        className="data-[state=checked]:bg-purple-600"
+                        className="data-[state=checked]:bg-[#1E3A8A]"
                       />
                     </div>
                   </div>
 
-                  <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-slate-700/50">
+                  <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-[#90CAF9]/30">
                     <Button
                       variant="outline"
                       onClick={() => setSettingsDialogOpen(false)}
-                      className="border-slate-700 text-slate-300 hover:bg-slate-800/50"
+                      className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] font-['Open Sans']"
                     >
                       Done
                     </Button>
@@ -949,7 +978,7 @@ function NotificationsContent() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.6 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
         >
           <Tabs defaultValue="all" className="w-full" onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-6 bg-white/90 backdrop-blur-xl border border-[#90CAF9]/30 p-1 rounded-xl">
@@ -967,7 +996,6 @@ function NotificationsContent() {
               <TabsTrigger
                 value="comment"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
-//                className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-blue-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Comments
                 {tabCounts.comment > 0 && (
@@ -979,8 +1007,6 @@ function NotificationsContent() {
               <TabsTrigger
                 value="reaction"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
-              
-               // className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-600 data-[state=active]:to-pink-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Reactions
                 {tabCounts.reaction > 0 && (
@@ -992,7 +1018,6 @@ function NotificationsContent() {
               <TabsTrigger
                 value="club"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
-                //className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-emerald-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Clubs
                 {tabCounts.club > 0 && (
@@ -1004,7 +1029,6 @@ function NotificationsContent() {
               <TabsTrigger
                 value="event"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
-                //className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-purple-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 Events
                 {tabCounts.event > 0 && (
@@ -1016,7 +1040,6 @@ function NotificationsContent() {
               <TabsTrigger
                 value="ai"
                 className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#1E3A8A] data-[state=active]:to-[#90CAF9] data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
-                //className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-yellow-600 data-[state=active]:to-yellow-500 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-lg font-medium flex items-center gap-2"
               >
                 AI Services
                 {tabCounts.ai > 0 && (
@@ -1038,34 +1061,26 @@ function NotificationsContent() {
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.5 }}
+                    transition={{ duration: 0.3 }}
+                    className="text-center py-16"
                   >
-                    <Card className="bg-white/90 backdrop-blur-xl border-[#90CAF9]/20">
-                      <CardContent className="p-12 text-center flex flex-col items-center justify-center">
-                        <div className="w-24 h-24 mx-auto mb-4 flex items-center justify-center rounded-full bg-gradient-to-br from-[#90CAF9]/30 to-[#1E3A8A]/20">
-                          <Bell className="h-16 w-16 text-[#90CAF9]" />
-                        </div>
-                        <motion.h3
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.3, duration: 0.5 }}
-                          className="text-lg font-medium text-[#333333] mb-2"
-                        >
-                          {activeTab === "all" ? "No notifications yet" : `No ${activeTab} notifications yet`}
-                        </motion.h3>
-                        <motion.p
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          transition={{ delay: 0.4, duration: 0.5 }}
-                          className="text-[#333333]/60 text-sm"
-                        >
-                          {activeTab === "all"
-                            ? "When you get notifications, they'll show up here"
-                            : `No ${activeTab} activity to show right now`
-                          }
-                        </motion.p>
-                      </CardContent>
-                    </Card>
+                    <motion.div
+                      initial={{ scale: 0 }}
+                      animate={{ scale: 1 }}
+                      transition={{ delay: 0.2 }}
+                      className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-2xl border border-[#90CAF9]/30 p-8 max-w-md mx-auto shadow-xl"
+                    >
+                      <Bell className="h-12 w-12 mx-auto mb-4 text-[#1E3A8A] opacity-50" />
+                      <h3 className="text-xl font-['Nunito'] font-bold text-[#1E3A8A] mb-2">
+                        {activeTab === "all" ? "No notifications yet" : `No ${activeTab} notifications yet`}
+                      </h3>
+                      <p className="text-[#333333] text-lg font-['Open Sans']">
+                        {activeTab === "all"
+                          ? "When you get notifications, they'll show up here"
+                          : `No ${activeTab} activity to show right now`
+                        }
+                      </p>
+                    </motion.div>
                   </motion.div>
                 ) : (
                   filteredNotifications.map((notification, index) => {
@@ -1079,7 +1094,7 @@ function NotificationsContent() {
                     return (
                       <motion.div key={notification.id} variants={cardVariants} whileHover="hover" custom={index}>
                         <Card
-                          className={`transition-all duration-300 cursor-pointer bg-white/90 backdrop-blur-xl border-[#90CAF9]/20 hover:shadow-2xl hover:scale-[1.015] hover:border-[#1E3A8A]/30 rounded-xl ${!notification.read ? "border-l-4 border-l-blue-500 bg-blue-500/5" : ""} ${newNotificationIds.has(notification.id) ? "border-2 border-red-500/50 shadow-red-500/20 shadow-lg" : ""}`}
+                          className={`overflow-hidden hover:shadow-[0_8px_28px_-6px_rgba(30,58,138,0.12)] hover:scale-[1.02] transition-all duration-500 cursor-pointer h-full relative group bg-white/90 backdrop-blur-xl border-[#90CAF9]/30 rounded-xl transform hover:-translate-y-1 ${!notification.read ? "border-l-4 border-l-[#1E3A8A] bg-[#F0F7FF]/30" : ""} ${newNotificationIds.has(notification.id) ? "border-2 border-red-500/50 shadow-red-500/20 shadow-lg" : ""}`}
                           onClick={() => {
                             if (!notification.read) {
                               markAsRead(notification.id)
@@ -1145,7 +1160,7 @@ function NotificationsContent() {
                                       initial={{ opacity: 0, y: 10 }}
                                       animate={{ opacity: 1, y: 0 }}
                                       transition={{ delay: 0.4 + index * 0.1 }}
-                                      className="text-slate-200 text-sm font-medium leading-relaxed"
+                                      className="text-[#333333] text-sm font-medium leading-relaxed font-['Open Sans']"
                                     >
                                       {formattedMessage}
                                     </motion.p>
@@ -1156,7 +1171,7 @@ function NotificationsContent() {
                                         initial={{ opacity: 0 }}
                                         animate={{ opacity: 1 }}
                                         transition={{ delay: 0.5 + index * 0.1 }}
-                                        className="text-slate-400 text-xs mt-1 leading-relaxed"
+                                        className="text-[#333333]/70 text-xs mt-1 leading-relaxed font-['Open Sans']"
                                       >
                                         {previewText}
                                       </motion.p>
@@ -1167,7 +1182,7 @@ function NotificationsContent() {
                                       initial={{ opacity: 0 }}
                                       animate={{ opacity: 1 }}
                                       transition={{ delay: 0.6 + index * 0.1 }}
-                                      className="text-slate-500 text-xs mt-2 flex items-center gap-2"
+                                      className="text-[#333333]/50 text-xs mt-2 flex items-center gap-2 font-['Open Sans']"
                                     >
                                       {notification.timestamp}
                                       {!notification.read && (
@@ -1210,7 +1225,7 @@ function NotificationsContent() {
                                           <Button
                                             variant="ghost"
                                             size="sm"
-                                            className="h-8 w-8 p-0 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-full"
+                                            className="h-8 w-8 p-0 text-[#333333]/50 hover:text-[#1E3A8A] hover:bg-[#F0F7FF] rounded-full"
                                           >
                                             <ArrowLeft className="h-3 w-3 rotate-180" />
                                           </Button>
@@ -1229,7 +1244,7 @@ function NotificationsContent() {
                                             size="sm"
                                             onClick={() => markAsRead(notification.id)}
                                             disabled={isProcessing}
-                                            className="h-8 w-8 p-0 text-slate-400 hover:text-green-400 hover:bg-green-500/10 rounded-full"
+                                            className="h-8 w-8 p-0 text-[#333333]/50 hover:text-green-600 hover:bg-green-500/10 rounded-full"
                                           >
                                             {isProcessing ? (
                                               <Loader2 className="h-3 w-3 animate-spin" />
@@ -1251,7 +1266,7 @@ function NotificationsContent() {
                                           size="sm"
                                           onClick={() => deleteNotification(notification.id)}
                                           disabled={isProcessing}
-                                          className="h-8 w-8 p-0 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-full"
+                                          className="h-8 w-8 p-0 text-[#333333]/50 hover:text-red-600 hover:bg-red-500/10 rounded-full"
                                         >
                                           {isProcessing ? (
                                             <Loader2 className="h-3 w-3 animate-spin" />
@@ -1287,7 +1302,7 @@ function NotificationsContent() {
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800/50 hover:text-purple-400 px-8 py-3 rounded-xl font-medium transition-all duration-300"
+                className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] px-8 py-3 rounded-xl font-medium transition-all duration-300 font-['Open Sans']"
               >
                 Load Older Notifications
               </Button>
