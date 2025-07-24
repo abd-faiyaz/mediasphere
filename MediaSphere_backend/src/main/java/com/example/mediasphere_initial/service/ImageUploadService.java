@@ -16,7 +16,7 @@ import java.util.UUID;
 @Service
 public class ImageUploadService {
 
-    @Value("${app.upload.dir:uploads/thread-images}")
+    @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
     @Value("${app.upload.max-size:10485760}") // 10MB default
@@ -59,8 +59,8 @@ public class ImageUploadService {
         Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
         System.out.println("File saved successfully");
 
-        // Return relative path for database storage
-        String relativePath = "uploads/thread-images/" + uniqueFilename;
+        // Return relative path for database storage - use actual upload directory
+        String relativePath = uploadDir + "/" + uniqueFilename;
         System.out.println("Returning relative path: " + relativePath);
         return relativePath;
     }

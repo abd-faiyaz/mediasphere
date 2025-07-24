@@ -33,6 +33,7 @@ interface Club {
   }
   createdAt: string
   memberCount: number
+  // clubvalue?: number
   isMember?: boolean
 }
 
@@ -93,12 +94,18 @@ interface ClubMember {
   }[]
 }
 
+interface ClubValue {
+  id: string
+  clubvalue: number
+}
+
 export default function ClubDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params)
   const [club, setClub] = useState<Club | null>(null)
   const [threads, setThreads] = useState<Thread[]>([])
   const [events, setEvents] = useState<Event[]>([])
   const [members, setMembers] = useState<ClubMember[]>([])
+  const [clubvalue, setClubValues] = useState<ClubValue[]>([])
   const [isMember, setIsMember] = useState(false)
   const [loading, setLoading] = useState(true)
   const [threadsLoading, setThreadsLoading] = useState(false)
@@ -117,7 +124,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     try {
       setLoading(true)
       console.log('Fetching club details for ID:', resolvedParams.id)
-      
+
       const headers: { [key: string]: string } = {}
       if (isSignedIn) {
         const token = authService.getToken()
@@ -125,13 +132,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           headers['Authorization'] = `Bearer ${token}`
         }
       }
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}`, {
         headers
       })
-      
+
       console.log('Club details response status:', response.status)
-      
+
       if (!response.ok) {
         throw new Error(`Club not found (${response.status})`)
       }
@@ -139,12 +146,12 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       const clubData = await response.json()
       console.log('Club data loaded:', clubData)
       setClub(clubData)
-      
+
       // Set membership status from the response
       if (isSignedIn && clubData.isMember !== undefined) {
         setIsMember(clubData.isMember)
       }
-      
+
       toast({
         title: "Success",
         description: `Loaded "${clubData.name}" club details with ${clubData.memberCount} members`,
@@ -191,24 +198,24 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     try {
       setThreadsLoading(true)
       console.log('Fetching threads for club:', resolvedParams.id)
-      
+
       const headers: { [key: string]: string } = {
         'Content-Type': 'application/json'
       }
-      
+
       if (isSignedIn) {
         const token = authService.getToken()
         if (token) {
           headers['Authorization'] = `Bearer ${token}`
         }
       }
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/threads`, {
         headers
       })
-      
+
       console.log('Threads response status:', response.status)
-      
+
       if (response.ok) {
         const threadsData = await response.json()
         console.log('Threads loaded:', threadsData.length, 'threads')
@@ -235,7 +242,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         console.log('No threads found or error occurred')
         setThreads([])
         toast({
-          title: "Warning", 
+          title: "Warning",
           description: "Could not load discussion threads",
           variant: "destructive"
         })
@@ -258,11 +265,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     try {
       setEventsLoading(true)
       console.log('Fetching events for club:', resolvedParams.id)
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/events`)
-      
+
       console.log('Events response status:', response.status)
-      
+
       if (response.ok) {
         const eventsData = await response.json()
         console.log('Events loaded:', eventsData.length, 'events')
@@ -289,7 +296,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     try {
       setMembersLoading(true)
       console.log('Fetching members for club:', resolvedParams.id)
-      
+
       const headers: { [key: string]: string } = {}
       if (isSignedIn) {
         const token = authService.getToken()
@@ -297,13 +304,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           headers['Authorization'] = `Bearer ${token}`
         }
       }
-      
+
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/members`, {
         headers
       })
-      
+
       console.log('Members response status:', response.status)
-      
+
       if (response.ok) {
         const membersData = await response.json()
         console.log('Members loaded:', membersData.length, 'members')
@@ -324,6 +331,44 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
       setMembersLoading(false)
     }
   }
+
+  // // Fetch club values
+  // const fetchClubValues = async () => {
+  //   try {
+  //     console.log('Fetching club values for club:', resolvedParams.id)
+
+  //     const headers: { [key: string]: string } = {}
+  //     if (isSignedIn) {
+  //       const token = authService.getToken()
+  //       if (token) {
+  //         headers['Authorization'] = `Bearer ${token}`
+  //       }
+  //     }
+
+  //     const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/${resolvedParams.id}/clubvalue`, {
+  //       headers
+  //     })
+
+  //     console.log('Club values response status:', response.status)
+
+  //     if (response.ok) {
+  //       const clubValuesData = await response.json()
+  //       console.log('Club values loaded:', clubValuesData)
+  //       setClubValues(clubValuesData)
+  //     } else {
+  //       console.log('No club values found or error occurred')
+  //       setClubValues([])
+  //     }
+  //   } catch (error) {
+  //     console.error('Error fetching club values:', error)
+  //     setClubValues([])
+  //     toast({
+  //       title: "Warning",
+  //       description: "Could not load club values",
+  //       variant: "destructive"
+  //     })
+  //   }
+  // }
 
   // Join club
   const joinClub = async () => {
@@ -350,7 +395,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         title: "🎉 Welcome to the club!",
         description: "You've successfully joined the community!",
       })
-      
+
       // Refresh membership status
       await checkMembership()
       await fetchClubDetails()
@@ -386,7 +431,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         title: "Success",
         description: "Successfully left the club!",
       })
-      
+
       // Refresh membership status
       await checkMembership()
       await fetchClubDetails()
@@ -428,12 +473,14 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
     console.log('API Base URL:', process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080')
     console.log('Is authenticated:', isAuthenticated)
     console.log('User:', user)
-    
+
     fetchClubDetails()
     checkMembership()
     fetchThreads()
     fetchEvents()
     fetchMembers()
+    // fetchClubValues()
+
   }, [resolvedParams.id, isReady])
 
   if (!isReady) {
@@ -574,7 +621,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                 <p className="text-gray-600 max-w-2xl">{club.description}</p>
               </div>
             </div>
-            
+
             <div className="flex flex-col gap-2">
               {!isMember ? (
                 <Button onClick={joinClub} className="bg-[#1E3A8A] hover:bg-[#15306E]">
@@ -624,7 +671,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
             </div>
-          </div>
+                    </div>
         </div>
 
         {/* Content Tabs */}
@@ -653,7 +700,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   <h2 className="text-xl font-semibold text-gray-900">Discussion Threads</h2>
                   <p className="text-gray-600">Join the conversation and share your thoughts</p>
                 </div>
-                <Button 
+                <Button
                   onClick={() => setShowCreateThreadModal(true)}
                   disabled={!isMember}
                   className="bg-[#1E3A8A] hover:bg-[#15306E]"
@@ -706,7 +753,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                   {thread.title}
                                 </CardTitle>
                               </div>
-                              
+
                               <CardDescription className="flex items-center gap-2 mb-2 text-sm text-gray-600">
                                 <Avatar className="w-5 h-5">
                                   <AvatarFallback className="text-xs bg-gray-200 text-gray-700">
@@ -717,13 +764,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 <span>•</span>
                                 <span>{new Date(thread.createdAt).toLocaleDateString()}</span>
                               </CardDescription>
-                              
+
                               {thread.content && (
                                 <p className="text-gray-700 text-sm line-clamp-2 mb-3">
                                   {thread.content}
                                 </p>
                               )}
-                              
+
                               {/* Thread Images */}
                               {thread.images && thread.images.length > 0 && (
                                 <div className="grid grid-cols-4 gap-2 mb-3">
@@ -752,14 +799,14 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 </div>
                               )}
                             </div>
-                            
+
                             <div className="flex items-center gap-2 ml-4 text-sm text-gray-500">
                               <Eye className="h-4 w-4" />
                               <span>{thread.viewCount}</span>
                             </div>
                           </div>
                         </CardHeader>
-                        
+
                         <CardContent className="pt-0">
                           <div className="flex items-center justify-between border-t border-gray-200 pt-3">
                             <div className="flex items-center gap-4 text-sm text-gray-600">
@@ -776,7 +823,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 <span>{thread.commentCount || 0} Comments</span>
                               </div>
                             </div>
-                            
+
                             <div className="text-sm text-[#1E3A8A] font-medium">
                               View Details →
                             </div>
@@ -824,7 +871,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 {event.title}
                               </Link>
                             </CardTitle>
-                            
+
                             <div className="flex items-center gap-4 text-gray-600 mb-3">
                               <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
                                 <Calendar className="h-4 w-4" />
@@ -835,7 +882,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 <span>{event.currentAttendees}/{event.maxAttendees}</span>
                               </div>
                             </div>
-                            
+
                             <p className="text-gray-700">{event.description}</p>
                           </div>
                         </div>
@@ -880,7 +927,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                               {member.user.firstName?.[0]}{member.user.lastName?.[0]}
                             </AvatarFallback>
                           </Avatar>
-                          
+
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="text-lg font-medium text-gray-900 truncate">
@@ -893,15 +940,15 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 </Badge>
                               )}
                             </div>
-                            
+
                             <p className="text-gray-600 font-medium mb-2 truncate">
                               @{member.user.username}
                             </p>
-                            
+
                             <div className="text-sm text-gray-500 mb-3">
                               Joined {new Date(member.joinedAt).toLocaleDateString()}
                             </div>
-                            
+
                             {/* Mutual Clubs */}
                             {member.mutualClubs && member.mutualClubs.length > 0 && (
                               <div>
@@ -910,17 +957,17 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                 </p>
                                 <div className="flex flex-wrap gap-1">
                                   {member.mutualClubs.slice(0, 2).map((mutualClub) => (
-                                    <Badge 
+                                    <Badge
                                       key={mutualClub.id}
-                                      variant="secondary" 
+                                      variant="secondary"
                                       className="text-xs bg-gray-100 text-gray-700"
                                     >
                                       {mutualClub.name}
                                     </Badge>
                                   ))}
                                   {member.mutualClubs.length > 2 && (
-                                    <Badge 
-                                      variant="outline" 
+                                    <Badge
+                                      variant="outline"
                                       className="text-xs text-gray-500"
                                     >
                                       +{member.mutualClubs.length - 2} more
@@ -940,7 +987,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
           </Tabs>
         </div>
       </main>
-      
+
       {/* Create Thread Modal */}
       <CreateThreadModal
         isOpen={showCreateThreadModal}
@@ -960,7 +1007,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             className="fixed inset-0 bg-black/50 z-50"
             onClick={() => setShowSidePanel(false)}
           />
-          
+
           <div className="fixed right-0 top-0 h-full w-[500px] bg-white shadow-xl z-50 overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
@@ -978,9 +1025,9 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                 <h3 className="text-lg font-medium mb-4 text-gray-900">Club Statistics</h3>
                 <div className="space-y-4">
                   {[
-                    { 
-                      label: "Total Members", 
-                      value: club?.memberCount?.toLocaleString() || "0", 
+                    {
+                      label: "Total Members",
+                      value: club?.memberCount?.toLocaleString() || "0",
                       icon: "👥",
                       clickable: true,
                       onClick: () => setShowMembersPanel(true)
@@ -1056,7 +1103,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             className="fixed inset-0 bg-black/50 z-50"
             onClick={() => setShowMembersPanel(false)}
           />
-          
+
           <div className="fixed right-0 top-0 h-full w-[500px] bg-white shadow-xl z-50 overflow-y-auto">
             <div className="p-6">
               <div className="flex justify-between items-center mb-6">
@@ -1096,7 +1143,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                             {member.user.firstName?.[0]}{member.user.lastName?.[0]}
                           </AvatarFallback>
                         </Avatar>
-                        
+
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
                             <h3 className="text-lg font-medium text-gray-900">
@@ -1109,13 +1156,13 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                               </Badge>
                             )}
                           </div>
-                          
+
                           <p className="text-gray-600 text-sm">@{member.user.username}</p>
-                          
+
                           <p className="text-xs text-gray-500 mt-1">
                             Joined {new Date(member.joinedAt).toLocaleDateString()}
                           </p>
-                          
+
                           {member.mutualClubs && member.mutualClubs.length > 0 && (
                             <div className="mt-2">
                               <p className="text-xs font-medium text-gray-500 mb-1">
@@ -1123,17 +1170,17 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                               </p>
                               <div className="flex flex-wrap gap-1">
                                 {member.mutualClubs.slice(0, 2).map((mutualClub) => (
-                                  <Badge 
+                                  <Badge
                                     key={mutualClub.id}
-                                    variant="secondary" 
+                                    variant="secondary"
                                     className="text-xs bg-gray-100 text-gray-700"
                                   >
                                     {mutualClub.name}
                                   </Badge>
                                 ))}
                                 {member.mutualClubs.length > 2 && (
-                                  <Badge 
-                                    variant="outline" 
+                                  <Badge
+                                    variant="outline"
                                     className="text-xs text-gray-500"
                                   >
                                     +{member.mutualClubs.length - 2}
@@ -1160,20 +1207,20 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             className="fixed inset-0 bg-black/50 z-50"
             onClick={cancelLeaveClub}
           />
-          
+
           <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white rounded-lg p-6 shadow-xl z-50 w-96">
             <div className="text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-4">Leave Club</h3>
               <p className="text-gray-600 mb-6">Are you sure you want to leave this club?</p>
               <div className="flex gap-3 justify-center">
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   onClick={cancelLeaveClub}
                   className="border-gray-300"
                 >
                   Cancel
                 </Button>
-                <Button 
+                <Button
                   onClick={confirmLeaveClub}
                   className="bg-red-600 hover:bg-red-700 text-white"
                 >

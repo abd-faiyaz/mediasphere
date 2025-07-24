@@ -2,6 +2,7 @@ package com.example.mediasphere_initial.model;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -70,6 +71,32 @@ public class ThreadImage {
 
     public void setImageUrl(String imageUrl) {
         this.imageUrl = imageUrl;
+    }
+
+    // Add a computed property for the full URL
+    @JsonProperty("fullImageUrl")
+    public String getFullImageUrl() {
+        if (imageUrl == null) {
+            return null;
+        }
+        // If the imageUrl already contains http, return as is (for external URLs)
+        if (imageUrl.startsWith("http://") || imageUrl.startsWith("https://")) {
+            return imageUrl;
+        }
+
+        // Handle both old and new path formats
+        String cleanPath = imageUrl;
+        // If it starts with uploads/, use it as is
+        if (imageUrl.startsWith("uploads/")) {
+            cleanPath = imageUrl;
+        }
+        // If it doesn't start with uploads/, prepend it
+        else if (!imageUrl.startsWith("/")) {
+            cleanPath = "uploads/" + imageUrl;
+        }
+
+        // Otherwise, construct the full URL for local files
+        return "http://localhost:8080/" + cleanPath;
     }
 
     public String getImageName() {

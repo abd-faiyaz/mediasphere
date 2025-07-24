@@ -114,6 +114,16 @@ public class ThreadService {
         stats.put("createdAt", thread.getCreatedAt());
         stats.put("isPinned", thread.getIsPinned());
         stats.put("isLocked", thread.getIsLocked());
+        stats.put("likeCount", thread.getLikeCount());
+        stats.put("dislikeCount", thread.getDislikeCount());
+
+        // Calculate total comment likes for this thread
+        List<Comment> comments = commentRepository.findByThread(thread);
+        long commentLikeCount = 0;
+        for (Comment c : comments) {
+            commentLikeCount += commentLikeRepository.countByComment(c);
+        }
+        stats.put("commentLikeCount", commentLikeCount);
 
         return stats;
     }
@@ -323,7 +333,7 @@ public class ThreadService {
                     comment.getThread().getId());
         }
 
-        long  likeCount = commentLikeRepository.countByComment(comment);
+        long likeCount = commentLikeRepository.countByComment(comment);
         comment.setLikeCount((int) likeCount);
         commentRepository.save(comment);
 

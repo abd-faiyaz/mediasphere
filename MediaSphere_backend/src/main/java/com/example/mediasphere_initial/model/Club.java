@@ -34,6 +34,9 @@ public class Club {
     @Column(name = "last_thread_created_at")
     private LocalDateTime lastThreadCreatedAt;
 
+    @Column
+    private String clubvalue;
+
     // Constructors
     public Club() {
     }
@@ -112,4 +115,5 @@ public class Club {
         this.lastThreadCreatedAt = lastThreadCreatedAt;
     }
 
+    
 }

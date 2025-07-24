@@ -28,13 +28,15 @@ interface CreateClubForm {
   name: string
   description: string
   mediaTypeId: string
+  clubvalue: string
 }
 
 export default function CreateClub() {
   const [formData, setFormData] = useState<CreateClubForm>({
     name: "",
     description: "",
-    mediaTypeId: ""
+    mediaTypeId: "",
+    clubvalue: "",
   })
   const [mediaTypes, setMediaTypes] = useState<MediaType[]>([])
   const [loading, setLoading] = useState(true)
@@ -56,7 +58,7 @@ export default function CreateClub() {
   const fetchMediaTypes = async () => {
     try {
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/media-types/`)
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch media types')
       }
@@ -83,7 +85,7 @@ export default function CreateClub() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
+
     if (!isSignedIn) {
       router.push('/sign-in')
       return
@@ -100,13 +102,14 @@ export default function CreateClub() {
     try {
       setSubmitting(true)
       const token = authService.getToken()
-      
+
       const selectedMediaType = mediaTypes.find(mt => mt.id === formData.mediaTypeId)
-      
+
       const clubData = {
         name: formData.name.trim(),
         description: formData.description.trim(),
-        mediaType: selectedMediaType
+        mediaType: selectedMediaType,
+        clubvalue: formData.clubvalue.trim()
       }
 
       const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/clubs/`, {
@@ -125,7 +128,7 @@ export default function CreateClub() {
       }
 
       const createdClub = await response.json()
-      
+
       toast({
         title: "Success",
         description: "Club created successfully!",

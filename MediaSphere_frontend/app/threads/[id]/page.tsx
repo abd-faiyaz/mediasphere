@@ -12,15 +12,16 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import {
   MessageSquare, Share, MoreHorizontal, Pin, ThumbsUp, ThumbsDown, Reply, ArrowLeft,
-  Heart, Bookmark, Eye, Star, Sparkles, TrendingUp, Send, Edit3, Trash2, Loader2
+  Heart, Bookmark, Eye, Star, Sparkles, TrendingUp, Send, Edit3, Trash2, Loader2, Maximize2, ImagePlus
 } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 import { use, useState, useRef, useEffect } from "react"
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
 import { authService } from "@/lib/auth-service"
 import { toast } from "@/hooks/use-toast"
-import { useUser } from "@clerk/nextjs" 
+import { useUser } from "@clerk/nextjs"
 
 interface User {
   id: string
@@ -35,6 +36,7 @@ interface Thread {
   title: string
   content: string
   imageUrl?: string
+  images?: { id: string; imageUrl: string; fullImageUrl?: string }[]
   createdBy: User
   club: {
     id: string
@@ -99,12 +101,6 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   // Enhanced sharing
   const [showShareModal, setShowShareModal] = useState(false)
   const [shareLoading, setShareLoading] = useState(false)
-
-  // Emoji reactions beyond like/dislike
-  const reactions = ['👍', '👎', '❤️', '😂', '😮', '😢', '😡']
-  const [threadReactions, setThreadReactions] = useState<{ [key: string]: number }>({})
-  const [userReactions, setUserReactions] = useState<string[]>([])
-  const [showReactionPicker, setShowReactionPicker] = useState(false)
 
   // Comment sorting options
   const [sortBy, setSortBy] = useState('newest') // newest, oldest, most_liked, controversial
@@ -985,20 +981,52 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                       </motion.p>
                     ))}
                   </motion.div>
-                  {thread.imageUrl && (
+                  {thread.images && thread.images.length > 0 && (
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.8, delay: 1 }}
-                      className="mb-6 rounded-lg overflow-hidden shadow-xl"
+                      className={`mb-6 grid gap-2 ${thread.images.length === 1 ? 'grid-cols-1' :
+                        thread.images.length === 2 ? 'grid-cols-2' :
+                          thread.images.length === 3 ? 'grid-cols-2' :
+                            'grid-cols-2 md:grid-cols-3'
+                        }`}
                     >
-                      <img
-                        src={thread.imageUrl}
-                        alt="Thread image"
-                        className="w-full h-auto max-h-96 object-cover"
-                      />
+                      {thread.images.map((image, imgIndex: number) => (
+                        <motion.div
+                          key={image.id}
+                          initial={{ opacity: 0, scale: 0.9 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          transition={{ duration: 0.6, delay: 0.2 + imgIndex * 0.1 }}
+                          className={`relative rounded-lg overflow-hidden shadow-xl ${thread.images!.length === 3 && imgIndex === 0 ? 'col-span-2' : ''
+                            } group`}
+                        >
+                          <div className="relative aspect-video">
+                            <Image
+                              src={image.fullImageUrl || image.imageUrl}
+                              alt={`Thread image ${imgIndex + 1}`}
+                              fill
+                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                              className="object-cover transition-transform duration-300 group-hover:scale-105"
+                              loading="lazy"
+                              quality={85}
+                            />
+                          </div>
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-white hover:bg-white/20"
+                              onClick={() => window.open(image.fullImageUrl || image.imageUrl, '_blank')}
+                            >
+                              <Maximize2 className="h-5 w-5" />
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ))}
                     </motion.div>
                   )}
+
                   <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -1260,8 +1288,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                               <Badge
                                 variant="secondary"
                                 className={`text-xs ${comment.createdBy.id === thread.createdBy.id
-                                    ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
-                                    : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
+                                  ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
+                                  : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
                                   }`}
                               >
                                 {comment.createdBy.id === thread.createdBy.id ? "Author" : "Member"}
@@ -1312,8 +1340,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                 variant="ghost"
                                 size="sm"
                                 className={`flex items-center gap-2 transition-all duration-300 ${likedComments[comment.id]
-                                    ? 'text-[#1E3A8A] bg-[#90CAF9]/20 shadow-lg shadow-[#1E3A8A]/20'
-                                    : 'hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70'
+                                  ? 'text-[#1E3A8A] bg-[#90CAF9]/20 shadow-lg shadow-[#1E3A8A]/20'
+                                  : 'hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70'
                                   }`}
                                 onClick={() => handleCommentLike(comment.id)}
                               >
@@ -1465,8 +1493,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                                         <Badge
                                           variant="secondary"
                                           className={`text-xs ${reply.createdBy.id === thread.createdBy.id
-                                              ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
-                                              : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
+                                            ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
+                                            : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
                                             }`}
                                         >
                                           {reply.createdBy.id === thread.createdBy.id ? "Author" : "Member"}
@@ -1609,7 +1637,10 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
         </Dialog>
 
         {/* Likers Modal */}
-        <Dialog open={showLikers} onOpenChange={setShowLikers}>
+        <Dialog open={showLikers} onOpenChange={(open) => {
+          setShowLikers(open);
+          if (open) fetchLikers();
+        }}>
           <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
             <DialogHeader>
               <DialogTitle className="text-[#333333] font-['Nunito']">People who liked this thread ({likers.length})</DialogTitle>
@@ -1642,7 +1673,10 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
         </Dialog>
 
         {/* Dislikers Modal */}
-        <Dialog open={showDislikers} onOpenChange={setShowDislikers}>
+        <Dialog open={showDislikers} onOpenChange={(open) => {
+          setShowDislikers(open);
+          if (open) fetchDislikers();
+        }}>
           <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
             <DialogHeader>
               <DialogTitle className="text-[#333333] font-['Nunito']">People who disliked this thread ({dislikers.length})</DialogTitle>
