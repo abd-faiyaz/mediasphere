@@ -14,9 +14,6 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.Map;
 import java.util.HashMap;
-import com.example.mediasphere_initial.repository.ThreadLikeRepository;
-import com.example.mediasphere_initial.repository.ThreadDislikeRepository;
-import com.example.mediasphere_initial.repository.CommentLikeRepository;
 
 @RestController
 @RequestMapping("/threads")
@@ -28,15 +25,6 @@ public class ThreadController {
 
     @Autowired
     private AuthService authService;
-
-    @Autowired
-    private ThreadLikeRepository threadLikeRepository;
-
-    @Autowired
-    private ThreadDislikeRepository threadDislikeRepository;
-
-    @Autowired
-    private CommentLikeRepository commentLikeRepository;
 
     // List all threads across all clubs
     @GetMapping("/")
@@ -240,9 +228,24 @@ public class ThreadController {
     public ResponseEntity<?> getThreadLikers(@PathVariable UUID id) {
         try {
             List<User> likers = threadService.getThreadLikers(id);
-            return ResponseEntity.ok(likers);
+            // Return user information in a clean format
+            List<Map<String, Object>> likersInfo = likers.stream().map(user -> {
+                Map<String, Object> userInfo = new HashMap<>();
+                userInfo.put("id", user.getId());
+                userInfo.put("username", user.getUsername());
+                userInfo.put("firstName", user.getFirstName());
+                userInfo.put("lastName", user.getLastName());
+                userInfo.put("email", user.getEmail());
+                return userInfo;
+            }).toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("likers", likersInfo);
+            response.put("count", likersInfo.size());
+
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
@@ -251,9 +254,24 @@ public class ThreadController {
     public ResponseEntity<?> getThreadDislikers(@PathVariable UUID id) {
         try {
             List<User> dislikers = threadService.getThreadDislikers(id);
-            return ResponseEntity.ok(dislikers);
+            // Return user information in a clean format
+            List<Map<String, Object>> dislikersInfo = dislikers.stream().map(user -> {
+                Map<String, Object> userInfo = new HashMap<>();
+                userInfo.put("id", user.getId());
+                userInfo.put("username", user.getUsername());
+                userInfo.put("firstName", user.getFirstName());
+                userInfo.put("lastName", user.getLastName());
+                userInfo.put("email", user.getEmail());
+                return userInfo;
+            }).toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("dislikers", dislikersInfo);
+            response.put("count", dislikersInfo.size());
+
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 
@@ -279,9 +297,24 @@ public class ThreadController {
     public ResponseEntity<?> getCommentLikers(@PathVariable UUID id) {
         try {
             List<User> likers = threadService.getCommentLikers(id);
-            return ResponseEntity.ok(likers);
+            // Return user information in a clean format
+            List<Map<String, Object>> likersInfo = likers.stream().map(user -> {
+                Map<String, Object> userInfo = new HashMap<>();
+                userInfo.put("id", user.getId());
+                userInfo.put("username", user.getUsername());
+                userInfo.put("firstName", user.getFirstName());
+                userInfo.put("lastName", user.getLastName());
+                userInfo.put("email", user.getEmail());
+                return userInfo;
+            }).toList();
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("likers", likersInfo);
+            response.put("count", likersInfo.size());
+
+            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
         }
     }
 

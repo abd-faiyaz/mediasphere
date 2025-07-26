@@ -334,7 +334,7 @@ export default function ClubsPage() {
 
     // Filter by clubView
     if (clubView === 'my') {
-      filtered = filtered.filter(club => club.isMember || (user && club.createdBy.id === user.id))
+      filtered = filtered.filter(club => club.isMember)
     }
 
     // Filter by search term
@@ -623,13 +623,13 @@ export default function ClubsPage() {
             whileTap={{ scale: 0.95 }}
           >
             <div className="flex flex-col items-end gap-2">
-              { isSignedIn && (
+              {isSignedIn && (
                 <Link href="/clubs/create">
-                <Button className="bg-[#1E3A8A] hover:bg-[#15306E] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]">
-                  <Plus className="mr-2 h-4 w-4" />
-                  Create Club
-                </Button>
-              </Link>
+                  <Button className="bg-[#1E3A8A] hover:bg-[#15306E] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]">
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Club
+                  </Button>
+                </Link>
               )}
               {/* Club View Segmented Toggle Button */}
               <div className="mt-2 flex rounded-lg overflow-hidden border border-[#90CAF9]/30 bg-white shadow-sm">
@@ -660,10 +660,10 @@ export default function ClubsPage() {
           className="bg-gradient-to-br from-white/95 to-white/90 backdrop-blur-xl rounded-xl border border-[#90CAF9]/30 p-6 mb-8 shadow-[0_5px_20px_-5px_rgba(0,0,0,0.08)] hover:shadow-[0_8px_25px_-5px_rgba(0,0,0,0.1)] transition-shadow duration-300"
         >
           <div className="flex flex-col md:flex-row gap-4">
-          <motion.div
-            initial={{ width: 0, opacity: 0 }}
-            animate={{ width: "100%", opacity: 1 }}
-            transition={{ delay: 0.15, duration: 0.3 }}
+            <motion.div
+              initial={{ width: 0, opacity: 0 }}
+              animate={{ width: "100%", opacity: 1 }}
+              transition={{ delay: 0.15, duration: 0.3 }}
               className="flex-1"
             >
               <div className="relative">
@@ -676,10 +676,10 @@ export default function ClubsPage() {
                 />
               </div>
             </motion.div>
-          <motion.div
-            initial={{ x: 50, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.2, duration: 0.3 }}
+            <motion.div
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              transition={{ delay: 0.2, duration: 0.3 }}
               className="flex gap-4"
             >
               <Select value={selectedCategory} onValueChange={setSelectedCategory}>

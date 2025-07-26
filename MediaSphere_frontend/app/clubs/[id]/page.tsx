@@ -14,6 +14,7 @@ import { toast } from "@/hooks/use-toast"
 import { authService } from "@/lib/auth-service"
 import { useUser } from "@clerk/nextjs"
 import CreateThreadModal from "@/components/CreateThreadModal"
+import CreateEventModal from "@/components/CreateEventModal"
 
 interface Club {
   id: string
@@ -66,16 +67,18 @@ interface Event {
   id: string
   title: string
   description: string
-  date: string
-  time: string
-  location: string
-  maxAttendees: number
-  currentAttendees: number
+  eventDate: string
+  location?: string
+  maxParticipants?: number
+  currentParticipants: number
   createdBy: {
     id: string
     username: string
+    firstName: string
+    lastName: string
   }
   createdAt: string
+  updatedAt?: string
 }
 
 interface ClubMember {
@@ -115,6 +118,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
   const [showMembersPanel, setShowMembersPanel] = useState(false)
   const [showLeaveConfirmation, setShowLeaveConfirmation] = useState(false)
   const [showCreateThreadModal, setShowCreateThreadModal] = useState(false)
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false)
   const { user, isLoading: isAuthLoading, isAuthenticated, isReady } = useAuth()
   const router = useRouter()
   const { isSignedIn } = useUser()
@@ -671,7 +675,7 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                 </div>
               </div>
             </div>
-                    </div>
+          </div>
         </div>
 
         {/* Content Tabs */}
@@ -842,7 +846,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   <h2 className="text-xl font-semibold text-gray-900">Upcoming Events</h2>
                   <p className="text-gray-600">Don't miss out on exciting happenings</p>
                 </div>
-                <Button className="bg-[#1E3A8A] hover:bg-[#15306E]">
+                <Button
+                  onClick={() => setShowCreateEventModal(true)}
+                  disabled={!isMember}
+                  className="bg-[#1E3A8A] hover:bg-[#15306E]"
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Create Event
                 </Button>
@@ -862,32 +870,46 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
               ) : (
                 <div className="space-y-4">
                   {events.map((event) => (
-                    <Card key={event.id} className="hover:shadow-md transition-shadow border border-gray-200">
-                      <CardHeader>
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg font-medium text-gray-900 mb-2">
-                              <Link href={`/events/${event.id}`} className="hover:text-[#1E3A8A]">
+                    <Link key={event.id} href={`/events/${event.id}`} className="block">
+                      <Card className="hover:shadow-md transition-shadow border border-gray-200 cursor-pointer">
+                        <CardHeader>
+                          <div className="flex justify-between items-start">
+                            <div className="flex-1">
+                              <CardTitle className="text-lg font-medium text-gray-900 mb-2">
                                 {event.title}
-                              </Link>
-                            </CardTitle>
+                              </CardTitle>
 
-                            <div className="flex items-center gap-4 text-gray-600 mb-3">
-                              <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
-                                <Calendar className="h-4 w-4" />
-                                <span>{new Date(event.date).toLocaleDateString()}</span>
+                              <div className="flex items-center gap-4 text-gray-600 mb-3">
+                                <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
+                                  <Calendar className="h-4 w-4" />
+                                  <span>{new Date(event.eventDate).toLocaleString()}</span>
+                                </div>
+                                {event.maxParticipants && (
+                                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
+                                    <Users className="h-4 w-4" />
+                                    <span>{event.currentParticipants}/{event.maxParticipants}</span>
+                                  </div>
+                                )}
+                                {event.location && (
+                                  <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
+                                    <Globe className="h-4 w-4" />
+                                    <span>{event.location}</span>
+                                  </div>
+                                )}
                               </div>
-                              <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1">
-                                <Users className="h-4 w-4" />
-                                <span>{event.currentAttendees}/{event.maxAttendees}</span>
+
+                              <p className="text-gray-700 mb-3">{event.description}</p>
+
+                              <div className="text-sm text-gray-500 flex items-center gap-2">
+                                <span>Created by {event.createdBy.firstName} {event.createdBy.lastName}</span>
+                                <span>•</span>
+                                <span>{new Date(event.createdAt).toLocaleDateString()}</span>
                               </div>
                             </div>
-
-                            <p className="text-gray-700">{event.description}</p>
                           </div>
-                        </div>
-                      </CardHeader>
-                    </Card>
+                        </CardHeader>
+                      </Card>
+                    </Link>
                   ))}
                 </div>
               )}
@@ -997,6 +1019,18 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
         onThreadCreated={() => {
           fetchThreads() // Refresh the threads list
           setShowCreateThreadModal(false)
+        }}
+      />
+
+      {/* Create Event Modal */}
+      <CreateEventModal
+        isOpen={showCreateEventModal}
+        onClose={() => setShowCreateEventModal(false)}
+        clubId={resolvedParams.id}
+        clubName={club?.name || ""}
+        onEventCreated={() => {
+          fetchEvents() // Refresh the events list
+          setShowCreateEventModal(false)
         }}
       />
 

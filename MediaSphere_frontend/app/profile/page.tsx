@@ -40,6 +40,10 @@ export default function ProfilePage() {
   const [clubs, setClubs] = useState<Club[]>([])
   const [threads, setThreads] = useState<Thread[]>([])
   const [achievements, setAchievements] = useState<Achievement[]>([])
+  const [createdEvents, setCreatedEvents] = useState<any[]>([])
+  const [upcomingEvents, setUpcomingEvents] = useState<any[]>([])
+  const [pastInterestedEvents, setPastInterestedEvents] = useState<any[]>([])
+  const [selectedEventTab, setSelectedEventTab] = useState<'created' | 'upcoming' | 'past'>('created')
   const [isEditing, setIsEditing] = useState(false)
   const [loading, setLoading] = useState(true)
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false)
@@ -241,7 +245,53 @@ export default function ProfilePage() {
     }
   }
 
+  // Fetch events created by the user
+  const fetchCreatedEvents = async (userId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/events/user/${userId}/created`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+      if (!response.ok) return []
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching created events:', error)
+      return []
+    }
+  }
 
+  // Fetch upcoming events from user's clubs
+  const fetchUpcomingEvents = async (userId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/events/user/${userId}/upcoming`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+      if (!response.ok) return []
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching upcoming events:', error)
+      return []
+    }
+  }
+
+  // Fetch past events the user was interested in
+  const fetchPastInterestedEvents = async (userId: string) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080'}/events/user/${userId}/past-interested`, {
+        headers: {
+          'Authorization': `Bearer ${authService.getToken()}`
+        }
+      })
+      if (!response.ok) return []
+      return await response.json()
+    } catch (error) {
+      console.error('Error fetching past interested events:', error)
+      return []
+    }
+  }
 
 
   const loadUserData = async () => {
@@ -250,12 +300,15 @@ export default function ProfilePage() {
       const currentUser = await apiService.getCurrentUser()
       if (!currentUser) return
 
-      const [userData, statsData, clubsData, threadsData, achievementsData] = await Promise.all([
+      const [userData, statsData, clubsData, threadsData, achievementsData, createdEventsData, upcomingEventsData, pastInterestedEventsData] = await Promise.all([
         apiService.getUserProfile(currentUser.id),
         apiService.getUserStats(currentUser.id),
         fetchUserClubsWithDetails(currentUser.id),
         fetchUserThreadsWithClubNames(currentUser.id),
-        Promise.resolve(apiService.getUserAchievements(currentUser.id))
+        Promise.resolve(apiService.getUserAchievements(currentUser.id)),
+        fetchCreatedEvents(currentUser.id),
+        fetchUpcomingEvents(currentUser.id),
+        fetchPastInterestedEvents(currentUser.id)
       ])
 
       setUser(userData)
@@ -263,6 +316,9 @@ export default function ProfilePage() {
       setClubs(clubsData || [])
       setThreads(threadsData || [])
       setAchievements(achievementsData || [])
+      setCreatedEvents(createdEventsData || [])
+      setUpcomingEvents(upcomingEventsData || [])
+      setPastInterestedEvents(pastInterestedEventsData || [])
 
       if (userData) {
         setFormData({
@@ -335,9 +391,9 @@ export default function ProfilePage() {
     return null
   }
 
-  
 
-  
+
+
 
   const handleProfilePicSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -803,7 +859,7 @@ export default function ProfilePage() {
           {[
             { label: "Threads", value: threads.length, icon: MessageSquare, gradient: "from-blue-500 to-cyan-500" },
             { label: "Achievements", value: achievements?.length || 0, icon: Trophy, gradient: "from-yellow-500 to-orange-500" },
-            { label: "Events", value: userStats?.eventsAttended || 0, icon: Calendar, gradient: "from-purple-500 to-indigo-500" },
+            { label: "Events", value: createdEvents.length, icon: Calendar, gradient: "from-purple-500 to-indigo-500" },
             { label: "Clubs", value: clubs.length, icon: Users, gradient: "from-emerald-500 to-teal-500" }
           ].map((stat, index) => (
             <motion.div
@@ -1132,17 +1188,265 @@ export default function ProfilePage() {
                         <CardHeader>
                           <CardTitle className="text-[#1E3A8A] flex items-center gap-2 font-['Nunito']">
                             <Calendar className="w-5 h-5" />
-                            My Events ({userStats?.eventsAttended || 0})
+                            My Events
                           </CardTitle>
                           <CardDescription className="text-[#333333]/70 font-['Open Sans']">
-                            Events you've attended
+                            Events you've created, upcoming events, and past interested events
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
-                          <div className="text-center py-8">
-                            <Calendar className="w-12 h-12 text-[#90CAF9]/50 mx-auto mb-4" />
-                            <p className="text-[#333333]/70 font-['Open Sans']">Events feature coming soon</p>
+                          {/* Event Tabs */}
+                          <div className="flex gap-2 mb-6">
+                            <Button
+                              variant={selectedEventTab === 'created' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setSelectedEventTab('created')}
+                              className={selectedEventTab === 'created' ?
+                                'bg-[#1E3A8A] text-white' :
+                                'border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF]'
+                              }
+                            >
+                              Created ({createdEvents.length})
+                            </Button>
+                            <Button
+                              variant={selectedEventTab === 'upcoming' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setSelectedEventTab('upcoming')}
+                              className={selectedEventTab === 'upcoming' ?
+                                'bg-[#1E3A8A] text-white' :
+                                'border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF]'
+                              }
+                            >
+                              Upcoming ({upcomingEvents.length})
+                            </Button>
+                            <Button
+                              variant={selectedEventTab === 'past' ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => setSelectedEventTab('past')}
+                              className={selectedEventTab === 'past' ?
+                                'bg-[#1E3A8A] text-white' :
+                                'border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF]'
+                              }
+                            >
+                              Past Interested ({pastInterestedEvents.length})
+                            </Button>
                           </div>
+
+                          {/* Event Content */}
+                          <AnimatePresence mode="wait">
+                            {selectedEventTab === 'created' && (
+                              <motion.div
+                                key="created"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                              >
+                                {createdEvents.length > 0 ? (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {createdEvents.map((event, index) => (
+                                      <motion.div
+                                        key={event.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.1 }}
+                                      >
+                                        <Link href={`/events/${event.id}`}>
+                                          <Card className="bg-[#F0F7FF]/50 hover:bg-[#90CAF9]/20 transition-all duration-300 cursor-pointer h-full border border-[#90CAF9]/20">
+                                            <CardContent className="p-4">
+                                              <div className="flex items-start gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-purple-500 to-indigo-500 flex items-center justify-center shadow-lg">
+                                                  <Calendar className="w-6 h-6 text-white" />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <h3 className="text-lg font-semibold text-[#1E3A8A] mb-1 font-['Nunito']">
+                                                    {event.title}
+                                                  </h3>
+                                                  <p className="text-[#333333]/70 text-sm mb-3 line-clamp-2 font-['Open Sans']">
+                                                    {event.description || 'No description available'}
+                                                  </p>
+                                                  <div className="space-y-1 text-xs text-[#333333]/70 font-['Open Sans']">
+                                                    <div className="flex items-center gap-1">
+                                                      <Calendar className="w-3 h-3" />
+                                                      <span>{new Date(event.eventDate).toLocaleString()}</span>
+                                                    </div>
+                                                    {event.maxParticipants && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>{event.interestedCount}/{event.maxParticipants} interested</span>
+                                                      </div>
+                                                    )}
+                                                    {event.location && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Globe className="w-3 h-3" />
+                                                        <span>{event.location}</span>
+                                                      </div>
+                                                    )}
+                                                    {event.club && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>Club: {event.club.name}</span>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </CardContent>
+                                          </Card>
+                                        </Link>
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-8">
+                                    <Calendar className="w-12 h-12 text-[#90CAF9]/50 mx-auto mb-4" />
+                                    <p className="text-[#333333]/70 font-['Open Sans']">No events created yet</p>
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+
+                            {selectedEventTab === 'upcoming' && (
+                              <motion.div
+                                key="upcoming"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                              >
+                                {upcomingEvents.length > 0 ? (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {upcomingEvents.map((event, index) => (
+                                      <motion.div
+                                        key={event.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.1 }}
+                                      >
+                                        <Link href={`/events/${event.id}`}>
+                                          <Card className="bg-[#F0F7FF]/50 hover:bg-[#90CAF9]/20 transition-all duration-300 cursor-pointer h-full border border-[#90CAF9]/20">
+                                            <CardContent className="p-4">
+                                              <div className="flex items-start gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-green-500 to-emerald-500 flex items-center justify-center shadow-lg">
+                                                  <Calendar className="w-6 h-6 text-white" />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <h3 className="text-lg font-semibold text-[#1E3A8A] mb-1 font-['Nunito']">
+                                                    {event.title}
+                                                  </h3>
+                                                  <p className="text-[#333333]/70 text-sm mb-3 line-clamp-2 font-['Open Sans']">
+                                                    {event.description || 'No description available'}
+                                                  </p>
+                                                  <div className="space-y-1 text-xs text-[#333333]/70 font-['Open Sans']">
+                                                    <div className="flex items-center gap-1">
+                                                      <Calendar className="w-3 h-3" />
+                                                      <span>{new Date(event.eventDate).toLocaleString()}</span>
+                                                    </div>
+                                                    {event.maxParticipants && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>{event.interestedCount}/{event.maxParticipants} interested</span>
+                                                      </div>
+                                                    )}
+                                                    {event.location && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Globe className="w-3 h-3" />
+                                                        <span>{event.location}</span>
+                                                      </div>
+                                                    )}
+                                                    {event.club && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>Club: {event.club.name}</span>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </CardContent>
+                                          </Card>
+                                        </Link>
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-8">
+                                    <Calendar className="w-12 h-12 text-[#90CAF9]/50 mx-auto mb-4" />
+                                    <p className="text-[#333333]/70 font-['Open Sans']">No upcoming events from your clubs</p>
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+
+                            {selectedEventTab === 'past' && (
+                              <motion.div
+                                key="past"
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -20 }}
+                              >
+                                {pastInterestedEvents.length > 0 ? (
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {pastInterestedEvents.map((event, index) => (
+                                      <motion.div
+                                        key={event.id}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: index * 0.1 }}
+                                      >
+                                        <Link href={`/events/${event.id}`}>
+                                          <Card className="bg-[#F0F7FF]/50 hover:bg-[#90CAF9]/20 transition-all duration-300 cursor-pointer h-full border border-[#90CAF9]/20">
+                                            <CardContent className="p-4">
+                                              <div className="flex items-start gap-3">
+                                                <div className="w-12 h-12 rounded-full bg-gradient-to-r from-gray-500 to-slate-500 flex items-center justify-center shadow-lg">
+                                                  <Calendar className="w-6 h-6 text-white" />
+                                                </div>
+                                                <div className="flex-1">
+                                                  <h3 className="text-lg font-semibold text-[#1E3A8A] mb-1 font-['Nunito']">
+                                                    {event.title}
+                                                  </h3>
+                                                  <p className="text-[#333333]/70 text-sm mb-3 line-clamp-2 font-['Open Sans']">
+                                                    {event.description || 'No description available'}
+                                                  </p>
+                                                  <div className="space-y-1 text-xs text-[#333333]/70 font-['Open Sans']">
+                                                    <div className="flex items-center gap-1">
+                                                      <Calendar className="w-3 h-3" />
+                                                      <span>{new Date(event.eventDate).toLocaleString()}</span>
+                                                    </div>
+                                                    {event.maxParticipants && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>{event.interestedCount}/{event.maxParticipants} interested</span>
+                                                      </div>
+                                                    )}
+                                                    {event.location && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Globe className="w-3 h-3" />
+                                                        <span>{event.location}</span>
+                                                      </div>
+                                                    )}
+                                                    {event.club && (
+                                                      <div className="flex items-center gap-1">
+                                                        <Users className="w-3 h-3" />
+                                                        <span>Club: {event.club.name}</span>
+                                                      </div>
+                                                    )}
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            </CardContent>
+                                          </Card>
+                                        </Link>
+                                      </motion.div>
+                                    ))}
+                                  </div>
+                                ) : (
+                                  <div className="text-center py-8">
+                                    <Calendar className="w-12 h-12 text-[#90CAF9]/50 mx-auto mb-4" />
+                                    <p className="text-[#333333]/70 font-['Open Sans']">No past interested events</p>
+                                  </div>
+                                )}
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
                         </CardContent>
                       </Card>
                     )}
