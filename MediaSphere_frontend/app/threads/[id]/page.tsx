@@ -1,5 +1,6 @@
 "use client"
 
+import React from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -10,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
+import { toast } from "@/hooks/use-toast"
 import {
   MessageSquare, Share, MoreHorizontal, Pin, ThumbsUp, ThumbsDown, Reply, ArrowLeft,
   Heart, Bookmark, Eye, Star, Sparkles, TrendingUp, Send, Edit3, Trash2, Loader2, Maximize2, ImagePlus
@@ -17,11 +19,9 @@ import {
 import Link from "next/link"
 import Image from "next/image"
 import { use, useState, useRef, useEffect } from "react"
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import { useAuth } from "@/lib/auth-context"
-import { authService } from "@/lib/auth-service"
-import { toast } from "@/hooks/use-toast"
 import { useUser } from "@clerk/nextjs"
+import { authService } from "@/lib/auth-service"
 
 interface User {
   id: string
@@ -163,23 +163,13 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
   // Enhanced performance and image optimization
   const [imageLoadingStates, setImageLoadingStates] = useState<{ [key: string]: boolean }>({})
   const [optimizedImages, setOptimizedImages] = useState<{ [key: string]: string }>({})
+  const [isMounted, setIsMounted] = useState(false)
 
   const containerRef = useRef(null)
-  const { scrollYProgress } = useScroll({ target: containerRef })
 
-  // Parallax effects
-  const headerY = useTransform(scrollYProgress, [0, 1], ['0%', '50%'])
-  const opacity = useTransform(scrollYProgress, [0, 0.3], [1, 0.8])
-
-  // Floating icons for background animation
-  const floatingIcons = [
-    { icon: Star, delay: 0.5, x: -30, y: -40 },
-    { icon: Heart, delay: 0.8, x: 40, y: -35 },
-    { icon: Sparkles, delay: 1.1, x: -35, y: 30 },
-    { icon: TrendingUp, delay: 1.4, x: 35, y: 40 },
-    { icon: MessageSquare, delay: 1.7, x: -40, y: -20 },
-    { icon: ThumbsUp, delay: 2.0, x: 30, y: 35 },
-  ]
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
 
   useEffect(() => {
     // Guard clause: Wait for authentication to be completely ready
@@ -557,50 +547,12 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     }
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-        delayChildren: 0.3,
-      },
-    },
-  }
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 30, scale: 0.9 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      scale: 1,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut"
-      },
-    },
-  }
-
-  const cardVariants = {
-    hidden: { opacity: 0, x: -50, rotateY: -15 },
-    visible: {
-      opacity: 1,
-      x: 0,
-      rotateY: 0,
-      transition: {
-        duration: 0.8,
-        ease: "easeOut"
-      },
-    },
-    hover: {
-      scale: 1.03,
-      rotateY: 3,
-      y: -8,
-      transition: {
-        duration: 0.4,
-        ease: "easeInOut"
-      },
-    },
+  if (!isMounted) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-12 w-12 animate-spin" />
+      </div>
+    )
   }
 
   if (!isReady) {
@@ -624,34 +576,20 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     return (
       <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
         <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8 }}
+          <div
             className="relative"
           >
-            <motion.h2
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
+            <h2
               className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-red-500 to-red-600 bg-clip-text text-transparent mb-4"
             >
               Error
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+            </h2>
+            <p
               className="text-[#333333]/70 font-['Open Sans'] mb-6"
             >
               {error}
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            </p>
+            <div
             >
               <Button
                 onClick={() => window.history.back()}
@@ -660,8 +598,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -671,34 +609,20 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
     return (
       <div className="min-h-screen bg-[#f7ecdf] flex items-center justify-center relative overflow-hidden">
         <div className="text-center bg-white/90 backdrop-blur-xl p-12 rounded-2xl shadow-2xl border border-[#90CAF9]/20 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+          <div
             className="relative"
           >
-            <motion.h2
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
+            <h2
               className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent mb-4"
             >
               Thread Not Found
-            </motion.h2>
-            <motion.p
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
+            </h2>
+            <p
               className="text-[#333333]/70 font-['Open Sans'] mb-6"
             >
               The thread you're looking for doesn't exist.
-            </motion.p>
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+            </p>
+            <div
             >
               <Button
                 onClick={() => window.history.back()}
@@ -707,8 +631,8 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 Go Back
               </Button>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
         </div>
       </div>
     )
@@ -723,851 +647,567 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
           <div className="absolute top-[10%] left-[15%] w-[40rem] h-[40rem] bg-gradient-to-r from-blue-400/30 to-purple-400/30 rounded-full filter blur-3xl opacity-50" />
           <div className="absolute bottom-[15%] right-[10%] w-[35rem] h-[35rem] bg-gradient-to-r from-indigo-400/30 to-pink-400/30 rounded-full filter blur-3xl opacity-50" />
 
-          {/* Floating Background Elements */}
-          {floatingIcons.map((item, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
-              animate={{
-                opacity: [0, 0.3, 0],
-                scale: [0, 1, 0],
-                x: [0, item.x, item.x * 2],
-                y: [0, item.y, item.y * 2],
-                rotate: [0, 180, 360],
-              }}
-              transition={{
-                duration: 15,
-                delay: item.delay,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
-              className="absolute"
-              style={{
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
-            >
-              <item.icon className="w-8 h-8 text-[#1E3A8A]/20" />
-            </motion.div>
-          ))}
         </div>
 
         {/* Header */}
-        <motion.header
-          style={{ y: headerY, opacity }}
+        <header
           className="bg-gradient-to-b from-white/95 to-white/80 backdrop-blur-xl border-b border-[#90CAF9]/30 sticky top-0 z-50 shadow-[0_2px_15px_-3px_rgba(0,0,0,0.05)]"
         >
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center gap-4">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
+                <div>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={() => window.history.back()}
                     className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 rounded-xl px-3 py-2"
                   >
-                    <motion.div
-                      whileHover={{ x: -2 }}
-                      transition={{ duration: 0.2 }}
-                    >
+                    <div>
                       <ArrowLeft className="w-4 h-4" />
-                    </motion.div>
+                    </div>
                     <span className="font-medium">Back</span>
                   </Button>
-                </motion.div>
+                </div>
                 <div className="h-8 w-px bg-gradient-to-b from-[#1E3A8A]/30 to-[#90CAF9]/30" />
                 <Link href="/" className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block">
                   MediaSphere
                 </Link>
               </div>
               <nav className="flex items-center space-x-4">
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <div>
                   <Link href="/clubs">
                     <Button variant="ghost" className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]">
                       <span className="relative z-10">Clubs</span>
                       <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
                     </Button>
                   </Link>
-                </motion.div>
-                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                </div>
+                <div>
                   <Link href="/notifications">
                     <Button variant="ghost" className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]">
                       <span className="relative z-10">Notifications</span>
                       <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
                     </Button>
                   </Link>
-                </motion.div>
+                </div>
               </nav>
             </div>
           </div>
-        </motion.header>
+        </header>
 
-        <motion.main
-          variants={containerVariants}
-          initial="hidden"
-          animate="visible"
+        <main
           className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8"
         >
           {/* Breadcrumb */}
-          <motion.div
-            variants={itemVariants}
+          <div
             className="flex items-center gap-2 text-sm text-[#333333]/70 mb-6"
           >
-            <motion.div whileHover={{ scale: 1.05 }}>
+            <div>
               <Link href="/clubs" className="hover:text-[#1E3A8A] transition-colors duration-300 font-['Open Sans']">
                 Clubs
               </Link>
-            </motion.div>
-            <motion.span
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.3 }}
+            </div>
+            <span
               className="text-[#333333]/50"
             >
               /
-            </motion.span>
-            <motion.div whileHover={{ scale: 1.05 }}>
+            </span>
+            <div>
               <Link href={`/clubs/${thread.club.id}`} className="hover:text-[#1E3A8A] transition-colors duration-300 font-['Open Sans']">
                 {thread.club.name}
               </Link>
-            </motion.div>
-            <motion.span
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.6 }}
+            </div>
+            <span
               className="text-[#333333]/50"
             >
               /
-            </motion.span>
-            <motion.span
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.9 }}
+            </span>
+            <span
               className="text-[#333333] font-medium font-['Open Sans']"
             >
               Discussion
-            </motion.span>
-          </motion.div>
+            </span>
+          </div>
 
           {/* Thread Card */}
-          <motion.div
-            variants={cardVariants}
-            whileHover="hover"
+          <div
             className="relative"
           >
             <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-xl blur-xl" />
             <Card className="mb-8 overflow-hidden border-0 shadow-2xl bg-white/90 backdrop-blur-xl relative z-10 border border-[#90CAF9]/30">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, ease: "easeOut" }}
+              <div
               >
                 <CardHeader className="pb-4 bg-gradient-to-r from-white/50 to-[#F0F7FF]/50">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-3">
                         {thread.isPinned && (
-                          <motion.div
-                            initial={{ rotate: 0, scale: 0 }}
-                            animate={{ rotate: 360, scale: 1 }}
-                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                          <div
                             className="p-1 bg-gradient-to-r from-yellow-400 to-orange-400 rounded-full"
                           >
-                            <Pin className="h-4 w-4 text-white" />
-                          </motion.div>
+                            <Pin className="w-4 h-4 text-white" />
+                          </div>
                         )}
-                        <motion.h1
-                          initial={{ opacity: 0, x: -20 }}
-                          animate={{ opacity: 1, x: 0 }}
-                          transition={{ duration: 0.8, delay: 0.2 }}
-                          className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] bg-clip-text text-transparent"
-                        >
+                        <h1 className="text-3xl font-['Nunito'] font-extrabold text-[#1E3A8A]">
                           {thread.title}
-                        </motion.h1>
+                        </h1>
                       </div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="flex items-center gap-3 mb-4"
-                      >
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Avatar className="h-10 w-10 ring-2 ring-[#90CAF9]/50 shadow-lg">
-                            <AvatarImage src={thread.createdBy.profilePic} />
-                            <AvatarFallback className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
-                              {thread.createdBy.firstName?.[0] || thread.createdBy.username[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                        </motion.div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium text-[#333333] font-['Nunito']">
-                              {thread.createdBy.firstName ?
-                                `${thread.createdBy.firstName} ${thread.createdBy.lastName}` :
-                                thread.createdBy.username
-                              }
-                            </span>
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.6 }}
-                            >
-                              <Badge variant="secondary" className="text-xs bg-gradient-to-r from-[#90CAF9]/20 to-[#1E3A8A]/20 text-[#1E3A8A] border-[#90CAF9]/30">
-                                Member & Author
-                              </Badge>
-                            </motion.div>
-                          </div>
-                          <div className="text-sm text-[#333333]/70 font-['Open Sans']">
-                            in{" "}
-                            <Link href={`/clubs/${thread.club.id}`} className="hover:text-[#1E3A8A] font-medium transition-colors duration-300">
-                              {thread.club.name}
-                            </Link>{" "}
-                            • {new Date(thread.createdAt).toLocaleDateString()}
-                          </div>
-                        </div>
-                      </motion.div>
+                      <div className="flex items-center gap-3 text-sm text-[#333333]/80 mb-4">
+                        <Avatar className="h-8 w-8 border border-[#90CAF9]">
+                          <AvatarImage src={thread.createdBy.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${thread.createdBy.username}`} alt={thread.createdBy.username} />
+                          <AvatarFallback>{thread.createdBy.username.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-semibold text-[#1E3A8A] font-['Open Sans']">
+                          {thread.createdBy.firstName} {thread.createdBy.lastName} (@{thread.createdBy.username})
+                        </span>
+                        <span className="text-[#333333]/60">•</span>
+                        <span className="text-[#333333]/60 font-['Open Sans']">
+                          {new Date(thread.createdAt).toLocaleDateString()}
+                        </span>
+                        {thread.club && (
+                          <>
+                            <span className="text-[#333333]/60">•</span>
+                            <Badge variant="secondary" className="bg-[#E0F2F7] text-[#1E3A8A] font-['Open Sans']">
+                              <Link href={`/clubs/${thread.club.id}`} className="hover:underline">
+                                {thread.club.name}
+                              </Link>
+                            </Badge>
+                          </>
+                        )}
+                      </div>
                     </div>
                     {canEditOrDelete && (
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.8 }}
-                        whileHover={{ scale: 1.05 }}
-                      >
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="hover:bg-[#F0F7FF] text-[#333333]/70 hover:text-[#1E3A8A]">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent className="bg-white border-[#90CAF9]/30">
-                            <DropdownMenuItem onClick={() => setShowEditModal(true)} className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF]">
-                              <Edit3 className="w-4 h-4 mr-2" />
-                              Edit Thread
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setShowDeleteModal(true)} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Delete Thread
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </motion.div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="text-[#333333]/70 hover:text-[#1E3A8A] transition-colors duration-300">
+                            <MoreHorizontal className="h-5 w-5" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-40 bg-white shadow-lg rounded-lg border border-[#90CAF9]/30">
+                          <DropdownMenuItem
+                            onClick={() => setShowEditModal(true)}
+                            className="flex items-center gap-2 text-[#333333] hover:bg-[#F0F7FF] transition-colors duration-200 cursor-pointer p-2"
+                          >
+                            <Edit3 className="h-4 w-4" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => setShowDeleteModal(true)}
+                            className="flex items-center gap-2 text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer p-2"
+                          >
+                            <Trash2 className="h-4 w-4" /> Delete
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 </CardHeader>
-                <CardContent className="bg-white/30">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.6 }}
-                    className="prose max-w-none mb-6"
-                  >
-                    {thread.content.split('\n').map((paragraph, index) => (
-                      <motion.p
-                        key={index}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                        className="mb-4 text-[#333333] leading-relaxed font-['Open Sans']"
+              </div>
+
+              <CardContent className="p-6">
+                {thread.imageUrl && (
+                  <div className="relative w-full h-80 mb-6 rounded-lg overflow-hidden border border-[#90CAF9]/20 shadow-md">
+                    <Image
+                      src={thread.imageUrl}
+                      alt={thread.title}
+                      layout="fill"
+                      objectFit="cover"
+                      className="transition-transform duration-500 hover:scale-105"
+                    />
+                  </div>
+                )}
+                <p className="text-[#333333] leading-relaxed font-['Open Sans'] text-lg">
+                  {thread.content}
+                </p>
+
+                <div className="flex items-center gap-4 mt-6 border-t border-dashed border-[#90CAF9]/30 pt-4">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleLike}
+                        disabled={liking || liked}
+                        className={`flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] transition-colors duration-300 ${liked ? 'text-[#1E3A8A] bg-[#E0F2F7]' : 'hover:bg-[#F0F7FF]'}`}
                       >
-                        {paragraph}
-                      </motion.p>
-                    ))}
-                  </motion.div>
-                  {thread.images && thread.images.length > 0 && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.8, delay: 1 }}
-                      className={`mb-6 grid gap-2 ${thread.images.length === 1 ? 'grid-cols-1' :
-                        thread.images.length === 2 ? 'grid-cols-2' :
-                          thread.images.length === 3 ? 'grid-cols-2' :
-                            'grid-cols-2 md:grid-cols-3'
-                        }`}
-                    >
-                      {thread.images.map((image, imgIndex: number) => (
-                        <motion.div
-                          key={image.id}
-                          initial={{ opacity: 0, scale: 0.9 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{ duration: 0.6, delay: 0.2 + imgIndex * 0.1 }}
-                          className={`relative rounded-lg overflow-hidden shadow-xl ${thread.images!.length === 3 && imgIndex === 0 ? 'col-span-2' : ''
-                            } group`}
-                        >
-                          <div className="relative aspect-video">
-                            <Image
-                              src={image.fullImageUrl || image.imageUrl}
-                              alt={`Thread image ${imgIndex + 1}`}
-                              fill
-                              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                              className="object-cover transition-transform duration-300 group-hover:scale-105"
-                              loading="lazy"
-                              quality={85}
-                            />
-                          </div>
-                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-white hover:bg-white/20"
-                              onClick={() => window.open(image.fullImageUrl || image.imageUrl, '_blank')}
-                            >
-                              <Maximize2 className="h-5 w-5" />
-                            </Button>
-                          </div>
-                        </motion.div>
-                      ))}
-                    </motion.div>
-                  )}
-
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 1.2 }}
-                    className="flex items-center gap-6 pt-4 border-t border-[#90CAF9]/30"
-                  >
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <div className="flex flex-col items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={`flex items-center gap-2 transition-all duration-300 ${liking ? 'text-[#1E3A8A] bg-[#90CAF9]/20 shadow-lg shadow-[#1E3A8A]/20' : 'hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70'
-                                }`}
-                              onClick={handleLike}
-                              disabled={liking}
-                            >
-                              <motion.div
-                                animate={liking ? { scale: [1, 1.2, 1], rotate: [0, 10, -10, 0] } : {}}
-                                transition={{ duration: 0.5 }}
-                              >
-                                <span className="text-lg">👍</span>
-                              </motion.div>
-                            </Button>
-                            <motion.span
-                              className="text-xs text-[#333333]/70 cursor-pointer hover:text-[#1E3A8A] transition-colors font-['Open Sans']"
-                              onClick={() => {
-                                fetchLikers()
-                                setShowLikers(true)
-                              }}
-                              whileHover={{ scale: 1.1 }}
-                            >
-                              {likeCount}
-                            </motion.span>
-                          </div>
-                        </motion.div>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-white text-[#333333] border-[#90CAF9]/30">
-                        <p>Like this thread</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <div className="flex flex-col items-center gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={`flex items-center gap-2 transition-all duration-300 ${disliked ? 'text-red-500 bg-red-100 shadow-lg shadow-red-500/20' : 'hover:text-red-500 hover:bg-red-50 text-[#333333]/70'
-                                }`}
-                              onClick={handleDislike}
-                              disabled={disliking}
-                            >
-                              <motion.div
-                                animate={disliked ? { scale: [1, 1.2, 1], rotate: [0, -10, 10, 0] } : {}}
-                                transition={{ duration: 0.5 }}
-                              >
-                                <span className="text-lg">👎</span>
-                              </motion.div>
-                            </Button>
-                            <motion.span
-                              className="text-xs text-[#333333]/70 cursor-pointer hover:text-red-500 transition-colors font-['Open Sans']"
-                              onClick={() => {
-                                fetchDislikers()
-                                setShowDislikers(true)
-                              }}
-                              whileHover={{ scale: 1.1 }}
-                            >
-                              {dislikeCount}
-                            </motion.span>
-                          </div>
-                        </motion.div>
-                      </TooltipTrigger>
-                      <TooltipContent className="bg-white text-[#333333] border-[#90CAF9]/30">
-                        <p>Dislike this thread</p>
-                      </TooltipContent>
-                    </Tooltip>
-
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-green-600 hover:bg-green-50 text-[#333333]/70 transition-all duration-300">
-                        <MessageSquare className="h-4 w-4" />
-                        {comments.length}
+                        <ThumbsUp className={`w-4 h-4 ${liked ? 'fill-[#1E3A8A]' : ''}`} />
+                        <span className="font-['Open Sans']">{likeCount}</span>
                       </Button>
-                    </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                      Like this thread
+                    </TooltipContent>
+                  </Tooltip>
 
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70 transition-all duration-300">
-                        <Eye className="h-4 w-4" />
-                        {thread.viewCount}
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={handleDislike}
+                        disabled={disliking || disliked}
+                        className={`flex items-center gap-2 text-[#333333] hover:text-[#FF4D4F] transition-colors duration-300 ${disliked ? 'text-[#FF4D4F] bg-[#FFE0E0]' : 'hover:bg-[#FFF0F0]'}`}
+                      >
+                        <ThumbsDown className={`w-4 h-4 ${disliked ? 'fill-[#FF4D4F]' : ''}`} />
+                        <span className="font-['Open Sans']">{dislikeCount}</span>
                       </Button>
-                    </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                      Dislike this thread
+                    </TooltipContent>
+                  </Tooltip>
 
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.95 }}
-                    >
-                      <Button variant="ghost" size="sm" className="flex items-center gap-2 hover:text-cyan-600 hover:bg-cyan-50 text-[#333333]/70 transition-all duration-300">
-                        <Share className="h-4 w-4" />
-                        Share
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-colors duration-300">
+                        <MessageSquare className="w-4 h-4" />
+                        <span className="font-['Open Sans']">{thread.commentCount}</span>
                       </Button>
-                    </motion.div>
-                  </motion.div>
-                </CardContent>
-              </motion.div>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                      View comments
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-colors duration-300">
+                        <Eye className="w-4 h-4" />
+                        <span className="font-['Open Sans']">{thread.viewCount}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                      Views
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setIsBookmarked(!isBookmarked)}
+                        disabled={bookmarking}
+                        className={`flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] transition-colors duration-300 ${isBookmarked ? 'text-[#1E3A8A] bg-[#E0F2F7]' : 'hover:bg-[#F0F7FF]'}`}
+                      >
+                        <Bookmark className={`w-4 h-4 ${isBookmarked ? 'fill-[#1E3A8A]' : ''}`} />
+                        <span className="font-['Open Sans']">Save</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                      {isBookmarked ? "Remove bookmark" : "Bookmark this thread"}
+                    </TooltipContent>
+                  </Tooltip>
+
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setShowShareModal(true)}
+                        className="flex items-center gap-2 text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-colors duration-300"
+                      >
+                        <Share className="w-4 h-4" />
+                        <span className="font-['Open Sans']">Share</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                      Share this thread
+                    </TooltipContent>
+                  </Tooltip>
+                </div>
+              </CardContent>
             </Card>
-          </motion.div>
+          </div>
 
-          {/* Add Comment */}
-          {isSignedIn && (
-            <motion.div
-              variants={cardVariants}
-              className="relative"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-xl blur-xl" />
-              <Card className="mb-8 border-0 shadow-2xl bg-white/90 backdrop-blur-xl relative z-10 border border-[#90CAF9]/30">
-                <CardContent className="pt-6">
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8 }}
-                    className="flex gap-4"
-                  >
-                    <motion.div
-                      whileHover={{ scale: 1.1 }}
-                      transition={{ duration: 0.2 }}
-                    >
-                      <Avatar className="h-8 w-8 ring-2 ring-[#90CAF9]/50 shadow-lg">
-                        <AvatarImage src={user?.profilePic} />
-                        <AvatarFallback className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
-                          {user?.firstName?.[0] || user?.username?.[0] || 'U'}
-                        </AvatarFallback>
-                      </Avatar>
-                    </motion.div>
-                    <div className="flex-1">
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.6, delay: 0.2 }}
-                      >
-                        <Textarea
-                          placeholder="Add your thoughts to the discussion..."
-                          className="min-h-[100px] mb-4 bg-[#F0F7FF]/50 border-[#90CAF9]/30 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20 text-[#333333] placeholder-[#333333]/50 font-['Open Sans']"
-                          value={newComment}
-                          onChange={(e) => setNewComment(e.target.value)}
-                        />
-                      </motion.div>
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.6, delay: 0.4 }}
-                        className="flex justify-between items-center"
-                      >
-                        <div className="text-sm text-[#333333]/70 font-['Open Sans']">Be respectful and constructive in your response</div>
-                        <motion.div
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          <Button
-                            className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)] transition-all duration-300"
-                            onClick={handlePostComment}
-                            disabled={postingComment || !newComment.trim()}
-                          >
-                            {postingComment ? (
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            ) : (
-                              <motion.div
-                                whileHover={{ x: 2 }}
-                                transition={{ duration: 0.2 }}
-                              >
-                                <Send className="w-4 h-4 mr-2" />
-                              </motion.div>
-                            )}
-                            Post Comment
-                          </Button>
-                        </motion.div>
-                      </motion.div>
-                    </div>
-                  </motion.div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          )}
-
-          {/* Comments Section */}
-          <motion.div variants={itemVariants} className="space-y-6">
-            <motion.h2
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.8 }}
-              className="text-xl font-['Nunito'] font-bold text-[#333333] flex items-center gap-2"
-            >
-              <motion.div
-                initial={{ rotate: 0 }}
-                animate={{ rotate: 360 }}
-                transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-              >
-                <MessageSquare className="w-5 h-5 text-[#1E3A8A]" />
-              </motion.div>
+          {/* Comment Section */}
+          <div className="bg-white/90 backdrop-blur-xl rounded-xl shadow-2xl border border-[#90CAF9]/30 p-6">
+            <h2 className="text-2xl font-['Nunito'] font-bold text-[#1E3A8A] mb-6 border-b border-dashed border-[#90CAF9]/30 pb-4">
               Comments ({comments.length})
-            </motion.h2>
+            </h2>
 
-            <AnimatePresence>
-              {comments.map((comment, index) => (
-                <motion.div
-                  key={comment.id}
-                  initial={{ opacity: 0, y: 20, scale: 0.95 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                  transition={{ delay: index * 0.1, duration: 0.6 }}
-                  className="relative"
+            {/* Comment Input */}
+            <div className="mb-8">
+              <Textarea
+                placeholder="Write a comment..."
+                value={newComment}
+                onChange={(e) => setNewComment(e.target.value)}
+                className="w-full p-3 border border-[#90CAF9]/40 rounded-lg focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent transition-all duration-300 text-[#333333] font-['Open Sans'] resize-y"
+                rows={3}
+              />
+              <div className="flex justify-end mt-3 gap-2">
+                {replyingTo && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => setReplyingTo(null)}
+                    className="text-[#333333] hover:text-red-500 hover:bg-red-500/10 transition-colors duration-300"
+                  >
+                    Cancel Reply
+                  </Button>
+                )}
+                <Button
+                  onClick={handlePostComment}
+                  disabled={postingComment || !newComment.trim()}
+                  className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#90CAF9]/5 to-[#1E3A8A]/5 rounded-xl blur-xl" />
-                  <Card className="border-0 shadow-2xl bg-white/90 backdrop-blur-xl hover:shadow-3xl transition-all duration-500 relative z-10 border border-[#90CAF9]/20">
-                    <CardContent className="pt-6">
-                      <div className="flex gap-4">
-                        <motion.div
-                          whileHover={{ scale: 1.1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          <Avatar className="h-8 w-8 ring-2 ring-green-400/50 shadow-lg">
-                            <AvatarImage src={comment.createdBy.profilePic} />
-                            <AvatarFallback className="bg-gradient-to-r from-green-500 to-teal-500 text-white">
-                              {comment.createdBy.firstName?.[0] || comment.createdBy.username[0]}
-                            </AvatarFallback>
-                          </Avatar>
-                        </motion.div>
-                        <div className="flex-1">
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.2 }}
-                            className="flex items-center gap-2 mb-2"
-                          >
-                            <span className="font-medium text-[#333333] font-['Nunito']">
-                              {comment.createdBy.firstName ?
-                                `${comment.createdBy.firstName} ${comment.createdBy.lastName}` :
-                                comment.createdBy.username
-                              }
-                            </span>
-                            <motion.div
-                              initial={{ opacity: 0, scale: 0 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ delay: 0.4 }}
-                            >
-                              <Badge
-                                variant="secondary"
-                                className={`text-xs ${comment.createdBy.id === thread.createdBy.id
-                                  ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
-                                  : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
-                                  }`}
-                              >
-                                {comment.createdBy.id === thread.createdBy.id ? "Author" : "Member"}
-                              </Badge>
-                            </motion.div>
-                            <span className="text-sm text-[#333333]/50">•</span>
-                            <span className="text-sm text-[#333333]/70 font-['Open Sans']">
-                              {new Date(comment.createdAt).toLocaleDateString()}
-                            </span>
-                            {canEditOrDelete && (
-                              <motion.div
-                                initial={{ opacity: 0, scale: 0 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.6 }}
-                                whileHover={{ scale: 1.1 }}
-                                className="ml-auto"
-                              >
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
-                                  onClick={() => handleDeleteComment(comment.id)}
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </Button>
-                              </motion.div>
-                            )}
-                          </motion.div>
-                          <motion.p
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.4 }}
-                            className="text-[#333333] mb-4 leading-relaxed font-['Open Sans']"
-                          >
-                            {comment.content}
-                          </motion.p>
-                          <motion.div
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ duration: 0.6, delay: 0.6 }}
-                            className="flex items-center gap-4"
-                          >
-                            <motion.div
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
+                  {postingComment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                  Post Comment
+                </Button>
+              </div>
+            </div>
+
+            {/* Comment Sorting */}
+            <div className="flex justify-between items-center mb-6">
+              <span className="text-sm font-medium text-[#333333]/80 font-['Open Sans']">Sort by:</span>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="flex items-center gap-2 border-[#90CAF9]/40 text-[#333333] hover:bg-[#F0F7FF] transition-colors duration-300">
+                    {sortOptions.find(option => option.value === sortBy)?.label}
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-40 bg-white shadow-lg rounded-lg border border-[#90CAF9]/30">
+                  {sortOptions.map(option => (
+                    <DropdownMenuItem
+                      key={option.value}
+                      onClick={() => setSortBy(option.value)}
+                      className={`flex items-center gap-2 p-2 cursor-pointer ${sortBy === option.value ? 'bg-[#F0F7FF] text-[#1E3A8A]' : 'text-[#333333] hover:bg-[#F0F7FF]'}`}
+                    >
+                      {option.icon} {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+
+
+            {/* Comments List */}
+            <div>
+              {comments.length === 0 ? (
+                <p className="text-center text-[#333333]/60 font-['Open Sans'] py-8">No comments yet. Be the first to comment!</p>
+              ) : (
+                comments.map((comment) => (
+                  <div key={comment.id} className="mb-6 pb-6 border-b border-dashed border-[#90CAF9]/20 last:border-b-0 last:pb-0">
+                    <div className="flex items-start gap-3">
+                      <Avatar className="h-9 w-9 border border-[#90CAF9]">
+                        <AvatarImage src={comment.createdBy.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${comment.createdBy.username}`} alt={comment.createdBy.username} />
+                        <AvatarFallback>{comment.createdBy.username.charAt(0)}</AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold text-[#1E3A8A] font-['Open Sans']">
+                            {comment.createdBy.firstName} {comment.createdBy.lastName}
+                          </span>
+                          <span className="text-[#333333]/60">•</span>
+                          <span className="text-sm text-[#333333]/60 font-['Open Sans']">
+                            {new Date(comment.createdAt).toLocaleDateString()}
+                          </span>
+                        </div>
+                        {editingComment === comment.id ? (
+                          <div className="mt-2">
+                            <Textarea
+                              value={editingContent}
+                              onChange={(e) => setEditingContent(e.target.value)}
+                              className="w-full p-2 border border-[#90CAF9]/40 rounded-lg focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent transition-all duration-300 text-[#333333] font-['Open Sans'] resize-y"
+                              rows={2}
+                            />
+                            <div className="flex justify-end gap-2 mt-2">
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className={`flex items-center gap-2 transition-all duration-300 ${likedComments[comment.id]
-                                  ? 'text-[#1E3A8A] bg-[#90CAF9]/20 shadow-lg shadow-[#1E3A8A]/20'
-                                  : 'hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70'
-                                  }`}
+                                onClick={() => setEditingComment(null)}
+                                className="text-[#333333] hover:text-red-500 hover:bg-red-500/10 transition-colors duration-300"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => {/* Handle save edit logic */ }}
+                                disabled={savingEdit || !editingContent.trim()}
+                                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium"
+                              >
+                                {savingEdit && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Save
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <p className="text-[#333333] leading-normal font-['Open Sans']">{comment.content}</p>
+                        )}
+                        <div className="flex items-center gap-3 mt-3">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
                                 onClick={() => handleCommentLike(comment.id)}
+                                className={`flex items-center gap-1 text-[#333333] hover:text-[#1E3A8A] transition-colors duration-300 ${likedComments[comment.id] ? 'text-[#1E3A8A] bg-[#E0F2F7]' : 'hover:bg-[#F0F7FF]'}`}
                               >
-                                <ThumbsUp className="h-3 w-3" />
-                                {comment.likeCount || 0}
+                                <ThumbsUp className={`w-3.5 h-3.5 ${likedComments[comment.id] ? 'fill-[#1E3A8A]' : ''}`} />
+                                <span className="text-xs font-['Open Sans']">{comment.likeCount || 0}</span>
                               </Button>
-                            </motion.div>
-                            <motion.div
-                              whileHover={{ scale: 1.1 }}
-                              whileTap={{ scale: 0.95 }}
-                            >
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                              Like this comment
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                className="flex items-center gap-2 hover:text-[#1E3A8A] hover:bg-[#90CAF9]/20 text-[#333333]/70"
                                 onClick={() => toggleReply(comment.id)}
+                                className={`flex items-center gap-1 text-[#333333] hover:text-[#1E3A8A] transition-colors duration-300 ${replyingTo === comment.id ? 'text-[#1E3A8A] bg-[#E0F2F7]' : 'hover:bg-[#F0F7FF]'}`}
                               >
-                                <Reply className="h-3 w-3" />
-                                Reply
+                                <Reply className="w-3.5 h-3.5" />
+                                <span className="text-xs font-['Open Sans']">Reply</span>
                               </Button>
-                            </motion.div>
-                          </motion.div>
+                            </TooltipTrigger>
+                            <TooltipContent className="bg-white shadow-md border border-[#90CAF9]/30 text-[#333333] font-['Open Sans']">
+                              Reply to this comment
+                            </TooltipContent>
+                          </Tooltip>
 
-                          {/* Reply Form */}
-                          <AnimatePresence>
-                            {replyingTo === comment.id && (
-                              <motion.div
-                                initial={{ opacity: 0, height: 0, y: -10 }}
-                                animate={{ opacity: 1, height: "auto", y: 0 }}
-                                exit={{ opacity: 0, height: 0, y: -10 }}
-                                transition={{ duration: 0.4, ease: "easeInOut" }}
-                                className="mt-4 pl-4 border-l-2 border-[#90CAF9]/30"
-                              >
-                                <div className="flex gap-3">
-                                  <motion.div
-                                    initial={{ scale: 0 }}
-                                    animate={{ scale: 1 }}
-                                    transition={{ delay: 0.2 }}
-                                    whileHover={{ scale: 1.1 }}
-                                  >
-                                    <Avatar className="h-6 w-6 ring-1 ring-[#90CAF9]/50">
-                                      <AvatarImage src={user?.profilePic} />
-                                      <AvatarFallback className="text-xs bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
-                                        {user?.firstName?.[0] || user?.username?.[0] || 'U'}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                  </motion.div>
-                                  <div className="flex-1">
-                                    <motion.div
-                                      initial={{ opacity: 0, scale: 0.95 }}
-                                      animate={{ opacity: 1, scale: 1 }}
-                                      transition={{ delay: 0.3 }}
-                                    >
-                                      <Textarea
-                                        placeholder="Write a reply..."
-                                        className="min-h-[80px] mb-2 bg-[#F0F7FF]/50 border-[#90CAF9]/30 focus:border-[#1E3A8A] focus:ring-[#1E3A8A]/20 text-[#333333] placeholder-[#333333]/50 font-['Open Sans']"
-                                        value={replyContent}
-                                        onChange={(e) => setReplyContent(e.target.value)}
-                                      />
-                                    </motion.div>
-                                    <motion.div
-                                      initial={{ opacity: 0, y: 10 }}
-                                      animate={{ opacity: 1, y: 0 }}
-                                      transition={{ delay: 0.4 }}
-                                      className="flex gap-2"
-                                    >
-                                      <motion.div
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                      >
-                                        <Button
-                                          size="sm"
-                                          onClick={() => handleReply(comment.id)}
-                                          disabled={postingComment || !replyContent.trim()}
-                                          className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
-                                        >
-                                          {postingComment ? (
-                                            <Loader2 className="w-3 h-3 mr-2 animate-spin" />
-                                          ) : (
-                                            <Send className="w-3 h-3 mr-2" />
-                                          )}
-                                          Reply
-                                        </Button>
-                                      </motion.div>
-                                      <motion.div
-                                        whileHover={{ scale: 1.05 }}
-                                        whileTap={{ scale: 0.95 }}
-                                      >
-                                        <Button
-                                          size="sm"
-                                          variant="outline"
-                                          onClick={() => {
-                                            setReplyingTo(null)
-                                            setReplyContent("")
-                                          }}
-                                          className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] font-['Open Sans']"
-                                        >
-                                          Cancel
-                                        </Button>
-                                      </motion.div>
-                                    </motion.div>
-                                  </div>
-                                </div>
-                              </motion.div>
-                            )}
-                          </AnimatePresence>
-
-                          {/* Nested Replies */}
-                          {comment.replies && comment.replies.length > 0 && (
-                            <motion.div
-                              initial={{ opacity: 0, x: -20 }}
-                              animate={{ opacity: 1, x: 0 }}
-                              transition={{ duration: 0.6, delay: 0.8 }}
-                              className="mt-4 pl-4 border-l-2 border-slate-700/30 space-y-4"
-                            >
-                              {comment.replies.map((reply, replyIndex) => (
-                                <motion.div
-                                  key={reply.id}
-                                  initial={{ opacity: 0, y: 10 }}
-                                  animate={{ opacity: 1, y: 0 }}
-                                  transition={{ duration: 0.4, delay: replyIndex * 0.1 }}
-                                  className="flex gap-3"
+                          {(comment.createdBy.id === user?.id || thread.createdBy.id === user?.id) && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="text-[#333333]/70 hover:text-[#1E3A8A] transition-colors duration-300">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent className="w-40 bg-white shadow-lg rounded-lg border border-[#90CAF9]/30">
+                                <DropdownMenuItem
+                                  onClick={() => { setEditingComment(comment.id); setEditingContent(comment.content); }}
+                                  className="flex items-center gap-2 text-[#333333] hover:bg-[#F0F7FF] transition-colors duration-200 cursor-pointer p-2"
                                 >
-                                  <motion.div
-                                    whileHover={{ scale: 1.1 }}
-                                    transition={{ duration: 0.2 }}
-                                  >
-                                    <Avatar className="h-6 w-6 ring-1 ring-pink-400/50">
-                                      <AvatarImage src={reply.createdBy.profilePic} />
-                                      <AvatarFallback className="text-xs bg-gradient-to-r from-pink-500 to-rose-500 text-white">
-                                        {reply.createdBy.firstName?.[0] || reply.createdBy.username[0]}
-                                      </AvatarFallback>
-                                    </Avatar>
-                                  </motion.div>
+                                  <Edit3 className="h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteComment(comment.id)}
+                                  className="flex items-center gap-2 text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer p-2"
+                                >
+                                  <Trash2 className="h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+
+                        {/* Reply Input */}
+                        {replyingTo === comment.id && (
+                          <div className="mt-4 pl-4 border-l-2 border-[#90CAF9]/40">
+                            <Textarea
+                              placeholder={`Replying to @${comment.createdBy.username}...`}
+                              value={replyContent}
+                              onChange={(e) => setReplyContent(e.target.value)}
+                              className="w-full p-3 border border-[#90CAF9]/40 rounded-lg focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent transition-all duration-300 text-[#333333] font-['Open Sans'] resize-y"
+                              rows={2}
+                            />
+                            <div className="flex justify-end mt-2 gap-2">
+                              <Button
+                                onClick={() => setReplyingTo(null)}
+                                variant="ghost"
+                                className="text-[#333333] hover:text-red-500 hover:bg-red-500/10 transition-colors duration-300"
+                              >
+                                Cancel
+                              </Button>
+                              <Button
+                                onClick={() => handleReply(comment.id)}
+                                disabled={postingComment || !replyContent.trim()}
+                                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
+                              >
+                                {postingComment && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Post Reply
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Nested Replies */}
+                        {comment.replies && comment.replies.length > 0 && showReplies[comment.id] && (
+                          <div className="mt-4 pl-4 border-l-2 border-[#90CAF9]/40">
+                            {comment.replies.map((reply) => (
+                              <div key={reply.id} className="mb-4 last:mb-0">
+                                <div className="flex items-start gap-3">
+                                  <Avatar className="h-8 w-8 border border-[#90CAF9]">
+                                    <AvatarImage src={reply.createdBy.profilePic || `https://api.dicebear.com/7.x/initials/svg?seed=${reply.createdBy.username}`} alt={reply.createdBy.username} />
+                                    <AvatarFallback>{reply.createdBy.username.charAt(0)}</AvatarFallback>
+                                  </Avatar>
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <span className="font-medium text-sm text-slate-200">
-                                        {reply.createdBy.firstName ?
-                                          `${reply.createdBy.firstName} ${reply.createdBy.lastName}` :
-                                          reply.createdBy.username
-                                        }
+                                      <span className="font-semibold text-[#1E3A8A] font-['Open Sans']">
+                                        {reply.createdBy.firstName} {reply.createdBy.lastName}
                                       </span>
-                                      <motion.div
-                                        initial={{ opacity: 0, scale: 0 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        transition={{ delay: 0.3 + replyIndex * 0.1 }}
-                                      >
-
-                                        <Badge
-                                          variant="secondary"
-                                          className={`text-xs ${reply.createdBy.id === thread.createdBy.id
-                                            ? "bg-gradient-to-r from-yellow-400/20 to-orange-400/20 text-yellow-700 border-yellow-200"
-                                            : "bg-gradient-to-r from-green-100 to-teal-100 text-green-700 border-green-200"
-                                            }`}
-                                        >
-                                          {reply.createdBy.id === thread.createdBy.id ? "Author" : "Member"}
-                                        </Badge>
-                                        {/* <Badge variant="secondary" className="text-xs bg-gradient-to-r from-pink-500/20 to-rose-500/20 text-pink-300 border-pink-400/30">
-                                          Author
-                                        </Badge> */}
-
-
-
-                                      </motion.div>
-                                      <span className="text-xs text-slate-500">•</span>
-                                      <span className="text-xs text-slate-400">
+                                      <span className="text-[#333333]/60">•</span>
+                                      <span className="text-sm text-[#333333]/60 font-['Open Sans']">
                                         {new Date(reply.createdAt).toLocaleDateString()}
                                       </span>
                                     </div>
-                                    <p className="text-slate-300 text-sm mb-2 leading-relaxed">{reply.content}</p>
-                                    <div className="flex items-center gap-3">
-                                      <motion.div
-                                        whileHover={{ scale: 1.1 }}
-                                        whileTap={{ scale: 0.95 }}
+                                    <p className="text-[#333333] leading-normal font-['Open Sans']">{reply.content}</p>
+                                    <div className="flex items-center gap-3 mt-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleCommentLike(reply.id)}
+                                        className={`flex items-center gap-1 text-[#333333] hover:text-[#1E3A8A] transition-colors duration-300 ${likedComments[reply.id] ? 'text-[#1E3A8A] bg-[#E0F2F7]' : 'hover:bg-[#F0F7FF]'}`}
                                       >
-                                        <Button variant="ghost" size="sm" className="flex items-center gap-1 text-xs hover:text-blue-400 hover:bg-blue-500/10 text-slate-400">
-                                          <ThumbsUp className="h-3 w-3" />
-                                          {reply.likeCount || 0}
-                                        </Button>
-                                      </motion.div>
+                                        <ThumbsUp className={`w-3.5 h-3.5 ${likedComments[reply.id] ? 'fill-[#1E3A8A]' : ''}`} />
+                                        <span className="text-xs font-['Open Sans']">{reply.likeCount || 0}</span>
+                                      </Button>
+                                      {(reply.createdBy.id === user?.id || thread.createdBy.id === user?.id) && (
+                                        <DropdownMenu>
+                                          <DropdownMenuTrigger asChild>
+                                            <Button variant="ghost" size="sm" className="text-[#333333]/70 hover:text-[#1E3A8A] transition-colors duration-300">
+                                              <MoreHorizontal className="h-4 w-4" />
+                                            </Button>
+                                          </DropdownMenuTrigger>
+                                          <DropdownMenuContent className="w-40 bg-white shadow-lg rounded-lg border border-[#90CAF9]/30">
+                                            <DropdownMenuItem
+                                              onClick={() => { setEditingComment(reply.id); setEditingContent(reply.content); }}
+                                              className="flex items-center gap-2 text-[#333333] hover:bg-[#F0F7FF] transition-colors duration-200 cursor-pointer p-2"
+                                            >
+                                              <Edit3 className="h-4 w-4" /> Edit
+                                            </DropdownMenuItem>
+                                            <DropdownMenuItem
+                                              onClick={() => handleDeleteComment(reply.id)}
+                                              className="flex items-center gap-2 text-red-500 hover:bg-red-500/10 transition-colors duration-200 cursor-pointer p-2"
+                                            >
+                                              <Trash2 className="h-4 w-4" /> Delete
+                                            </DropdownMenuItem>
+                                          </DropdownMenuContent>
+                                        </DropdownMenu>
+                                      )}
                                     </div>
                                   </div>
-                                </motion.div>
-                              ))}
-                            </motion.div>
-                          )}
-                        </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        {comment.replies && comment.replies.length > 0 && (
+                          <Button
+                            variant="link"
+                            size="sm"
+                            onClick={() => setShowReplies(prev => ({ ...prev, [comment.id]: !prev[comment.id] }))}
+                            className="text-[#1E3A8A] font-semibold text-sm mt-2 font-['Open Sans']"
+                          >
+                            {showReplies[comment.id] ? `Hide ${comment.replies.length} replies` : `View ${comment.replies.length} replies`}
+                          </Button>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {comments.length === 0 && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.8 }}
-                className="text-center py-8"
-              >
-                <motion.div
-                  initial={{ y: 20 }}
-                  animate={{ y: 0 }}
-                  transition={{ duration: 0.6, delay: 0.2 }}
-                >
-                  <MessageSquare className="w-12 h-12 text-[#90CAF9]/50 mx-auto mb-4" />
-                </motion.div>
-                <motion.p
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                  className="text-[#333333]/70 font-['Open Sans']"
-                >
-                  No comments yet. Be the first to share your thoughts!
-                </motion.p>
-              </motion.div>
-            )}
-          </motion.div>
-        </motion.main>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </main>
 
         {/* Edit Thread Modal */}
         <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
-          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
+          <DialogContent className="sm:max-w-[425px] bg-white p-6 rounded-lg shadow-xl border border-[#90CAF9]/30">
             <DialogHeader>
-              <DialogTitle className="text-[#333333] font-['Nunito']">Edit Thread</DialogTitle>
+              <DialogTitle className="text-2xl font-['Nunito'] font-bold text-[#1E3A8A]">Edit Thread</DialogTitle>
               <DialogDescription className="text-[#333333]/70 font-['Open Sans']">
                 Make changes to your thread here. Click save when you're done.
               </DialogDescription>
@@ -1581,7 +1221,7 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                   id="title"
                   value={editingThread.title}
                   onChange={(e) => setEditingThread({ ...editingThread, title: e.target.value })}
-                  className="col-span-3 bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
+                  className="col-span-3 border border-[#90CAF9]/40 focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent text-[#333333] font-['Open Sans']"
                 />
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
@@ -1592,15 +1232,34 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
                   id="content"
                   value={editingThread.content}
                   onChange={(e) => setEditingThread({ ...editingThread, content: e.target.value })}
-                  className="col-span-3 bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
+                  className="col-span-3 border border-[#90CAF9]/40 focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent text-[#333333] font-['Open Sans'] resize-y"
+                  rows={6}
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="imageUrl" className="text-right text-[#333333] font-['Open Sans']">
+                  Image URL
+                </Label>
+                <Input
+                  id="imageUrl"
+                  value={editingThread.imageUrl}
+                  onChange={(e) => setEditingThread({ ...editingThread, imageUrl: e.target.value })}
+                  className="col-span-3 border border-[#90CAF9]/40 focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent text-[#333333] font-['Open Sans']"
                 />
               </div>
             </div>
             <DialogFooter>
               <Button
+                variant="outline"
+                onClick={() => setShowEditModal(false)}
+                className="border-[#90CAF9]/40 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] transition-colors duration-300 font-['Nunito']"
+              >
+                Cancel
+              </Button>
+              <Button
                 type="submit"
                 onClick={handleEditThread}
-                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito']"
+                className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
               >
                 Save changes
               </Button>
@@ -1608,11 +1267,11 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
           </DialogContent>
         </Dialog>
 
-        {/* Delete Thread Modal */}
+        {/* Delete Thread Confirmation Modal */}
         <Dialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
-          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
+          <DialogContent className="sm:max-w-[425px] bg-white p-6 rounded-lg shadow-xl border border-red-400/30">
             <DialogHeader>
-              <DialogTitle className="text-[#333333] font-['Nunito']">Delete Thread</DialogTitle>
+              <DialogTitle className="text-2xl font-['Nunito'] font-bold text-red-600">Delete Thread</DialogTitle>
               <DialogDescription className="text-[#333333]/70 font-['Open Sans']">
                 Are you sure you want to delete this thread? This action cannot be undone.
               </DialogDescription>
@@ -1621,14 +1280,14 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
               <Button
                 variant="outline"
                 onClick={() => setShowDeleteModal(false)}
-                className="border-[#90CAF9]/30 text-[#333333] hover:bg-[#F0F7FF] font-['Open Sans']"
+                className="border-[#90CAF9]/40 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] transition-colors duration-300 font-['Nunito']"
               >
                 Cancel
               </Button>
               <Button
-                variant="destructive"
+                type="submit"
                 onClick={handleDeleteThread}
-                className="bg-red-500 hover:bg-red-600 text-white font-['Nunito']"
+                className="bg-red-500 hover:bg-red-600 text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(239,68,68,0.2)]"
               >
                 Delete
               </Button>
@@ -1636,75 +1295,40 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
           </DialogContent>
         </Dialog>
 
-        {/* Likers Modal */}
-        <Dialog open={showLikers} onOpenChange={(open) => {
-          setShowLikers(open);
-          if (open) fetchLikers();
-        }}>
-          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
+        {/* Share Modal */}
+        <Dialog open={showShareModal} onOpenChange={setShowShareModal}>
+          <DialogContent className="sm:max-w-[425px] bg-white p-6 rounded-lg shadow-xl border border-[#90CAF9]/30">
             <DialogHeader>
-              <DialogTitle className="text-[#333333] font-['Nunito']">People who liked this thread ({likers.length})</DialogTitle>
+              <DialogTitle className="text-2xl font-['Nunito'] font-bold text-[#1E3A8A]">Share Thread</DialogTitle>
+              <DialogDescription className="text-[#333333]/70 font-['Open Sans']">
+                Share this thread with others.
+              </DialogDescription>
             </DialogHeader>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {likers.map((liker, index) => (
-                <motion.div
-                  key={liker.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-[#F0F7FF]/50 transition-colors"
+            <div className="grid gap-4 py-4">
+              <div className="flex items-center space-x-2">
+                <Input
+                  id="shareLink"
+                  readOnly
+                  value={window.location.href}
+                  className="flex-1 border border-[#90CAF9]/40 focus:ring-2 focus:ring-[#90CAF9] focus:border-transparent text-[#333333] font-['Open Sans']"
+                />
+                <Button
+                  onClick={() => { navigator.clipboard.writeText(window.location.href); toast({ title: "Copied!", description: "Link copied to clipboard." }) }}
+                  className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] text-white font-['Nunito'] font-medium shadow-[0_4px_12px_-2px_rgba(30,58,138,0.2)]"
                 >
-                  <Avatar className="h-8 w-8 ring-1 ring-[#90CAF9]/50">
-                    <AvatarImage src={liker.profilePic} />
-                    <AvatarFallback className="bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] text-white">
-                      {liker.firstName?.[0] || liker.username[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-[#333333] font-['Nunito']">
-                    {liker.username}
-                  </span>
-                </motion.div>
-              ))}
-              {likers.length === 0 && (
-                <p className="text-[#333333]/70 text-center py-4 font-['Open Sans']">No likes yet</p>
-              )}
+                  Copy
+                </Button>
+              </div>
             </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Dislikers Modal */}
-        <Dialog open={showDislikers} onOpenChange={(open) => {
-          setShowDislikers(open);
-          if (open) fetchDislikers();
-        }}>
-          <DialogContent className="sm:max-w-[425px] bg-white border-[#90CAF9]/30">
-            <DialogHeader>
-              <DialogTitle className="text-[#333333] font-['Nunito']">People who disliked this thread ({dislikers.length})</DialogTitle>
-            </DialogHeader>
-            <div className="space-y-3 max-h-60 overflow-y-auto">
-              {dislikers.map((disliker, index) => (
-                <motion.div
-                  key={disliker.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-red-50 transition-colors"
-                >
-                  <Avatar className="h-8 w-8 ring-1 ring-red-400/50">
-                    <AvatarImage src={disliker.profilePic} />
-                    <AvatarFallback className="bg-gradient-to-r from-red-500 to-pink-500 text-white">
-                      {disliker.firstName?.[0] || disliker.username[0]}
-                    </AvatarFallback>
-                  </Avatar>
-                  <span className="font-medium text-[#333333] font-['Nunito']">
-                    {disliker.username}
-                  </span>
-                </motion.div>
-              ))}
-              {dislikers.length === 0 && (
-                <p className="text-[#333333]/70 text-center py-4 font-['Open Sans']">No dislikes yet</p>
-              )}
-            </div>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowShareModal(false)}
+                className="border-[#90CAF9]/40 text-[#333333] hover:bg-[#F0F7FF] hover:text-[#1E3A8A] transition-colors duration-300 font-['Nunito']"
+              >
+                Close
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
