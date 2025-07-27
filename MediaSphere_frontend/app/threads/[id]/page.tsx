@@ -36,7 +36,15 @@ interface Thread {
   title: string
   content: string
   imageUrl?: string
-  images?: { id: string; imageUrl: string; fullImageUrl?: string }[]
+  images?: { 
+    id: string; 
+    imageUrl: string; 
+    fullImageUrl?: string;
+    imageName?: string;
+    fileSize?: number;
+    contentType?: string;
+    uploadedAt?: string;
+  }[]
   createdBy: User
   club: {
     id: string
@@ -805,7 +813,29 @@ export default function ThreadDetailsPage({ params }: { params: Promise<{ id: st
               </div>
 
               <CardContent className="p-6">
-                {thread.imageUrl && (
+                {/* Display images from the images array */}
+                {thread.images && thread.images.length > 0 && (
+                  <div className="mb-6 space-y-4">
+                    {thread.images.map((image, index) => (
+                      <div key={image.id} className="relative w-full h-80 rounded-lg overflow-hidden border border-[#90CAF9]/20 shadow-md">
+                        <Image
+                          src={image.fullImageUrl || image.imageUrl}
+                          alt={image.imageName || `${thread.title} - Image ${index + 1}`}
+                          layout="fill"
+                          objectFit="cover"
+                          className="transition-transform duration-500 hover:scale-105"
+                        />
+                        {image.imageName && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2 text-sm">
+                            {image.imageName}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {/* Fallback to single imageUrl if images array is not available */}
+                {(!thread.images || thread.images.length === 0) && thread.imageUrl && (
                   <div className="relative w-full h-80 mb-6 rounded-lg overflow-hidden border border-[#90CAF9]/20 shadow-md">
                     <Image
                       src={thread.imageUrl}

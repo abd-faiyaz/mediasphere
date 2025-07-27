@@ -57,9 +57,12 @@ interface Thread {
   isLocked: boolean
   images?: Array<{
     id: string
-    fileName: string
-    fileUrl: string
-    uploadedAt: string
+    imageUrl: string
+    fullImageUrl?: string
+    imageName?: string
+    fileSize?: number
+    contentType?: string
+    uploadedAt?: string
   }>
 }
 
@@ -782,8 +785,8 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                                     <div key={image.id} className="relative group">
                                       <div className="aspect-square overflow-hidden rounded bg-gray-100">
                                         <img
-                                          src={image.fileUrl}
-                                          alt={image.fileName}
+                                          src={image.fullImageUrl || image.imageUrl}
+                                          alt={image.imageName || `Thread Image ${imgIndex + 1}`}
                                           className="w-full h-full object-cover"
                                           onError={(e) => {
                                             const target = e.target as HTMLImageElement;
