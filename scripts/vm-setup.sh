@@ -89,8 +89,8 @@ services:
     image: abdfaiyaz/mediasphere-frontend:latest
     container_name: mediasphere-frontend
     environment:
-      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ}
-      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0}
+      - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ}
+      - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae}
       - NEXT_PUBLIC_API_BASE_URL=http://${BACKEND_HOST:-localhost}:${BACKEND_PORT:-8080}
       - NEXT_PUBLIC_APP_URL=http://${FRONTEND_HOST:-localhost}:${FRONTEND_PORT:-3000}
     ports:
@@ -136,8 +136,8 @@ BACKEND_HOST=20.244.25.13
 FRONTEND_PORT=3000
 FRONTEND_HOST=20.244.25.13
 
-CLERK_PUBLISHABLE_KEY=pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ
-CLERK_SECRET_KEY=sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0
+CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
+CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
 EOF
 
 # Create management scripts

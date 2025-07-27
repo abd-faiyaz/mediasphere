@@ -54,11 +54,30 @@ interface Thread {
   authorId: string
   createdAt: string
   updatedAt?: string
+  lastActivityAt?: string
+  viewCount?: number
+  likeCount?: number
+  dislikeCount?: number
+  commentCount?: number
   // Additional computed fields
-  club?: string
+  club?: string | {
+    id: string
+    name: string
+    mediaId: string
+  }
+  author?: {
+    id: string
+    username: string
+    profilePic?: string
+  }
   replies?: number
   likes?: number
   time?: string
+  timeAgo?: string
+  trendingScore?: number
+  isLiked?: boolean
+  isDisliked?: boolean
+  mediaUrl?: string
 }
 
 interface Comment {

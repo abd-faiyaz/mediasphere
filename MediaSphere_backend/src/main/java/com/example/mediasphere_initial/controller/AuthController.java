@@ -50,8 +50,27 @@ public class AuthController {
             AuthResponse response = authService.authenticateOrCreateClerkUser(clerkUser);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ex.getMessage()));
+            // Log the error for debugging
+            System.err.println("Authentication error: " + ex.getMessage());
+            ex.printStackTrace();
+            
+            // Return appropriate error response
+            String errorMessage = ex.getMessage();
+            if (errorMessage.contains("already exists") || errorMessage.contains("duplicate")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Account with this email already exists. Please try signing in instead."));
+            } else if (errorMessage.contains("required")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse(errorMessage));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Authentication failed. Please try again."));
+            }
+        } catch (Exception ex) {
+            System.err.println("Unexpected authentication error: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Authentication failed. Please try again."));
         }
     }
 
@@ -72,10 +91,24 @@ public class AuthController {
                 }
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Invalid token"));
+                .body(new ErrorResponse("Invalid or missing authentication token"));
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ex.getMessage()));
+            System.err.println("Profile sync error: " + ex.getMessage());
+            ex.printStackTrace();
+            
+            String errorMessage = ex.getMessage();
+            if (errorMessage.contains("already exists") || errorMessage.contains("duplicate")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Account linking failed. Please contact support."));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Profile sync failed: " + errorMessage));
+            }
+        } catch (Exception ex) {
+            System.err.println("Unexpected sync error: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Profile sync failed. Please try again."));
         }
     }
 }

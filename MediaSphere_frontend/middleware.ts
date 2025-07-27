@@ -1,6 +1,15 @@
 import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 
+// Validate Clerk environment variables
+if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  throw new Error('Missing NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY environment variable');
+}
+
+if (!process.env.CLERK_SECRET_KEY) {
+  throw new Error('Missing CLERK_SECRET_KEY environment variable');
+}
+
 // Define protected routes
 const isProtectedRoute = createRouteMatcher([
   '/profile(.*)',

@@ -208,9 +208,6 @@ CREATE TABLE public.thread_dislikes (
 
 ALTER TABLE public.thread_dislikes OWNER TO postgres;
 
-<<<<<<< HEAD
-
-=======
 --
 -- Name: thread_images; Type: TABLE; Schema: public; Owner: postgres
 --
@@ -227,7 +224,6 @@ CREATE TABLE public.thread_images (
 
 
 ALTER TABLE public.thread_images OWNER TO postgres;
->>>>>>> 8bbeeb7 (abd-commit)
 
 --
 -- Name: thread_likes; Type: TABLE; Schema: public; Owner: postgres
@@ -538,9 +534,6 @@ f1dc118e-6622-436a-be1e-db48b3cc6cad	2025-07-05 20:23:21.574131	fd43fa7a-a60b-43
 \.
 
 
-<<<<<<< HEAD
-
-=======
 --
 -- Data for Name: thread_images; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -554,7 +547,6 @@ c6a890cb-4e3a-40a7-86b4-e50d448f02cc	image/png	48578	basic_acc.png	uploads/threa
 80a98513-d8d3-4c87-beea-adc4f0ebc769	image/png	48578	basic_acc.png	uploads/thread-images/thread_b323a92e-f9bc-455b-b458-ae4a5f3674d9_20250704_153607_0b5a3c49.png	2025-07-04 15:36:07.175638	b323a92e-f9bc-455b-b458-ae4a5f3674d9
 02ddbbd9-374f-4b4c-b8cd-38c361b1f60c	image/png	52557	complex_acc.png	uploads/thread-images/thread_2bab3d09-8e22-492a-81f0-63c0630bef53_20250704_160834_3eda412c.png	2025-07-04 16:08:34.419201	2bab3d09-8e22-492a-81f0-63c0630bef53
 \.
->>>>>>> 8bbeeb7 (abd-commit)
 
 
 --
@@ -677,10 +669,7 @@ a688cb56-0dca-466b-840f-e277a3d1431d	suman.sinan@gmail.com	\N	suman.sinan	user	\
 a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2	bangi@gmail.com	\N	bangi	user	\N	user_30QYoUKmDOUWEbEM9rTL0BhhzOq	clerk	user_30QYoUKmDOUWEbEM9rTL0BhhzOq	f	\N	\N	https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yelc0YlNPZUM3VlhuNW1XRGdaNFFtZGlsaWoiLCJyaWQiOiJ1c2VyXzMwUVlvVUttRE9VV0ViRU05clRMMEJoaHpPcSJ9	2025-07-27 02:23:58.708789	clerk	2025-07-27 02:23:58.708785	clerk	clerk_clerk	2025-07-27 02:23:58.708779	\N
 \.
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 8bbeeb7 (abd-commit)
 --
 -- Name: activity_logs activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
@@ -769,16 +758,12 @@ ALTER TABLE ONLY public.thread_dislikes
     ADD CONSTRAINT thread_dislikes_pkey PRIMARY KEY (id);
 
 
-<<<<<<< HEAD
-
-=======
 --
 -- Name: thread_images thread_images_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.thread_images
     ADD CONSTRAINT thread_images_pkey PRIMARY KEY (id);
->>>>>>> 8bbeeb7 (abd-commit)
 
 
 --
@@ -1085,16 +1070,12 @@ ALTER TABLE ONLY public.thread_dislikes
     ADD CONSTRAINT fkfuv6tl0ivg0h0ctcddp59py4 FOREIGN KEY (thread_id) REFERENCES public.threads(id);
 
 
-<<<<<<< HEAD
-
-=======
 --
 -- Name: thread_images fki03773l245kipe2k22klun3xs; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.thread_images
     ADD CONSTRAINT fki03773l245kipe2k22klun3xs FOREIGN KEY (thread_id) REFERENCES public.threads(id);
->>>>>>> 8bbeeb7 (abd-commit)
 
 
 --

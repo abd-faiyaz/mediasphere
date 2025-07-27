@@ -52,6 +52,9 @@ public class Thread {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "last_activity_at")
+    private LocalDateTime lastActivityAt;
+
     @OneToMany(mappedBy = "thread", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonManagedReference
     private List<ThreadImage> images = new ArrayList<>();
@@ -67,6 +70,7 @@ public class Thread {
         this.club = club;
         this.createdBy = createdBy;
         this.createdAt = LocalDateTime.now();
+        this.lastActivityAt = LocalDateTime.now();
     }
 
     // Getters and setters
@@ -172,6 +176,14 @@ public class Thread {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public LocalDateTime getLastActivityAt() {
+        return lastActivityAt;
+    }
+
+    public void setLastActivityAt(LocalDateTime lastActivityAt) {
+        this.lastActivityAt = lastActivityAt;
     }
 
     public List<ThreadImage> getImages() {
