@@ -476,7 +476,7 @@ export default function ClubsPage() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-4">
               <Link
-                href={isSignedIn ? "/profile" : "/"}
+                href={"/"}
                 className="text-2xl font-['Nunito'] font-bold bg-gradient-to-r from-[#1E3A8A] to-[#90CAF9] hover:from-[#15306E] hover:to-[#7FB9F8] bg-clip-text text-transparent transition-all duration-300 hover:scale-105 inline-block"
               >
                 Mediasphere
