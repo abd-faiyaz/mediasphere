@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/ai")
+@RequestMapping("/api/ai")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AIController {
 
