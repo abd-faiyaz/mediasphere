@@ -101,6 +101,21 @@ public class ContentAggregatorService {
         // Get all threads for this club
         List<com.example.mediasphere_initial.model.Thread> threads = threadRepository.findByClubIdOrderByCreatedAtDesc(clubId);
         
+        if (threads.isEmpty()) {
+            // Handle case where club has no discussion threads
+            content.append("Recent Discussions: None\n");
+            content.append("This club currently has no discussion threads. ");
+            content.append("The club was created for discussions about: ").append(club.getDescription());
+            
+            result.setAggregatedContent(content.toString());
+            result.setSourceId(clubId);
+            result.setSourceTitle(club.getName());
+            result.setItemCount(0);
+            result.setError("No discussion content available for summarization. This club has no threads yet.");
+            
+            return result;
+        }
+        
         content.append("Recent Discussions:\n");
         int threadCount = 0;
         for (com.example.mediasphere_initial.model.Thread thread : threads) {
@@ -141,8 +156,25 @@ public class ContentAggregatorService {
         // Get all clubs for this media
         List<Club> clubs = clubRepository.findByLinkedMediaIdOrderByCreatedAtDesc(mediaId);
         
+        if (clubs.isEmpty()) {
+            // Handle case where media has no related clubs
+            content.append("Related Clubs and Discussions: None\n");
+            content.append("This media currently has no associated clubs or discussions. ");
+            content.append("The media is about: ").append(media.getDescription());
+            
+            result.setAggregatedContent(content.toString());
+            result.setSourceId(mediaId);
+            result.setSourceTitle(media.getTitle());
+            result.setItemCount(0);
+            result.setError("No discussion content available for summarization. This media has no associated clubs yet.");
+            
+            return result;
+        }
+        
         content.append("Related Clubs and Discussions:\n");
         int clubCount = 0;
+        boolean hasAnyThreads = false;
+        
         for (Club club : clubs) {
             if (clubCount >= 5) break; // Limit to top 5 clubs
             
@@ -153,12 +185,22 @@ public class ContentAggregatorService {
             List<com.example.mediasphere_initial.model.Thread> recentThreads = threadRepository.findByClubIdOrderByCreatedAtDesc(club.getId())
                     .stream().limit(3).collect(Collectors.toList());
             
-            for (com.example.mediasphere_initial.model.Thread thread : recentThreads) {
-                content.append("  - Discussion: ").append(thread.getTitle()).append("\n");
-                content.append("    ").append(thread.getContent()).append("\n");
+            if (!recentThreads.isEmpty()) {
+                hasAnyThreads = true;
+                for (com.example.mediasphere_initial.model.Thread thread : recentThreads) {
+                    content.append("  - Discussion: ").append(thread.getTitle()).append("\n");
+                    content.append("    ").append(thread.getContent()).append("\n");
+                }
+            } else {
+                content.append("  - No discussions yet\n");
             }
             content.append("\n");
             clubCount++;
+        }
+        
+        // Check if we have sufficient content for summarization
+        if (!hasAnyThreads) {
+            result.setError("Insufficient discussion content for summarization. While this media has " + clubs.size() + " associated club(s), none have active discussions yet.");
         }
         
         result.setAggregatedContent(content.toString());

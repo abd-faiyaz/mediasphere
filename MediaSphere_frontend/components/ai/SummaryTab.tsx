@@ -196,11 +196,17 @@ export function SummaryTab() {
                   } />
                 </SelectTrigger>
                 <SelectContent>
-                  {threadList.map((thread) => (
-                    <SelectItem key={thread.id} value={thread.id}>
-                      {thread.title}
-                    </SelectItem>
-                  ))}
+                  {threadList.length === 0 && selectedClub && !loadingThreads ? (
+                    <div className="p-2 text-sm text-gray-500 text-center">
+                      No threads available in this club yet
+                    </div>
+                  ) : (
+                    threadList.map((thread) => (
+                      <SelectItem key={thread.id} value={thread.id}>
+                        {thread.title}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -223,11 +229,20 @@ export function SummaryTab() {
           </div>
 
           {/* Generate Button */}
-          <div className="flex gap-4 pt-4">
+          <div className="flex flex-col gap-3 pt-4">
+            {selectedClub && threadList.length === 0 && !loadingThreads && (
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                <p className="text-sm text-yellow-800">
+                  <strong>Note:</strong> The selected club has no discussion threads yet. 
+                  You can still generate a summary based on the club's description and media information.
+                </p>
+              </div>
+            )}
+            
             <Button 
               onClick={handleGenerateSummary} 
               disabled={!canGenerate}
-              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
+              className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2 w-fit"
             >
               {generatingSummary ? (
                 <>
