@@ -12,8 +12,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @Service
 @Slf4j
@@ -23,7 +21,7 @@ public class SummaryService {
     private ContentAggregatorService contentAggregatorService;
     
     @Autowired
-    private GeminiAIService geminiAIService;
+    private GeminiAPIService geminiAPIService;
     
     public SummaryResponse generateSummary(SummaryRequest request, UUID userId) {
         try {
@@ -49,7 +47,7 @@ public class SummaryService {
             String prompt = createSummaryPrompt(aggregationResult, request);
             
             // Call Gemini AI
-            String aiResponse = geminiAIService.callGeminiWithFallback(prompt, userId, AIRequest.RequestType.SUMMARY);
+            String aiResponse = geminiAPIService.callGeminiWithFallback(prompt, userId, AIRequest.RequestType.SUMMARY);
             
             // Process and structure the response
             SummaryResponse response = processSummaryResponse(aiResponse, aggregationResult, request);

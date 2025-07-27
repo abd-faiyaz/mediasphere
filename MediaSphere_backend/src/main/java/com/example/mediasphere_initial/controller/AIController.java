@@ -92,7 +92,7 @@ public class AIController {
     
     @GetMapping("/health")
     public ResponseEntity<String> healthCheck() {
-        return ResponseEntity.ok("AI service is running - Phase 1 implementation");
+        return ResponseEntity.ok("AI service is running - Phase 2 implementation with fixed dependencies");
     }
     
     public static class TestAIRequest {

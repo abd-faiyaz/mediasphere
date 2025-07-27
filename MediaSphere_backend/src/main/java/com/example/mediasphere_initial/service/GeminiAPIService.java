@@ -10,21 +10,19 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 import lombok.extern.slf4j.Slf4j;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 @Service
 @Slf4j
-public class GeminiAIService {
-    
-    private final WebClient webClient;
-    private final ObjectMapper objectMapper;
+public class GeminiAPIService {
     
     @Autowired
     private AIRequestRepository aiRequestRepository;
@@ -36,7 +34,10 @@ public class GeminiAIService {
     private ContentFilterService contentFilterService;
     
     @Value("${gemini.api.key}")
-    private String geminiApiKey;
+    private String apiKey;
+    
+    @Value("${gemini.api.url}")
+    private String apiUrl;
     
     @Value("${ai.service.timeout-seconds:30}")
     private int timeoutSeconds;
@@ -44,10 +45,11 @@ public class GeminiAIService {
     @Value("${ai.service.retry-attempts:3}")
     private int retryAttempts;
     
-    public GeminiAIService() {
-        this.webClient = WebClient.builder()
-            .baseUrl("https://generativelanguage.googleapis.com")
-            .build();
+    private final WebClient webClient;
+    private final ObjectMapper objectMapper;
+    
+    public GeminiAPIService() {
+        this.webClient = WebClient.builder().build();
         this.objectMapper = new ObjectMapper();
     }
     
@@ -101,10 +103,25 @@ public class GeminiAIService {
             try {
                 log.debug("Attempting Gemini API call, attempt: {}", attempt);
                 
-                String response = callGeminiAPI(prompt);
+                // Create request body for Gemini API
+                Map<String, Object> requestBody = createGeminiRequestBody(prompt);
                 
-                if (response != null && !response.trim().isEmpty()) {
-                    return response;
+                // Call Gemini API
+                Mono<String> responseMono = webClient.post()
+                    .uri(apiUrl + "?key=" + apiKey)
+                    .header("Content-Type", "application/json")
+                    .bodyValue(requestBody)
+                    .retrieve()
+                    .bodyToMono(String.class)
+                    .timeout(java.time.Duration.ofSeconds(timeoutSeconds));
+                
+                String responseJson = responseMono.block();
+                
+                if (responseJson != null && !responseJson.trim().isEmpty()) {
+                    String extractedText = extractTextFromGeminiResponse(responseJson);
+                    if (extractedText != null && !extractedText.trim().isEmpty()) {
+                        return extractedText;
+                    }
                 }
                 
                 throw new RuntimeException("Empty response from Gemini API");
@@ -127,98 +144,69 @@ public class GeminiAIService {
         throw new RuntimeException("All Gemini API attempts failed", lastException);
     }
     
-    private String callGeminiAPI(String prompt) throws Exception {
-        String requestBody = createGeminiRequestBody(prompt);
+    private Map<String, Object> createGeminiRequestBody(String prompt) {
+        Map<String, Object> requestBody = new HashMap<>();
         
+        // Create contents array
+        Map<String, Object> part = new HashMap<>();
+        part.put("text", prompt);
+        
+        Map<String, Object> content = new HashMap<>();
+        content.put("parts", List.of(part));
+        
+        requestBody.put("contents", List.of(content));
+        
+        // Add generation config
+        Map<String, Object> generationConfig = new HashMap<>();
+        generationConfig.put("temperature", 0.7);
+        generationConfig.put("maxOutputTokens", 1000);
+        requestBody.put("generationConfig", generationConfig);
+        
+        return requestBody;
+    }
+    
+    private String extractTextFromGeminiResponse(String responseJson) {
         try {
-            String response = webClient.post()
-                .uri("/v1beta/models/gemini-1.5-flash-latest:generateContent?key={apiKey}", geminiApiKey)
-                .header("Content-Type", "application/json")
-                .bodyValue(requestBody)
-                .retrieve()
-                .bodyToMono(String.class)
-                .timeout(Duration.ofSeconds(timeoutSeconds))
-                .block();
+            JsonNode rootNode = objectMapper.readTree(responseJson);
+            JsonNode candidatesNode = rootNode.path("candidates");
             
-            return parseGeminiResponse(response);
-            
-        } catch (Exception e) {
-            log.error("Failed to call Gemini API", e);
-            throw new RuntimeException("Gemini API call failed: " + e.getMessage(), e);
-        }
-    }
-    
-    private String createGeminiRequestBody(String prompt) throws Exception {
-        Map<String, Object> request = Map.of(
-            "contents", List.of(
-                Map.of("parts", List.of(
-                    Map.of("text", prompt)
-                ))
-            ),
-            "generationConfig", Map.of(
-                "temperature", 0.7,
-                "topK", 40,
-                "topP", 0.95,
-                "maxOutputTokens", 1024
-            )
-        );
-        
-        return objectMapper.writeValueAsString(request);
-    }
-    
-    private String parseGeminiResponse(String responseBody) throws Exception {
-        JsonNode root = objectMapper.readTree(responseBody);
-        
-        if (root.has("error")) {
-            String errorMessage = root.get("error").get("message").asText();
-            throw new RuntimeException("Gemini API error: " + errorMessage);
-        }
-        
-        JsonNode candidates = root.get("candidates");
-        if (candidates != null && candidates.isArray() && candidates.size() > 0) {
-            JsonNode firstCandidate = candidates.get(0);
-            JsonNode content = firstCandidate.get("content");
-            if (content != null) {
-                JsonNode parts = content.get("parts");
-                if (parts != null && parts.isArray() && parts.size() > 0) {
-                    return parts.get(0).get("text").asText();
+            if (candidatesNode.isArray() && candidatesNode.size() > 0) {
+                JsonNode firstCandidate = candidatesNode.get(0);
+                JsonNode contentNode = firstCandidate.path("content");
+                JsonNode partsNode = contentNode.path("parts");
+                
+                if (partsNode.isArray() && partsNode.size() > 0) {
+                    JsonNode firstPart = partsNode.get(0);
+                    JsonNode textNode = firstPart.path("text");
+                    
+                    if (!textNode.isMissingNode()) {
+                        return textNode.asText();
+                    }
                 }
             }
+            
+            log.warn("Could not extract text from Gemini response: {}", responseJson);
+            return null;
+            
+        } catch (Exception e) {
+            log.error("Error parsing Gemini response", e);
+            return null;
         }
-        
-        throw new RuntimeException("Invalid response format from Gemini API");
     }
     
     private String getFallbackResponse(String prompt, AIRequest.RequestType requestType) {
-        // Try to get a recent similar response
-        String recentResponse = getRecentSimilarResponse(prompt, requestType);
-        if (recentResponse != null) {
-            return recentResponse + " (Based on recent similar analysis)";
-        }
-        
         // Generic fallback messages
         switch (requestType) {
             case SUMMARY:
-                return "Sorry, AI summarization service is temporarily unavailable. Please try again later.";
+                return "AI summarization service is temporarily unavailable. Please try again later.";
             case QUIZ:
-                return "Sorry, AI quiz generation service is temporarily unavailable. Please try again later.";
+                return "AI quiz generation service is temporarily unavailable. Please try again later.";
             case ANALYSIS:
-                return "Sorry, AI analysis service is temporarily unavailable. Please try again later.";
+                return "AI analysis service is temporarily unavailable. Please try again later.";
             case RECOMMENDATION:
-                return "Sorry, AI recommendation service is temporarily unavailable. Please try again later.";
+                return "AI recommendation service is temporarily unavailable. Please try again later.";
             default:
-                return "Sorry, AI service is temporarily unavailable. Please try again later.";
-        }
-    }
-    
-    private String getRecentSimilarResponse(String prompt, AIRequest.RequestType requestType) {
-        try {
-            // This is a simplified similarity check - in production, you might want semantic similarity
-            // Could implement search for similar prompts from the last 24 hours
-            return null; // Implement if needed
-        } catch (Exception e) {
-            log.warn("Failed to get recent similar response", e);
-            return null;
+                return "AI service is temporarily unavailable. Please try again later.";
         }
     }
     
