@@ -5,6 +5,7 @@ import com.example.mediasphere_initial.model.User;
 import com.example.mediasphere_initial.model.Thread;
 import com.example.mediasphere_initial.model.Event;
 import com.example.mediasphere_initial.dto.LeaveClubRequest;
+import com.example.mediasphere_initial.dto.CreateClubRequest;
 import com.example.mediasphere_initial.service.ClubService;
 import com.example.mediasphere_initial.service.AuthService;
 import com.example.mediasphere_initial.service.EventService;
@@ -37,10 +38,21 @@ public class ClubController {
         List<Club> clubs = clubService.getAllClubs();
         return ResponseEntity.ok(clubs);
     }
+    
+    // Get clubs by linked media ID
+    @GetMapping("/by-linked-media/{mediaId}")
+    public ResponseEntity<List<Club>> getClubsByLinkedMedia(@PathVariable UUID mediaId) {
+        try {
+            List<Club> clubs = clubService.getClubsByLinkedMedia(mediaId);
+            return ResponseEntity.ok(clubs);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
 
     // Create new club
     @PostMapping("/")
-    public ResponseEntity<?> createClub(@RequestBody Club club,
+    public ResponseEntity<?> createClub(@RequestBody CreateClubRequest request,
             @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
@@ -48,7 +60,7 @@ public class ClubController {
                 return ResponseEntity.status(401).body("Authentication required");
             }
 
-            Club createdClub = clubService.createClub(club, userOpt.get());
+            Club createdClub = clubService.createClub(request, userOpt.get());
             return ResponseEntity.status(201).body(createdClub);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

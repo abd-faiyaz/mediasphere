@@ -141,6 +141,9 @@ function AIServicesContent() {
               </motion.div>
             </div>
             <nav className="flex items-center space-x-4">
+              <Link href="/media">
+                <Button variant="ghost">Media</Button>
+              </Link>
               <Link href="/clubs">
                 <Button variant="ghost">Clubs</Button>
               </Link>

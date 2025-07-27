@@ -554,6 +554,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
             <nav className="flex items-center space-x-4">
               {isSignedIn ? (
                 <>
+                  <Link href="/media">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Media
+                    </Button>
+                  </Link>
                   <Link href="/clubs">
                     <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
                       Clubs
@@ -580,6 +585,11 @@ export default function ClubDetailsPage({ params }: { params: Promise<{ id: stri
                   <Link href="/">
                     <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
                       Home
+                    </Button>
+                  </Link>
+                  <Link href="/media">
+                    <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300">
+                      Media
                     </Button>
                   </Link>
                   <Link href="/clubs">

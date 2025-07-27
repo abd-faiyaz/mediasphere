@@ -439,12 +439,12 @@ export default function ClubsPage() {
             <motion.div
               key={i}
               className="absolute bg-gradient-to-r from-[#1E3A8A]/10 to-[#90CAF9]/10 rounded-full blur-3xl"
-              style={{
-                width: Math.random() * 300 + 100,
-                height: Math.random() * 300 + 100,
-                left: `${Math.random() * 100}%`,
-                top: `${Math.random() * 100}%`,
-              }}
+              // style={{
+              //   width: Math.random() * 300 + 100,
+              //   height: Math.random() * 300 + 100,
+              //   left: `${Math.random() * 100}%`,
+              //   top: `${Math.random() * 100}%`,
+              // }}
               animate={{
                 scale: [1, 1.2, 1],
                 opacity: [0.3, 0.6, 0.3],
@@ -504,6 +504,15 @@ export default function ClubsPage() {
               {isSignedIn ? (
                 // Authenticated user navigation
                 <>
+                  <Link href="/media">
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Media</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
+                  </Link>
                   <Link href="/clubs">
                     <Button
                       variant="ghost"
@@ -550,6 +559,15 @@ export default function ClubsPage() {
                       className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
                     >
                       <span className="relative z-10">Home</span>
+                      <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                    </Button>
+                  </Link>
+                  <Link href="/media">
+                    <Button
+                      variant="ghost"
+                      className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                    >
+                      <span className="relative z-10">Media</span>
                       <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
                     </Button>
                   </Link>

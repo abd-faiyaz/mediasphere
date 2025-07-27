@@ -15,22 +15,22 @@ public class Media {
     @JoinColumn(name = "media_type_id")
     private MediaType mediaType;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 255)
     private String title;
 
-    @Column
+    @Column(length = 255)
     private String description;
 
-    @Column
+    @Column(length = 255)
     private String author;
 
     @Column(name = "release_year")
     private Integer releaseYear;
 
-    @Column
+    @Column(length = 255)
     private String genre;
 
-    @Column(name = "image_url")
+    @Column(name = "image_url", length = 255)
     private String imageUrl;
 
     @Column(name = "created_at", nullable = false)

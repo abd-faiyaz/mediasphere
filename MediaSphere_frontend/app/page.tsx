@@ -70,6 +70,11 @@ export default function HomePage() {
             </div>
 
             <nav className="flex items-center space-x-4">
+              <Link href="/media">
+                <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 font-['Open Sans']">
+                  Media
+                </Button>
+              </Link>
               <Link href="/clubs">
                 <Button variant="ghost" className="text-[#333333] hover:text-[#1E3A8A] hover:bg-[#F0F7FF] transition-all duration-300 font-['Open Sans']">
                   Clubs

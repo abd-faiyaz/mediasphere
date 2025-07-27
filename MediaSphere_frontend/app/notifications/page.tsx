@@ -672,6 +672,15 @@ function NotificationsContent() {
               </motion.div>
             </div>
             <nav className="flex items-center space-x-4">
+              <Link href="/media">
+                <Button
+                  variant="ghost"
+                  className="text-[#333333] relative overflow-hidden group font-['Open Sans'] transition-all duration-300 hover:text-[#1E3A8A]"
+                >
+                  <span className="relative z-10">Media</span>
+                  <div className="absolute inset-0 bg-[#F0F7FF] transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left rounded-lg"></div>
+                </Button>
+              </Link>
               <Link href="/clubs">
                 <Button
                   variant="ghost"

@@ -15,6 +15,10 @@ public class Club {
     @JoinColumn(name = "media_type_id")
     private MediaType mediaType;
 
+    @ManyToOne
+    @JoinColumn(name = "linked_media_id")
+    private Media linkedMedia;
+
     @Column(nullable = false)
     private String name;
 
@@ -34,8 +38,6 @@ public class Club {
     @Column(name = "last_thread_created_at")
     private LocalDateTime lastThreadCreatedAt;
 
-    @Column
-    private String clubvalue;
 
     // Constructors
     public Club() {
@@ -47,6 +49,16 @@ public class Club {
         this.description = description;
         this.createdBy = createdBy;
         this.mediaType = mediaType;
+        this.createdAt = LocalDateTime.now();
+    }
+
+    public Club(UUID id, String name, String description, User createdBy, MediaType mediaType, Media linkedMedia) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.createdBy = createdBy;
+        this.mediaType = mediaType;
+        this.linkedMedia = linkedMedia;
         this.createdAt = LocalDateTime.now();
     }
 
@@ -89,6 +101,14 @@ public class Club {
 
     public void setMediaType(MediaType mediaType) {
         this.mediaType = mediaType;
+    }
+
+    public Media getLinkedMedia() {
+        return linkedMedia;
+    }
+
+    public void setLinkedMedia(Media linkedMedia) {
+        this.linkedMedia = linkedMedia;
     }
 
     public LocalDateTime getCreatedAt() {

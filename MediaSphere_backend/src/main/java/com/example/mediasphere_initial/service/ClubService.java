@@ -14,12 +14,17 @@ import com.example.mediasphere_initial.model.UserClub;
 import com.example.mediasphere_initial.model.Thread;
 import com.example.mediasphere_initial.model.ThreadImage;
 import com.example.mediasphere_initial.model.ClubLeaveLog;
+import com.example.mediasphere_initial.model.Media;
+import com.example.mediasphere_initial.model.MediaType;
+import com.example.mediasphere_initial.dto.CreateClubRequest;
 import com.example.mediasphere_initial.repository.ClubRepository;
 import com.example.mediasphere_initial.repository.UserClubRepository;
 import com.example.mediasphere_initial.repository.UserRepository;
 import com.example.mediasphere_initial.repository.ThreadRepository;
 import com.example.mediasphere_initial.repository.ThreadImageRepository;
 import com.example.mediasphere_initial.repository.ClubLeaveLogRepository;
+import com.example.mediasphere_initial.repository.MediaRepository;
+import com.example.mediasphere_initial.repository.MediaTypeRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +51,10 @@ public class ClubService {
     private ImageUploadService imageUploadService;
     @Autowired
     private NotificationService notificationService;
+    @Autowired
+    private MediaRepository mediaRepository;
+    @Autowired
+    private MediaTypeRepository mediaTypeRepository;
 
     public List<Club> getAllClubs() {
         return clubRepository.findAll();
@@ -68,6 +77,50 @@ public class ClubService {
             membership.setJoinedAt(LocalDateTime.now());
             userClubRepository.save(membership);
         }
+        return savedClub;
+    }
+
+    public Club createClub(CreateClubRequest request, User creator) {
+        // Validate and get MediaType
+        MediaType mediaType = null;
+        if (request.getMediaTypeId() != null) {
+            mediaType = mediaTypeRepository.findById(request.getMediaTypeIdAsUUID())
+                .orElseThrow(() -> new RuntimeException("Media type not found"));
+        }
+
+        // Validate and get LinkedMedia
+        Media linkedMedia = null;
+        if (request.getLinkedMediaId() != null) {
+            linkedMedia = mediaRepository.findById(request.getLinkedMediaIdAsUUID())
+                .orElseThrow(() -> new RuntimeException("Linked media not found"));
+            
+            // Validate that linked media belongs to the specified media type
+            if (mediaType != null && !linkedMedia.getMediaType().getId().equals(mediaType.getId())) {
+                throw new RuntimeException("Selected media does not belong to the specified media type");
+            }
+        }
+
+        // Create club
+        Club club = new Club();
+        club.setId(UUID.randomUUID());
+        club.setName(request.getName());
+        club.setDescription(request.getDescription());
+        club.setCreatedBy(creator);
+        club.setCreatedAt(LocalDateTime.now());
+        club.setMediaType(mediaType);
+        club.setLinkedMedia(linkedMedia);
+
+        Club savedClub = clubRepository.save(club);
+        
+        // Add creator as a member
+        if (!userClubRepository.existsByUserAndClub(creator, savedClub)) {
+            UserClub membership = new UserClub();
+            membership.setUser(creator);
+            membership.setClub(savedClub);
+            membership.setJoinedAt(LocalDateTime.now());
+            userClubRepository.save(membership);
+        }
+        
         return savedClub;
     }
 
@@ -424,5 +477,14 @@ public class ClubService {
         return memberships.stream()
                 .map(UserClub::getUser)
                 .collect(Collectors.toList());
+    }
+    
+    // Get clubs by linked media ID
+    public List<Club> getClubsByLinkedMedia(UUID mediaId) {
+        Optional<Media> mediaOpt = mediaRepository.findById(mediaId);
+        if (!mediaOpt.isPresent()) {
+            return Collections.emptyList();
+        }
+        return clubRepository.findByLinkedMedia(mediaOpt.get());
     }
 }
