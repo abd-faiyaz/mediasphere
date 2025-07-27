@@ -56,6 +56,10 @@ interface Club {
   memberCount?: number
 }
 
+interface ClubWithScore extends Club {
+  relevanceScore: number
+}
+
 export default function MediaDetailsPage() {
   const [media, setMedia] = useState<Media | null>(null)
   const [relatedClubs, setRelatedClubs] = useState<Club[]>([])
@@ -196,7 +200,7 @@ export default function MediaDetailsPage() {
     }
   }
 
-  // Fetch related clubs based on media type
+  // Fetch related clubs based on media type and relevance
   const fetchRelatedClubs = async () => {
     if (!media) return
     
@@ -230,13 +234,51 @@ export default function MediaDetailsPage() {
       const allClubs = await response.json()
       
       // Filter clubs by the same media type
-      const filtered = allClubs.filter((club: Club) => 
+      const typeFiltered = allClubs.filter((club: Club) => 
         club.mediaType.id === media.mediaType.id || 
         club.mediaType.name === media.mediaType.name
       )
       
-      console.log('Related clubs:', filtered)
-      setRelatedClubs(filtered)
+      // Further filter for relevance - prioritize clubs that mention the media title
+      const mediaTitle = media.title.toLowerCase()
+      const mediaAuthor = media.author.toLowerCase()
+      const mediaGenre = media.genre.toLowerCase()
+      
+      // Score clubs by relevance
+      const scoredClubs: ClubWithScore[] = typeFiltered.map((club: Club) => {
+        let relevanceScore = 0
+        const clubName = club.name.toLowerCase()
+        const clubDescription = club.description.toLowerCase()
+        
+        // Higher score for exact title matches
+        if (clubName.includes(mediaTitle)) relevanceScore += 10
+        if (clubDescription.includes(mediaTitle)) relevanceScore += 8
+        
+        // Medium score for author matches
+        if (clubName.includes(mediaAuthor)) relevanceScore += 6
+        if (clubDescription.includes(mediaAuthor)) relevanceScore += 4
+        
+        // Lower score for genre matches
+        if (clubName.includes(mediaGenre)) relevanceScore += 3
+        if (clubDescription.includes(mediaGenre)) relevanceScore += 2
+        
+        // Bonus for newer clubs (might be more relevant)
+        const daysSinceCreation = Math.floor((Date.now() - new Date(club.createdAt).getTime()) / (1000 * 60 * 60 * 24))
+        if (daysSinceCreation < 30) relevanceScore += 1
+        
+        return { ...club, relevanceScore }
+      })
+      
+      // Sort by relevance score (highest first), then by creation date (newest first)
+      const sortedClubs = scoredClubs.sort((a: ClubWithScore, b: ClubWithScore) => {
+        if (b.relevanceScore !== a.relevanceScore) {
+          return b.relevanceScore - a.relevanceScore
+        }
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      })
+      
+      console.log('Related clubs with scores:', sortedClubs)
+      setRelatedClubs(sortedClubs)
     } catch (error) {
       console.error('Error fetching related clubs:', error)
       // Don't show toast for clubs error, just log it
@@ -630,7 +672,10 @@ export default function MediaDetailsPage() {
                   Related Clubs
                 </h2>
                 <p className="text-[#333333]/70 font-['Open Sans'] mt-2">
-                  Clubs focused on {media.mediaType.name} content
+                  Clubs related to "{media.title}" and {media.mediaType.name} content
+                </p>
+                <p className="text-[#333333]/50 font-['Open Sans'] text-sm mt-1">
+                  Sorted by relevance to this media item
                 </p>
               </div>
               <Link href="/clubs">
@@ -649,10 +694,10 @@ export default function MediaDetailsPage() {
               <Card className="text-center py-12 bg-white/90 backdrop-blur-xl border-[#90CAF9]/30">
                 <Users className="h-12 w-12 mx-auto mb-4 text-[#1E3A8A] opacity-50" />
                 <h3 className="text-xl font-['Nunito'] font-bold text-[#1E3A8A] mb-2">
-                  No Related Clubs
+                  No Related Clubs Found
                 </h3>
                 <p className="text-[#333333] font-['Open Sans'] mb-4">
-                  There are no clubs currently focused on {media.mediaType.name} content.
+                  No clubs found that are specifically related to "{media.title}" or {media.mediaType.name} content.
                 </p>
                 {isSignedIn && (
                   <Link href="/clubs/create">

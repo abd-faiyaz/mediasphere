@@ -316,7 +316,7 @@ export default function ClubsPage() {
       const data = await response.json()
       console.log('Clubs data:', data)
       setClubs(data)
-      setFilteredClubs(data)
+      // Don't set filteredClubs here - let the useEffect handle filtering/sorting
     } catch (error) {
       console.error('Error fetching clubs:', error)
       toast({
@@ -330,6 +330,15 @@ export default function ClubsPage() {
 
   // Filter and sort clubs
   useEffect(() => {
+    console.log('Filtering clubs:', { 
+      clubsCount: clubs.length, 
+      isSignedIn, 
+      clubView, 
+      searchTerm, 
+      selectedCategory, 
+      sortBy 
+    })
+    
     let filtered = clubs
 
     // Filter by clubView
@@ -350,8 +359,15 @@ export default function ClubsPage() {
       filtered = filtered.filter(club => club.mediaType.name === selectedCategory)
     }
 
-    // Sort clubs
+    // Sort clubs - prioritize joined clubs for authenticated users
     filtered.sort((a, b) => {
+      // First priority: For authenticated users viewing all clubs, show joined clubs first
+      if (isSignedIn && clubView === 'all') {
+        if (a.isMember && !b.isMember) return -1  // a is joined, b is not - a comes first
+        if (!a.isMember && b.isMember) return 1   // b is joined, a is not - b comes first
+      }
+      
+      // Second priority: Sort by selected criteria
       switch (sortBy) {
         case "members":
           // For now, sort by creation date as a proxy for popularity
@@ -366,13 +382,24 @@ export default function ClubsPage() {
       }
     })
 
-    setFilteredClubs(filtered)
-  }, [clubs, searchTerm, selectedCategory, sortBy, clubView, user])
+    console.log('Filtered and sorted clubs:', {
+      totalFiltered: filtered.length,
+      joinedClubsFirst: filtered.slice(0, 3).map(c => ({ name: c.name, isMember: c.isMember }))
+    })
 
-  // Fetch clubs on component mount
+    setFilteredClubs(filtered)
+    
+    // Reset visible count when clubs are filtered to ensure joined clubs are visible
+    setVisibleCount(9)
+  }, [clubs, searchTerm, selectedCategory, sortBy, clubView, user, isSignedIn])
+
+  // Fetch clubs on component mount and when authentication state changes
   useEffect(() => {
-    fetchClubs()
-  }, [])
+    // Only fetch if auth loading is complete
+    if (!authLoading) {
+      fetchClubs()
+    }
+  }, [authLoading, isSignedIn])
 
   // Infinite scroll states
   const [visibleCount, setVisibleCount] = useState(9); // Show 9 clubs initially
