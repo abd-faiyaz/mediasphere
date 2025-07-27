@@ -16,4 +16,9 @@ public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findByParentComment(Comment parentComment);
 
     long countByCreatedBy(User user);
+    
+    // Additional methods for AI summary functionality
+    List<Comment> findByThreadIdOrderByCreatedAtAsc(UUID threadId);
+    
+    List<Comment> findByThreadOrderByCreatedAtAsc(Thread thread);
 }

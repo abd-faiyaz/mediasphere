@@ -15,4 +15,10 @@ public interface ClubRepository extends JpaRepository<Club, UUID> {
     
     // Find clubs by linked media
     List<Club> findByLinkedMedia(Media linkedMedia);
+    
+    // Additional methods for AI summary functionality
+    List<Club> findByLinkedMediaIdOrderByCreatedAtDesc(UUID mediaId);
+    
+    @Query("SELECT c FROM Club c WHERE c.linkedMedia.id = :mediaId ORDER BY c.createdAt DESC")
+    List<Club> findByLinkedMediaIdOrderByCreatedAtDescCustom(@Param("mediaId") UUID mediaId);
 }

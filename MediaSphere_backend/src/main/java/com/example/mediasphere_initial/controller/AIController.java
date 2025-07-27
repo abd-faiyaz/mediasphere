@@ -1,9 +1,7 @@
 package com.example.mediasphere_initial.controller;
 
 import com.example.mediasphere_initial.service.AIService;
-import com.example.mediasphere_initial.service.GeminiAIService;
 import com.example.mediasphere_initial.dto.*;
-import com.example.mediasphere_initial.model.AIRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -76,23 +74,12 @@ public class AIController {
         }
     }
     
-    // New Gemini AI integration endpoints
-    @Autowired
-    private GeminiAIService geminiAIService;
     
     @PostMapping("/gemini/test")
     public ResponseEntity<BaseAIResponse> testGeminiAI(@RequestBody TestAIRequest request) {
         try {
-            // For testing purposes, use a dummy user ID
-            UUID userId = UUID.randomUUID();
-            
-            String response = geminiAIService.callGeminiWithFallback(
-                request.getPrompt(), 
-                userId, 
-                AIRequest.RequestType.SUMMARY
-            );
-            
-            BaseAIResponse aiResponse = new BaseAIResponse(true, "Gemini AI test completed successfully");
+            // This will be implemented in a future phase
+            BaseAIResponse aiResponse = new BaseAIResponse(true, "Gemini AI test endpoint available - Phase 2");
             aiResponse.setRequestId(UUID.randomUUID().toString());
             
             return ResponseEntity.ok(aiResponse);

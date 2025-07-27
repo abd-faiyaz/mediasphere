@@ -12,6 +12,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { AuthGuard } from "@/components/auth-guard"
+import { SummaryTab } from "@/components/ai/SummaryTab"
 
 function AIServicesContent() {
   const router = useRouter()
@@ -254,36 +255,7 @@ function AIServicesContent() {
                       </CardHeader>
                       <CardContent>
                         {service.id === "summarize" && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
-                            className="space-y-4"
-                          >
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Content to Summarize
-                              </label>
-                              <Textarea
-                                placeholder="Paste your content here or upload a file..."
-                                className="min-h-[200px]"
-                              />
-                            </div>
-                            <div className="flex gap-4">
-                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button className="bg-blue-600 hover:bg-blue-700">
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  Generate Summary
-                                </Button>
-                              </motion.div>
-                              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                <Button variant="outline">
-                                  <Upload className="mr-2 h-4 w-4" />
-                                  Upload File
-                                </Button>
-                              </motion.div>
-                            </div>
-                          </motion.div>
+                          <SummaryTab />
                         )}
 
                         {service.id === "quiz" && (
