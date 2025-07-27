@@ -208,9 +208,6 @@ CREATE TABLE public.thread_dislikes (
 
 ALTER TABLE public.thread_dislikes OWNER TO postgres;
 
-<<<<<<< HEAD
-
-=======
 --
 -- Name: thread_images; Type: TABLE; Schema: public; Owner: postgres
 --
@@ -227,7 +224,6 @@ CREATE TABLE public.thread_images (
 
 
 ALTER TABLE public.thread_images OWNER TO postgres;
->>>>>>> 8bbeeb7 (abd-commit)
 
 --
 -- Name: thread_likes; Type: TABLE; Schema: public; Owner: postgres
@@ -406,18 +402,18 @@ COPY public.club_leave_logs (id, left_at, reason, club_id, user_id) FROM stdin;
 --
 
 COPY public.clubs (id, media_type_id, name, description, created_by, created_at, last_activity_at, last_thread_created_at, value, clubvalue) FROM stdin;
-5e5fe910-bd7c-464d-957f-fbcfadd72854	06e1bdf9-3b78-4139-a715-07bd0e2c2e86	Sci-Fi TV Series Club	Discussion club for science fiction tv seriess	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-06-30 08:55:44.46577	\N	\N	\N
 57e7af79-b324-4e3c-91af-5f5f92317e0e	550e8400-e29b-41d4-a716-446655440001	Sci-Fi Movie Club	Discussion club for science fiction movies	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-06-30 08:55:44.46577	2025-07-04 13:40:27.681744	\N	\N
-68787b29-734e-4b10-a4bf-401f1ae3e3b6	a6af7c45-69b8-4157-8a11-9134926034a4	Sci-Fi Movie Club	Discussion club for science fiction movies	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-06-30 08:55:44.46577	2025-07-04 13:42:38.040383	\N	\N
 df50b126-de42-412e-9ee0-4d5f2b2412ee	550e8400-e29b-41d4-a716-446655440004	Studio Ghibli Appreciation Society	Dedicated to discussing and analyzing Studio Ghibli films	3281e9dd-b913-4d48-836f-0b5539d89999	2025-06-30 08:55:44.46577	2025-06-30 08:55:44.46577	2025-07-04 14:57:51.432997	\N	\N
-452c7a0d-2eae-421d-9696-92e7f131254b	a26da08b-7372-4310-a1a4-f26815ca78ac	Sci-Fi Book Club	Discussion club for science fiction books	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-07-04 15:36:07.213565	2025-07-04 15:36:07.213565	\N	\N
 8612a07b-91fc-4177-b326-765af2aa76ad	1e1756e6-549e-4db9-a974-e05e9c9181fb	Sumon	baal create	a688cb56-0dca-466b-840f-e277a3d1431d	2025-07-02 09:54:50.097023	2025-07-04 16:08:34.43969	2025-07-04 16:08:34.43969	\N	\N
 1153d21a-30da-4240-878c-9bbf2bc268e0	550e8400-e29b-41d4-a716-446655440003	Sci-Fi Book Club	Discussion club for science fiction books	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-07-07 10:03:51.973489	2025-07-07 10:03:51.973489	\N	\N
 0c167685-5bed-45be-aa67-3d682f5f62b6	e28305d9-577c-4fd3-a4d0-636bcd18cd1c	a b c	def	a688cb56-0dca-466b-840f-e277a3d1431d	2025-06-30 09:08:48.269639	2025-07-12 19:27:31.2851	2025-07-12 19:27:31.2851	\N	\N
 aa88ed56-9e54-4aa3-b33b-b16e1da02e8c	550e8400-e29b-41d4-a716-446655440003	asfiaj asjd	askdjsdj oowe	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	2025-07-14 15:41:11.665434	\N	\N	0	\N
-8825011e-38ce-48da-b6e5-2fad2b44df69	550e8400-e29b-41d4-a716-446655440004	sample_value_club	adjfajfha afuihfkja	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	2025-07-14 16:17:48.102352	\N	\N	2	\N
 ddc02c3d-d7c6-43c9-81b2-a2d603c5bc4c	550e8400-e29b-41d4-a716-446655440003	ajhxjhas	dvjkakjc	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	2025-07-14 16:24:54.283328	\N	\N	132871	\N
 e7182d74-efb3-4427-bf94-4dc6a769c5e5	550e8400-e29b-41d4-a716-446655440003	asfjash iasohdoiase	asjeoiwr oieurinvnvm	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	2025-07-14 16:20:26.866912	2025-07-26 21:50:32.419836	2025-07-26 21:50:32.419836	22	\N
+8825011e-38ce-48da-b6e5-2fad2b44df69	550e8400-e29b-41d4-a716-446655440004	sample_value_club	adjfajfha afuihfkja	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	2025-07-14 16:17:48.102352	2025-07-27 13:36:58.406687	2025-07-27 13:36:58.406687	2	\N
+68787b29-734e-4b10-a4bf-401f1ae3e3b6	550e8400-e29b-41d4-a716-446655440001	Sci-Fi Movie Club	Discussion club for science fiction movies	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-06-30 08:55:44.46577	2025-07-04 13:42:38.040383	\N	\N
+5e5fe910-bd7c-464d-957f-fbcfadd72854	550e8400-e29b-41d4-a716-446655440002	Sci-Fi TV Series Club	Discussion club for science fiction tv seriess	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-06-30 08:55:44.46577	\N	\N	\N
+452c7a0d-2eae-421d-9696-92e7f131254b	550e8400-e29b-41d4-a716-446655440003	Sci-Fi Book Club	Discussion club for science fiction books	0b7c0688-b9bb-42ad-ab00-de26606283fa	2025-06-30 08:55:44.46577	2025-07-04 15:36:07.213565	2025-07-04 15:36:07.213565	\N	\N
 \.
 
 
@@ -502,10 +498,6 @@ COPY public.media_types (id, name, description) FROM stdin;
 550e8400-e29b-41d4-a716-446655440002	Series	TV series and shows
 550e8400-e29b-41d4-a716-446655440003	Book	Books and novels
 550e8400-e29b-41d4-a716-446655440004	Anime	Anime series and movies
-a6af7c45-69b8-4157-8a11-9134926034a4	Movie	Feature films and documentaries
-06e1bdf9-3b78-4139-a715-07bd0e2c2e86	TV Series	Television series and shows
-a26da08b-7372-4310-a1a4-f26815ca78ac	Book	Books, novels, and literature
-19741ba9-5a85-459b-91ef-6657d5ba22c7	Anime	Japanese animation series and films
 e28305d9-577c-4fd3-a4d0-636bcd18cd1c	Manga	Japanese comics and graphic novels
 1e1756e6-549e-4db9-a974-e05e9c9181fb	Video Game	Video games and interactive media
 \.
@@ -526,6 +518,8 @@ COPY public.notifications (id, user_id, title, content, type, is_read, reference
 59ec5940-72cc-4b2f-a0b1-b129c6240bb0	a688cb56-0dca-466b-840f-e277a3d1431d	Thread liked	vemita6946 liked your thread 'kochu'	thread_like	f	c660eca2-a023-446f-a193-d829dc735275	thread	2025-07-07 23:00:03.666714	4a754586-c9bd-4c47-8599-a9f34e309464
 d1fae013-e79f-4dd8-8c59-c3438f6ee49a	a688cb56-0dca-466b-840f-e277a3d1431d	Thread disliked	vemita6946 disliked your thread 'kochu'	thread_dislike	f	c660eca2-a023-446f-a193-d829dc735275	thread	2025-07-07 23:00:18.904595	4a754586-c9bd-4c47-8599-a9f34e309464
 f7500912-79d5-48fc-a0ea-d5c00178ca4b	a688cb56-0dca-466b-840f-e277a3d1431d	Thread liked	vemita6946 liked your thread 'kochu'	thread_like	f	c660eca2-a023-446f-a193-d829dc735275	thread	2025-07-07 23:05:23.442277	4a754586-c9bd-4c47-8599-a9f34e309464
+57d6818e-c1b3-4f9c-923c-66133b6007e4	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	New club member	bangi joined sample_value_club	club_join	f	8825011e-38ce-48da-b6e5-2fad2b44df69	club	2025-07-27 04:05:24.702981	a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2
+aa3ea5c3-ba89-4530-81a5-0f04463ee342	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	New thread in sample_value_club	bangi created 'ekta sample thread' in sample_value_club	club_thread_created	f	d6f3608f-3e95-4b9d-ac07-c17f34556e24	thread	2025-07-27 13:36:58.418645	a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2
 \.
 
 
@@ -538,9 +532,6 @@ f1dc118e-6622-436a-be1e-db48b3cc6cad	2025-07-05 20:23:21.574131	fd43fa7a-a60b-43
 \.
 
 
-<<<<<<< HEAD
-
-=======
 --
 -- Data for Name: thread_images; Type: TABLE DATA; Schema: public; Owner: postgres
 --
@@ -553,8 +544,8 @@ eaa70750-06b9-4168-bda0-adc349ea79a2	image/png	52557	complex_acc.png	uploads/thr
 c6a890cb-4e3a-40a7-86b4-e50d448f02cc	image/png	48578	basic_acc.png	uploads/thread-images/thread_7b02afc6-aa31-41c7-a0d6-8991f8a9bfcd_20250704_141938_049fe14e.png	2025-07-04 14:19:38.135972	7b02afc6-aa31-41c7-a0d6-8991f8a9bfcd
 80a98513-d8d3-4c87-beea-adc4f0ebc769	image/png	48578	basic_acc.png	uploads/thread-images/thread_b323a92e-f9bc-455b-b458-ae4a5f3674d9_20250704_153607_0b5a3c49.png	2025-07-04 15:36:07.175638	b323a92e-f9bc-455b-b458-ae4a5f3674d9
 02ddbbd9-374f-4b4c-b8cd-38c361b1f60c	image/png	52557	complex_acc.png	uploads/thread-images/thread_2bab3d09-8e22-492a-81f0-63c0630bef53_20250704_160834_3eda412c.png	2025-07-04 16:08:34.419201	2bab3d09-8e22-492a-81f0-63c0630bef53
+4385c7f3-80f4-44e4-883d-9be6408db308	image/jpeg	137463	JF_pic.jpg	uploads/thread_d6f3608f-3e95-4b9d-ac07-c17f34556e24_20250727_133658_d8246960.jpg	2025-07-27 13:36:58.398636	d6f3608f-3e95-4b9d-ac07-c17f34556e24
 \.
->>>>>>> 8bbeeb7 (abd-commit)
 
 
 --
@@ -581,16 +572,11 @@ c7c54765-9f09-4073-a63c-dd51b8d438c8	2025-07-07 23:05:23.282505	c660eca2-a023-44
 
 COPY public.threads (id, club_id, created_by, title, content, view_count, comment_count, is_pinned, is_locked, created_at, updated_at, like_count, dislike_count, last_activity_at) FROM stdin;
 b323a92e-f9bc-455b-b458-ae4a5f3674d9	452c7a0d-2eae-421d-9696-92e7f131254b	a688cb56-0dca-466b-840f-e277a3d1431d	rayan boss	well	0	0	f	f	2025-07-04 15:36:07.077436	\N	0	0	\N
-37839c26-ae93-409e-8dc0-c63910b9eb04	e7182d74-efb3-4427-bf94-4dc6a769c5e5	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	about baal	sjgoisdh odbvuibgilbsd bscnxl nskfjaij jahcj	14	2	f	f	2025-07-26 21:49:05.553985	\N	1	0	2025-07-27 02:23:59.227766
+7cec4af6-88bf-435c-8813-732432adb428	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	fg	hi	8	2	f	f	2025-07-03 23:29:02.377085	\N	0	0	2025-07-27 04:05:02.959138
 f7d27d01-9de4-43cf-aca4-608caa7b5327	0c167685-5bed-45be-aa67-3d682f5f62b6	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	asdff	qerw	9	1	f	f	2025-07-12 19:27:31.269102	\N	0	0	2025-07-27 02:24:01.230209
-fd43fa7a-a60b-4349-bc41-533580643fc0	68787b29-734e-4b10-a4bf-401f1ae3e3b6	a688cb56-0dca-466b-840f-e277a3d1431d	check	asc	41	8	f	f	2025-07-04 13:42:38.040383	2025-07-04 20:49:25.063101	1	1	2025-07-27 02:24:01.234691
-9ee70fdb-c9f2-433e-9ebe-277d1cd83a83	68787b29-734e-4b10-a4bf-401f1ae3e3b6	a688cb56-0dca-466b-840f-e277a3d1431d	rhrrrrrr	rrr	13	5	f	f	2025-07-04 13:41:46.256042	\N	1	0	2025-07-27 02:24:01.301104
-c660eca2-a023-446f-a193-d829dc735275	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	kochu	gechu	48	6	f	f	2025-07-04 16:04:56.165374	\N	3	0	2025-07-27 02:24:01.301092
-ba1cab1d-705f-475b-b485-c5add714f489	e7182d74-efb3-4427-bf94-4dc6a769c5e5	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	afnaiuf asjejeejejej	sdijfjroireoir pasopfiacka ljjsjs	2	0	f	f	2025-07-26 21:50:32.408986	\N	0	0	2025-07-27 02:24:01.698003
-e854452d-a967-4d01-ae54-aadbc09e12fc	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	no	hey boy	7	2	f	f	2025-07-03 23:28:30.127395	\N	1	0	2025-07-27 02:24:01.768213
-7b02afc6-aa31-41c7-a0d6-8991f8a9bfcd	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	asdfgh	qwerty	9	3	f	f	2025-07-04 14:19:37.803399	\N	0	0	2025-07-27 02:24:01.768395
-e226e86d-759c-4dd5-9a6e-093865d9a8c2	1153d21a-30da-4240-878c-9bbf2bc268e0	4a754586-c9bd-4c47-8599-a9f34e309464	Sir	Is good boy	16	2	f	f	2025-07-07 10:03:51.68429	\N	1	0	2025-07-27 02:24:01.768362
-7cec4af6-88bf-435c-8813-732432adb428	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	fg	hi	7	2	f	f	2025-07-03 23:29:02.377085	\N	0	0	2025-07-27 02:24:01.835007
+d6f3608f-3e95-4b9d-ac07-c17f34556e24	8825011e-38ce-48da-b6e5-2fad2b44df69	a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2	ekta sample thread	ekta sample thread khullam tomar jonno	14	0	f	f	2025-07-27 13:36:58.36702	\N	0	0	2025-07-27 13:59:17.407638
+fd43fa7a-a60b-4349-bc41-533580643fc0	68787b29-734e-4b10-a4bf-401f1ae3e3b6	a688cb56-0dca-466b-840f-e277a3d1431d	check	asc	52	8	f	f	2025-07-04 13:42:38.040383	2025-07-04 20:49:25.063101	1	1	2025-07-27 13:59:18.130962
+c660eca2-a023-446f-a193-d829dc735275	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	kochu	gechu	53	6	f	f	2025-07-04 16:04:56.165374	\N	3	0	2025-07-27 13:59:18.235478
 2bab3d09-8e22-492a-81f0-63c0630bef53	8612a07b-91fc-4177-b326-765af2aa76ad	a688cb56-0dca-466b-840f-e277a3d1431d	kochu	kochu	5	1	f	f	2025-07-04 16:08:34.335934	\N	1	0	2025-07-27 02:24:02.045237
 d3036ebc-4c9f-45b0-be33-2f25a7569d5b	68787b29-734e-4b10-a4bf-401f1ae3e3b6	a688cb56-0dca-466b-840f-e277a3d1431d	rhrrrrrr	rrr	7	0	f	f	2025-07-04 13:41:37.115403	\N	1	0	2025-07-27 02:24:02.181841
 7c56fcc5-a2aa-4a72-a1cd-de8c2912e4e0	57e7af79-b324-4e3c-91af-5f5f92317e0e	a688cb56-0dca-466b-840f-e277a3d1431d	chol	chol chol	1	0	f	f	2025-07-04 13:38:59.944748	\N	0	0	2025-07-27 02:24:02.285934
@@ -602,6 +588,12 @@ adf56cb5-b51a-48a6-829f-641dc6d90e85	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb
 2b29e7aa-4530-4b65-991b-0846f8438b7c	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	qq	asd	1	0	f	f	2025-07-04 13:59:44.924437	\N	0	0	2025-07-27 02:24:02.697806
 1c1573d0-e2d1-42ce-b49f-9b3a83616f66	452c7a0d-2eae-421d-9696-92e7f131254b	a688cb56-0dca-466b-840f-e277a3d1431d	rayan	boss	1	0	f	f	2025-07-04 15:35:33.323543	\N	0	0	2025-07-27 02:24:02.979747
 e504f340-20fa-4102-a4c4-584d00ba1bcb	0c167685-5bed-45be-aa67-3d682f5f62b6	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	afd	ewr	7	0	f	f	2025-07-12 19:26:16.795334	\N	0	0	2025-07-27 02:24:03.266613
+7b02afc6-aa31-41c7-a0d6-8991f8a9bfcd	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	asdfgh	qwerty	10	3	f	f	2025-07-04 14:19:37.803399	\N	0	0	2025-07-27 04:05:02.425664
+e226e86d-759c-4dd5-9a6e-093865d9a8c2	1153d21a-30da-4240-878c-9bbf2bc268e0	4a754586-c9bd-4c47-8599-a9f34e309464	Sir	Is good boy	17	2	f	f	2025-07-07 10:03:51.68429	\N	1	0	2025-07-27 04:05:02.756311
+37839c26-ae93-409e-8dc0-c63910b9eb04	e7182d74-efb3-4427-bf94-4dc6a769c5e5	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	about baal	sjgoisdh odbvuibgilbsd bscnxl nskfjaij jahcj	15	2	f	f	2025-07-26 21:49:05.553985	\N	1	0	2025-07-27 04:05:02.846302
+e854452d-a967-4d01-ae54-aadbc09e12fc	1153d21a-30da-4240-878c-9bbf2bc268e0	a688cb56-0dca-466b-840f-e277a3d1431d	no	hey boy	8	2	f	f	2025-07-03 23:28:30.127395	\N	1	0	2025-07-27 04:05:02.898712
+ba1cab1d-705f-475b-b485-c5add714f489	e7182d74-efb3-4427-bf94-4dc6a769c5e5	66b1d6f4-70cf-4bcb-a038-fe570b979dd8	afnaiuf asjejeejejej	sdijfjroireoir pasopfiacka ljjsjs	3	0	f	f	2025-07-26 21:50:32.408986	\N	0	0	2025-07-27 13:40:14.775597
+9ee70fdb-c9f2-433e-9ebe-277d1cd83a83	68787b29-734e-4b10-a4bf-401f1ae3e3b6	a688cb56-0dca-466b-840f-e277a3d1431d	rhrrrrrr	rrr	16	5	f	f	2025-07-04 13:41:46.256042	\N	1	0	2025-07-27 13:40:22.697775
 \.
 
 
@@ -632,6 +624,7 @@ a688cb56-0dca-466b-840f-e277a3d1431d	1153d21a-30da-4240-878c-9bbf2bc268e0	2025-0
 66b1d6f4-70cf-4bcb-a038-fe570b979dd8	8825011e-38ce-48da-b6e5-2fad2b44df69	2025-07-14 16:17:48.110048
 66b1d6f4-70cf-4bcb-a038-fe570b979dd8	e7182d74-efb3-4427-bf94-4dc6a769c5e5	2025-07-14 16:20:26.871679
 66b1d6f4-70cf-4bcb-a038-fe570b979dd8	ddc02c3d-d7c6-43c9-81b2-a2d603c5bc4c	2025-07-14 16:24:54.300775
+a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2	8825011e-38ce-48da-b6e5-2fad2b44df69	2025-07-27 04:05:24.677649
 \.
 
 
@@ -673,14 +666,11 @@ f9ac75cc-7701-455f-9e16-2e62e14d569d	mike.wilson@example.com	\N	mikewilson	moder
 a688cb56-0dca-466b-840f-e277a3d1431d	suman.sinan@gmail.com	\N	suman.sinan	user	\N	user_2zDieq0ppn3qgK1IfEdUNIboeUf	clerk	user_2zDieq0ppn3qgK1IfEdUNIboeUf	t	Suman Ahmed	Sinan	https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yekRpZXNod1RBd1FmZ3pTT25URG5XS2pZcEgifQ	2025-07-07 06:47:34.239969	oauth	2025-07-07 06:47:34.245615	clerk_google	clerk_google	2025-06-30 09:07:41.939693	2025-07-07 06:47:34.245592
 11cfd680-2c4c-43fd-aed0-7ba80604f411	samiulshemul66@gmail.com	\N	samiulshemul66	user	\N	user_2zGj14nbjDmQueZukOkJR1HIdWa	clerk	user_2zGj14nbjDmQueZukOkJR1HIdWa	t	Shemul	Samiul	https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yekdqMThnSG82cTc2RU4yUDFlUFpNMVVtRlcifQ	2025-07-09 17:18:27.1942	oauth	2025-07-09 17:18:27.194575	clerk_google	clerk_google	2025-07-01 10:01:30.565671	2025-07-09 17:18:27.194564
 59bca9be-0a2d-41a3-b152-f2dc24449cd1	fohoju@fxzig.com	\N	fohoju	user	\N	user_2zmG9YOeyviasga5oE73Ec7fklw	clerk	user_2zmG9YOeyviasga5oE73Ec7fklw	t	\N	\N	https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yemxxWWpENkFzUXpWaUFneHAyVHZpNkJSQksiLCJyaWQiOiJ1c2VyXzJ6bUc5WU9leXZpYXNnYTVvRTczRWM3ZmtsdyJ9	2025-07-12 19:59:18.725046	oauth	2025-07-12 19:59:18.725049	clerk_clerk	clerk_clerk	2025-07-12 19:58:06.656218	2025-07-12 19:59:18.725049
+a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2	bangi@gmail.com	\N	bangi	user	\N	user_30QYoUKmDOUWEbEM9rTL0BhhzOq	clerk	user_30QYoUKmDOUWEbEM9rTL0BhhzOq	f	\N	\N	https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yelc0YlNPZUM3VlhuNW1XRGdaNFFtZGlsaWoiLCJyaWQiOiJ1c2VyXzMwUVlvVUttRE9VV0ViRU05clRMMEJoaHpPcSJ9	2025-07-27 13:59:15.294165	clerk	2025-07-27 13:59:15.29417	clerk_clerk	clerk_clerk	2025-07-27 02:23:58.708779	2025-07-27 13:59:15.294169
 66b1d6f4-70cf-4bcb-a038-fe570b979dd8	abdullah991r@gmail.com	\N	abdullah991r	user	\N	user_2zW4r4fnKLe52bJMBEFZ03pLAm0	clerk	user_2zW4r4fnKLe52bJMBEFZ03pLAm0	t	Abdullah	Faiyaz	https://img.clerk.com/eyJ0eXBlIjoicHJveHkiLCJzcmMiOiJodHRwczovL2ltYWdlcy5jbGVyay5kZXYvb2F1dGhfZ29vZ2xlL2ltZ18yelc0ckU3RnFmSFRVNUhtaVlwNzRhSjBubTEifQ	2025-07-27 02:18:18.902972	oauth	2025-07-27 02:18:18.902982	clerk_google	clerk_google	2025-07-12 16:57:56.937479	2025-07-27 02:18:18.90298
-a5f0cbe5-1f2f-4c42-bf85-aa7786abf5f2	bangi@gmail.com	\N	bangi	user	\N	user_30QYoUKmDOUWEbEM9rTL0BhhzOq	clerk	user_30QYoUKmDOUWEbEM9rTL0BhhzOq	f	\N	\N	https://img.clerk.com/eyJ0eXBlIjoiZGVmYXVsdCIsImlpZCI6Imluc18yelc0YlNPZUM3VlhuNW1XRGdaNFFtZGlsaWoiLCJyaWQiOiJ1c2VyXzMwUVlvVUttRE9VV0ViRU05clRMMEJoaHpPcSJ9	2025-07-27 02:23:58.708789	clerk	2025-07-27 02:23:58.708785	clerk	clerk_clerk	2025-07-27 02:23:58.708779	\N
 \.
 
-<<<<<<< HEAD
-=======
 
->>>>>>> 8bbeeb7 (abd-commit)
 --
 -- Name: activity_logs activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
@@ -769,16 +759,12 @@ ALTER TABLE ONLY public.thread_dislikes
     ADD CONSTRAINT thread_dislikes_pkey PRIMARY KEY (id);
 
 
-<<<<<<< HEAD
-
-=======
 --
 -- Name: thread_images thread_images_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.thread_images
     ADD CONSTRAINT thread_images_pkey PRIMARY KEY (id);
->>>>>>> 8bbeeb7 (abd-commit)
 
 
 --
@@ -1085,16 +1071,12 @@ ALTER TABLE ONLY public.thread_dislikes
     ADD CONSTRAINT fkfuv6tl0ivg0h0ctcddp59py4 FOREIGN KEY (thread_id) REFERENCES public.threads(id);
 
 
-<<<<<<< HEAD
-
-=======
 --
 -- Name: thread_images fki03773l245kipe2k22klun3xs; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
 ALTER TABLE ONLY public.thread_images
     ADD CONSTRAINT fki03773l245kipe2k22klun3xs FOREIGN KEY (thread_id) REFERENCES public.threads(id);
->>>>>>> 8bbeeb7 (abd-commit)
 
 
 --
