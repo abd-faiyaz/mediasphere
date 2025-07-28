@@ -116,15 +116,15 @@ jobs:
           
           # Pull the latest images
           echo "Pulling latest Docker images..."
-          sudo docker compose -f docker-compose.production.yml pull
+          sudo docker-compose -f docker-compose.production.yml pull
           
           # Stop current services
           echo "Stopping current services..."
-          sudo docker compose -f docker-compose.production.yml down
+          sudo docker-compose -f docker-compose.production.yml down
           
           # Start services with new images
           echo "Starting services with updated images..."
-          sudo docker compose -f docker-compose.production.yml up -d
+          sudo docker-compose -f docker-compose.production.yml up -d
           
           # Wait a bit for services to start
           echo "Waiting for services to start..."
@@ -132,7 +132,7 @@ jobs:
           
           # Check service status
           echo "Checking service status..."
-          sudo docker compose -f docker-compose.production.yml ps
+          sudo docker-compose -f docker-compose.production.yml ps
           
           # Test backend health
           echo "Testing backend health..."
