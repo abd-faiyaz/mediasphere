@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { AuthGuard } from "@/components/auth-guard"
 import { SummaryTab } from "@/components/ai/SummaryTab"
+import { QuizTab } from "@/components/ai/QuizTab"
 
 function AIServicesContent() {
   const router = useRouter()
@@ -259,48 +260,7 @@ function AIServicesContent() {
                         )}
 
                         {service.id === "quiz" && (
-                          <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            transition={{ delay: 0.3, duration: 0.5 }}
-                            className="space-y-4"
-                          >
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">Source Content</label>
-                              <Textarea
-                                placeholder="Enter the content you want to create a quiz from..."
-                                className="min-h-[150px]"
-                              />
-                            </div>
-                            <div className="grid grid-cols-2 gap-4">
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
-                                  Number of Questions
-                                </label>
-                                <select className="w-full p-2 border border-gray-300 rounded-md">
-                                  <option>5 questions</option>
-                                  <option>10 questions</option>
-                                  <option>15 questions</option>
-                                  <option>20 questions</option>
-                                </select>
-                              </div>
-                              <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">Difficulty Level</label>
-                                <select className="w-full p-2 border border-gray-300 rounded-md">
-                                  <option>Easy</option>
-                                  <option>Medium</option>
-                                  <option>Hard</option>
-                                  <option>Mixed</option>
-                                </select>
-                              </div>
-                            </div>
-                            <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                              <Button className="bg-green-600 hover:bg-green-700">
-                                <HelpCircle className="mr-2 h-4 w-4" />
-                                Generate Quiz
-                              </Button>
-                            </motion.div>
-                          </motion.div>
+                          <QuizTab />
                         )}
 
                         {service.id === "analyze" && (

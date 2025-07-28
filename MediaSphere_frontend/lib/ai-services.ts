@@ -35,6 +35,68 @@ export interface ThreadOption {
   title: string;
 }
 
+export interface QuizRequest {
+  mediaId?: string;
+  clubId?: string;
+  threadId?: string;
+  numberOfQuestions?: number;
+  difficulty?: 'EASY' | 'MEDIUM' | 'HARD' | 'MIXED';
+  questionType?: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER' | 'MIXED';
+  includeExplanations?: boolean;
+  timeLimit?: number;
+}
+
+export interface QuizQuestion {
+  question: string;
+  type: 'MULTIPLE_CHOICE' | 'TRUE_FALSE' | 'SHORT_ANSWER';
+  options?: string[];
+  correctAnswer: string;
+  explanation?: string;
+  points: number;
+  difficulty: 'EASY' | 'MEDIUM' | 'HARD';
+}
+
+export interface QuizResponse {
+  success: boolean;
+  message?: string;
+  quizTitle: string;
+  sourceType: 'MEDIA' | 'CLUB' | 'THREAD';
+  sourceTitle: string;
+  questions: QuizQuestion[];
+  totalQuestions: number;
+  estimatedTime: number;
+  difficulty: string;
+  instructions: string;
+  generatedAt: string;
+  fromCache: boolean;
+}
+
+export interface QuizSubmissionRequest {
+  quizId: string;
+  answers: Record<number, string>;
+  startTime: number;
+  endTime: number;
+}
+
+export interface QuestionResult {
+  questionIndex: number;
+  userAnswer: string;
+  correctAnswer: string;
+  isCorrect: boolean;
+  explanation: string;
+  points: number;
+}
+
+export interface QuizSubmissionResponse {
+  success: boolean;
+  message?: string;
+  score: number;
+  totalQuestions: number;
+  percentage: number;
+  results: QuestionResult[];
+  completionTime: number;
+}
+
 class AIService {
   private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -76,6 +138,20 @@ class AIService {
 
   async getThreadsByClub(clubId: string): Promise<ThreadOption[]> {
     return this.makeRequest<ThreadOption[]>(`/api/ai/data/threads?clubId=${clubId}`);
+  }
+
+  async generateQuiz(request: QuizRequest): Promise<QuizResponse> {
+    return this.makeRequest<QuizResponse>('/api/ai/quiz/generate', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    });
+  }
+
+  async submitQuiz(request: QuizSubmissionRequest): Promise<QuizSubmissionResponse> {
+    return this.makeRequest<QuizSubmissionResponse>('/api/ai/quiz/submit', {
+      method: 'POST',
+      body: JSON.stringify(request)
+    });
   }
 
   async testConnection(): Promise<string> {
