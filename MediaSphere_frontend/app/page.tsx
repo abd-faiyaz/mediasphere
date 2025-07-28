@@ -12,6 +12,7 @@ import { PageLoader } from "@/components/ui/loading"
 import { useUser } from "@clerk/nextjs"
 import { useDashboardData } from "@/hooks/use-dashboard-data"
 import { InfiniteScrollFeed } from "@/components/feed/infinite-scroll-feed"
+import { SearchBar } from "@/components/search/search-bar"
 
 export default function HomePage() {
   const { isAuthenticated, isReady } = useAuth()
@@ -59,14 +60,10 @@ export default function HomePage() {
 
             {/* Search Bar */}
             <div className="flex-1 max-w-lg mx-8">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-[#333333]/50 h-4 w-4" />
-                <Input 
-                  placeholder="Search clubs, threads, events..." 
-                  className="pl-10 w-full bg-white/90 border-[#90CAF9]/30 focus:border-[#1E3A8A] text-[#333333] placeholder:text-[#333333]/50 font-['Open Sans']"
-                  type="text"
-                />
-              </div>
+              <SearchBar 
+                placeholder="Search clubs, threads, events..." 
+                className="w-full"
+              />
             </div>
 
             <nav className="flex items-center space-x-4">
