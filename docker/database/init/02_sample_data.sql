@@ -1,2 +1,0 @@
--- All data is now included in 01_init_schema.sql
--- This file is kept for compatibility but contains no additional data
