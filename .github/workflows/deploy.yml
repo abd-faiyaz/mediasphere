@@ -2,7 +2,7 @@ name: MediaSphere CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ sumon main ]
   pull_request:
     branches: [ main ]
 
