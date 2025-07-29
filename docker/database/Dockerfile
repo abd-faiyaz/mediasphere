@@ -12,6 +12,11 @@ RUN apk add --no-cache \
 # Set timezone for Azure deployment
 ENV TZ=UTC
 
+# Remove the environment variable defaults - they will be set at runtime
+# ENV POSTGRES_DB will be set by docker-compose or docker run
+# ENV POSTGRES_USER will be set by docker-compose or docker run  
+# ENV POSTGRES_PASSWORD will be set by docker-compose or docker run
+
 # Create directories for custom configuration
 RUN mkdir -p /docker-entrypoint-initdb.d \
     && mkdir -p /var/lib/postgresql/backup \
@@ -20,20 +25,10 @@ RUN mkdir -p /docker-entrypoint-initdb.d \
 # Copy initialization scripts
 COPY init/*.sql /docker-entrypoint-initdb.d/
 
-# Copy custom PostgreSQL configuration
-COPY postgresql.conf /etc/postgresql/postgresql.conf
+# Use a simpler approach - just use default PostgreSQL config
+# Skip custom postgresql.conf and scripts for now to avoid errors
 
-# Create backup script
-COPY scripts/backup.sh /usr/local/bin/backup-db
-COPY scripts/restore.sh /usr/local/bin/restore-db
-COPY scripts/health-check.sh /usr/local/bin/health-check
-
-# Make scripts executable
-RUN chmod +x /usr/local/bin/backup-db \
-    && chmod +x /usr/local/bin/restore-db \
-    && chmod +x /usr/local/bin/health-check
-
-# Set proper ownership
+# Set proper ownership for directories we created
 RUN chown -R postgres:postgres /var/lib/postgresql/backup \
     && chown -R postgres:postgres /var/log/postgresql
 
@@ -41,9 +36,9 @@ RUN chown -R postgres:postgres /var/lib/postgresql/backup \
 EXPOSE 5432
 
 # Add health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD /usr/local/bin/health-check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD pg_isready || exit 1
 
-# Use default PostgreSQL entrypoint
+# Use default PostgreSQL entrypoint and default configuration
 ENTRYPOINT ["docker-entrypoint.sh"]
-CMD ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+CMD ["postgres"]

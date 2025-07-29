@@ -27,6 +27,13 @@ public class UserController {
     @Autowired
     private UserService userService;
 
+    // Get all users
+    @GetMapping("/all")
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userService.getAllUsers();
+        return ResponseEntity.ok(users);
+    }
+
     // Get user profile by ID
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserProfile(@PathVariable("id") UUID id) {

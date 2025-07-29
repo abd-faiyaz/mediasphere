@@ -91,6 +91,11 @@ jobs:
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
+          CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
+          NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
 
   deploy:
     name: Deploy to Azure VM
@@ -103,46 +108,51 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Deploy to Azure VM
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AZURE_VM_IP }}
-        username: ${{ secrets.AZURE_VM_USER }}
-        key: ${{ secrets.AZURE_VM_SSH_KEY }}
-        script: |
-          echo "Starting deployment on Azure VM..."
-          
-          # Navigate to deployment directory
-          cd ~/mediasphere-deploy
-          
-          # Pull the latest images
-          echo "Pulling latest Docker images..."
-          sudo docker-compose -f docker-compose.production.yml pull
-          
-          # Stop current services
-          echo "Stopping current services..."
-          sudo docker-compose -f docker-compose.production.yml down
-          
-          # Start services with new images
-          echo "Starting services with updated images..."
-          sudo docker-compose -f docker-compose.production.yml up -d
-          
-          # Wait a bit for services to start
-          echo "Waiting for services to start..."
-          sleep 30
-          
-          # Check service status
-          echo "Checking service status..."
-          sudo docker-compose -f docker-compose.production.yml ps
-          
-          # Test backend health
-          echo "Testing backend health..."
-          curl -f http://localhost:8080/actuator/health || echo "Backend health check failed"
-          
-          # Test frontend
-          echo "Testing frontend..."
-          curl -f http://localhost:3000/ || echo "Frontend health check failed"
-          
-          echo "Deployment completed!"
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.AZURE_VM_HOST }}
+          username: ${{ secrets.AZURE_VM_USERNAME }}
+          key: ${{ secrets.AZURE_VM_SSH_KEY }}
+          script: |
+            cd mediasphere
+            
+            # Stop existing containers
+            docker compose -f docker-compose.production.yml down
+            
+            # Create production environment file
+            cat > .env.production << EOF
+            # Database Configuration
+            POSTGRES_DB=mediaspheredb
+            POSTGRES_USER=mediasphere_user
+            POSTGRES_PASSWORD=mediasphere_password123
+            
+            # Backend Configuration
+            SPRING_PROFILES_ACTIVE=production
+            SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mediaspheredb
+            SPRING_DATASOURCE_USERNAME=mediasphere_user
+            SPRING_DATASOURCE_PASSWORD=mediasphere_password123
+            
+            # AI Service Configuration
+            GEMINI_API_KEY=AIzaSyDJMJt-rMWW3u55lPpwjsLU6Z8XCE6xhD8
+            AI_SERVICE_TYPE=gemini
+            AI_SERVICE_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
+            AI_SERVICE_API_KEY=AIzaSyDJMJt-rMWW3u55lPpwjsLU6Z8XCE6xhD8
+            
+            # Frontend Configuration
+            NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
+            CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
+            NEXT_PUBLIC_API_BASE_URL=http://20.255.51.86:8080
+            NEXT_PUBLIC_APP_URL=http://20.255.51.86:3000
+            EOF
+            
+            # Pull latest images
+            docker compose -f docker-compose.production.yml pull
+            
+            # Start services
+            docker compose -f docker-compose.production.yml up -d
+            
+            # Show running containers
+            docker ps
 
     - name: Deployment Status Notification
       if: always()
