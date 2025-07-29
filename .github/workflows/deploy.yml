@@ -2,13 +2,16 @@ name: MediaSphere CI/CD Pipeline
 
 on:
   push:
-    branches: [ sumon, main ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
 env:
   REGISTRY: docker.io
   REGISTRY_USER: abdfaiyaz
+  AZURE_VM_HOST: ${{ secrets.AZURE_VM_IP }}
+  AZURE_VM_USER: ${{ secrets.AZURE_VM_USERNAME }}
+  AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
 
 jobs:
   build-and-push:
@@ -109,32 +112,21 @@ jobs:
 
     - name: Debug SSH Connection Info
       run: |
-        echo "Host: ${{ secrets.AZURE_VM_IP }}"
-        echo "Username: ${{ secrets.AZURE_VM_USERNAME }}"
-        echo "Host length: $(echo -n '${{ secrets.AZURE_VM_IP }}' | wc -c)"
-        echo "Username length: $(echo -n '${{ secrets.AZURE_VM_USERNAME }}' | wc -c)"
+        echo "Host: ${{ env.AZURE_VM_HOST }}"
+        echo "Username: ${{ env.AZURE_VM_USER }}"
+        echo "Host length: $(echo -n '${{ env.AZURE_VM_HOST }}' | wc -c)"
+        echo "Username length: $(echo -n '${{ env.AZURE_VM_USER }}' | wc -c)"
 
-    - name: Test SSH Connection
-      uses: shimataro/ssh-key-action@v2
+    - name: Deploy to Azure VM
+      uses: appleboy/ssh-action@v0.1.7
       with:
-        key: ${{ secrets.AZURE_VM_SSH_KEY }}
-        known_hosts: unnecessary
-        
-    - name: Test SSH with different action
-      run: |
-        ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_IP }} "echo 'Connection successful'; whoami; pwd"
-
-    - name: Deployment to Azure VM
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.AZURE_VM_IP }}
-        username: ${{ secrets.AZURE_VM_USERNAME }}
-        key: ${{ secrets.AZURE_VM_SSH_KEY }}
-        port: 22
-        timeout: 30s
-        command_timeout: 10m
+        host: ${{ env.AZURE_VM_HOST }}
+        username: ${{ env.AZURE_VM_USER }}
+        key: ${{ env.AZURE_VM_SSH_KEY }}
         script: |
-          cd mediasphere
+          echo "Deploying to Azure VM..."
+          # Ensure the directory exists
+          cd /home/${{ env.AZURE_VM_USER }}/mediasphere || cd mediasphere
           
           # Stop existing containers
           docker compose -f docker-compose.production.yml down
