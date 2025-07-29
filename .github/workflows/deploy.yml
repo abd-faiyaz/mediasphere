@@ -107,10 +107,17 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Debug SSH Connection Info
+      run: |
+        echo "Host: ${{ secrets.AZURE_VM_IP }}"
+        echo "Username: ${{ secrets.AZURE_VM_USERNAME }}"
+        echo "Host length: $(echo -n '${{ secrets.AZURE_VM_IP }}' | wc -c)"
+        echo "Username length: $(echo -n '${{ secrets.AZURE_VM_USERNAME }}' | wc -c)"
+
     - name: Deployment to Azure VM
       uses: appleboy/ssh-action@v1.0.3
       with:
-        host: ${{ secrets.AZURE_VM_HOST }}
+        host: ${{ secrets.AZURE_VM_IP }}
         username: ${{ secrets.AZURE_VM_USERNAME }}
         key: ${{ secrets.AZURE_VM_SSH_KEY }}
         script: |
@@ -151,8 +158,8 @@ jobs:
           # Start services
           docker compose -f docker-compose.production.yml up -d
           
-            # Show running containers
-            docker ps
+          # Show running containers
+          docker ps
   
     - name: Deployment Status Notification
       if: always()
