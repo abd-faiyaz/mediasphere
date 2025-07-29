@@ -114,12 +114,25 @@ jobs:
         echo "Host length: $(echo -n '${{ secrets.AZURE_VM_IP }}' | wc -c)"
         echo "Username length: $(echo -n '${{ secrets.AZURE_VM_USERNAME }}' | wc -c)"
 
+    - name: Test SSH Connection
+      uses: shimataro/ssh-key-action@v2
+      with:
+        key: ${{ secrets.AZURE_VM_SSH_KEY }}
+        known_hosts: unnecessary
+        
+    - name: Test SSH with different action
+      run: |
+        ssh -o StrictHostKeyChecking=no ${{ secrets.AZURE_VM_USERNAME }}@${{ secrets.AZURE_VM_IP }} "echo 'Connection successful'; whoami; pwd"
+
     - name: Deployment to Azure VM
       uses: appleboy/ssh-action@v1.0.3
       with:
         host: ${{ secrets.AZURE_VM_IP }}
         username: ${{ secrets.AZURE_VM_USERNAME }}
         key: ${{ secrets.AZURE_VM_SSH_KEY }}
+        port: 22
+        timeout: 30s
+        command_timeout: 10m
         script: |
           cd mediasphere
           
