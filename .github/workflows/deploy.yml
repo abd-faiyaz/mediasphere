@@ -2,7 +2,7 @@ name: MediaSphere CI/CD Pipeline
 
 on:
   push:
-    branches: [ sumon , main ]
+    branches: [ main ]
   pull_request:
     branches: [ main ]
 
@@ -125,7 +125,6 @@ jobs:
         key: ${{ env.AZURE_VM_SSH_KEY }}
         script: |
           echo "Deploying to Azure VM..."
-          # Ensure the directory exists
           cd /home/${{ env.AZURE_VM_USER }}/mediasphere || cd mediasphere
           
           # Stop existing containers
@@ -133,24 +132,17 @@ jobs:
           
           # Create production environment file
           cat > .env.production << EOF
-          # Database Configuration
           POSTGRES_DB=mediaspheredb
           POSTGRES_USER=mediasphere_user
           POSTGRES_PASSWORD=mediasphere_password123
-          
-          # Backend Configuration
           SPRING_PROFILES_ACTIVE=production
           SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mediaspheredb
           SPRING_DATASOURCE_USERNAME=mediasphere_user
           SPRING_DATASOURCE_PASSWORD=mediasphere_password123
-          
-          # AI Service Configuration
           GEMINI_API_KEY=AIzaSyDJMJt-rMWW3u55lPpwjsLU6Z8XCE6xhD8
           AI_SERVICE_TYPE=gemini
           AI_SERVICE_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
           AI_SERVICE_API_KEY=AIzaSyDJMJt-rMWW3u55lPpwjsLU6Z8XCE6xhD8
-          
-          # Frontend Configuration
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
           CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
           NEXT_PUBLIC_API_BASE_URL=http://20.255.51.86:8080
