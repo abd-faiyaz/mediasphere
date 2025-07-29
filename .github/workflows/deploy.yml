@@ -2,7 +2,11 @@ name: MediaSphere CI/CD Pipeline
 
 on:
   push:
+<<<<<<< HEAD
     branches: [ sumon main ]
+=======
+    branches: [ sumon, main ]
+>>>>>>> 20bec2a (checking push)
   pull_request:
     branches: [ main ]
 
