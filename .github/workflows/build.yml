@@ -87,13 +87,9 @@ jobs:
       with:
         context: ./MediaSphere_frontend
         file: ./MediaSphere_frontend/Dockerfile
+        target: production
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        build-args: |
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
-          CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
-          NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-          NEXT_PUBLIC_APP_URL=http://localhost:3000

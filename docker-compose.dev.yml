@@ -60,6 +60,7 @@ services:
     build:
       context: ./MediaSphere_frontend
       dockerfile: Dockerfile
+      target: development
     image: abdfaiyaz/mediasphere-frontend:dev
     container_name: mediasphere-dev-frontend
     volumes:
