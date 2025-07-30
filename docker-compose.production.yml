@@ -54,6 +54,7 @@ services:
     image: abdfaiyaz/mediasphere-frontend:latest
     container_name: mediasphere-frontend
     environment:
+      - DB_HOST=postgres
       - NODE_ENV=production
       - PORT=3000
       - HOSTNAME=0.0.0.0

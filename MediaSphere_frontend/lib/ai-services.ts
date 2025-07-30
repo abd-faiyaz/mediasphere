@@ -98,7 +98,7 @@ export interface QuizSubmissionResponse {
 }
 
 class AIService {
-  private baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+  private baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8080';
 
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;

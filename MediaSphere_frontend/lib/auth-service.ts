@@ -51,22 +51,34 @@ export class AuthService {
       authProvider: this.extractAuthProvider(clerkUser)
     }
 
-    const response = await fetch(`${this.baseUrl}/oauth/clerk`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(clerkUserDto),
-    })
+    try {
+      const response = await fetch(`${this.baseUrl}/oauth/clerk`, {
+        method: 'POST',
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+        },
+        body: JSON.stringify(clerkUserDto),
+      })
 
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || 'Clerk authentication failed')
+      if (!response.ok) {
+        const error = await response.text()
+        console.error('Auth response error:', error)
+        throw new Error(error || 'Clerk authentication failed')
+      }
+
+      const authResponse = await response.json()
+      this.storeToken(authResponse.token)
+      return authResponse
+    } catch (error) {
+      console.error('Network error during authentication:', error)
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Unable to connect to the server. Please ensure the backend is running on localhost:8080')
+      }
+      throw error
     }
-
-    const authResponse = await response.json()
-    this.storeToken(authResponse.token)
-    return authResponse
   }
 
   /**

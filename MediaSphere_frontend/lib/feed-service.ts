@@ -83,21 +83,33 @@ class FeedService {
   private async makeRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const token = await authService.getToken()
     
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      ...options,
-      headers: {
-        'Content-Type': 'application/json',
-        ...(token && { 'Authorization': `Bearer ${token}` }),
-        ...options.headers,
-      },
-    })
+    try {
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        ...options,
+        mode: 'cors',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json',
+          ...(token && { 'Authorization': `Bearer ${token}` }),
+          ...options.headers,
+        },
+      })
 
-    if (!response.ok) {
-      const errorText = await response.text()
-      throw new Error(`HTTP ${response.status}: ${errorText}`)
+      if (!response.ok) {
+        const errorText = await response.text()
+        console.error(`API Error (${response.status}):`, errorText)
+        throw new Error(`HTTP ${response.status}: ${errorText}`)
+      }
+
+      return response.json()
+    } catch (error) {
+      console.error('Network error:', error)
+      if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
+        throw new Error('Unable to connect to the server. Please ensure the backend is running on localhost:8080')
+      }
+      throw error
     }
-
-    return response.json()
   }
 
   /**
