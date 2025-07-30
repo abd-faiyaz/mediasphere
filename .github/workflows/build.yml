@@ -86,7 +86,7 @@ jobs:
       uses: docker/build-push-action@v5
       with:
         context: ./MediaSphere_frontend
-        file: ./MediaSphere_frontend/Dockerfile
+        file: ./MediaSphere_frontend/Dockerfile.production
         target: production
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
