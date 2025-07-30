@@ -115,7 +115,7 @@ export default function SignInPage() {
         />
       </motion.div>
 
-      {/* Floating Icons Background */}
+      {/* Floating Icons Background
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {isMounted && floatingIcons.map((item, index) => (
           <motion.div
@@ -143,7 +143,7 @@ export default function SignInPage() {
             <item.icon className="w-8 h-8 text-white/20" />
           </motion.div>
         ))}
-      </div>
+      </div> */}
 
       {/* Main Content */}
       <div className="relative z-10 min-h-screen flex items-center justify-center p-4">

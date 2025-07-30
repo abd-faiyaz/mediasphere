@@ -60,6 +60,8 @@ export default function ProfilePage() {
   const [formData, setFormData] = useState({
     username: "",
     email: "",
+    firstName: "",
+    lastName: "",
     bio: "",
     location: "",
     website: ""
@@ -324,6 +326,8 @@ export default function ProfilePage() {
         setFormData({
           username: userData.username || "",
           email: userData.email || "",
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
           bio: userData.bio || "",
           location: "", // Add these when available in API
           website: ""
@@ -467,6 +471,8 @@ export default function ProfilePage() {
       const updatedUser = await apiService.updateUserProfile(user.id, {
         username: formData.username,
         email: formData.email,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
         bio: formData.bio
       })
 
@@ -474,9 +480,14 @@ export default function ProfilePage() {
         setUser(updatedUser)
         setIsEditing(false)
 
+        // Check if names were added for the first time
+        const namesAdded = (!user.firstName && formData.firstName) || (!user.lastName && formData.lastName)
+        
         toast({
           title: "Success",
-          description: "Profile updated successfully!"
+          description: namesAdded 
+            ? "Profile updated successfully! Your name has been added." 
+            : "Profile updated successfully!"
         })
       }
     } catch (error) {
@@ -785,7 +796,9 @@ export default function ProfilePage() {
             animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
             transition={{ duration: 5, repeat: Infinity, ease: "linear" }}
           >
-            {user?.username}
+            {user?.firstName && user?.lastName
+              ? `${user.firstName} ${user.lastName}`
+              : user?.username || "User"}
           </motion.h1>
           <motion.p
             className="text-lg text-[#333333]/70 mb-6 max-w-2xl mx-auto font-['Open Sans']"
@@ -917,7 +930,7 @@ export default function ProfilePage() {
                           Edit Profile
                         </CardTitle>
                         <CardDescription className="text-[#333333]/70 font-['Open Sans']">
-                          Update your profile information
+                          Update your profile information. Add your first and last name to personalize your profile.
                         </CardDescription>
                       </CardHeader>
                       <CardContent className="space-y-6">
@@ -941,6 +954,28 @@ export default function ProfilePage() {
                               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                               className="bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
                               placeholder="Enter email"
+                            />
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName" className="text-[#1E3A8A] font-['Open Sans']">First Name</Label>
+                            <Input
+                              id="firstName"
+                              value={formData.firstName}
+                              onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                              className="bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
+                              placeholder="Enter first name"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName" className="text-[#1E3A8A] font-['Open Sans']">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              value={formData.lastName}
+                              onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
+                              className="bg-[#F0F7FF]/50 border-[#90CAF9]/30 text-[#333333] font-['Open Sans']"
+                              placeholder="Enter last name"
                             />
                           </div>
                         </div>
@@ -982,6 +1017,26 @@ export default function ProfilePage() {
                             <p className="text-[#333333] text-lg font-['Nunito']">{user.email}</p>
                           </div>
                         </div>
+                        {(user.firstName || user.lastName || true) && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div>
+                              <Label className="text-[#1E3A8A] font-['Open Sans']">First Name</Label>
+                              <p className="text-[#333333] text-lg font-['Nunito']">
+                                {user.firstName || (
+                                  <span className="text-[#333333]/50 italic">Not set - click Edit to add</span>
+                                )}
+                              </p>
+                            </div>
+                            <div>
+                              <Label className="text-[#1E3A8A] font-['Open Sans']">Last Name</Label>
+                              <p className="text-[#333333] text-lg font-['Nunito']">
+                                {user.lastName || (
+                                  <span className="text-[#333333]/50 italic">Not set - click Edit to add</span>
+                                )}
+                              </p>
+                            </div>
+                          </div>
+                        )}
                         {user.bio && (
                           <div>
                             <Label className="text-[#1E3A8A] font-['Open Sans']">Bio</Label>

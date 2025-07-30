@@ -60,10 +60,27 @@ public class UserController {
         User existingUser = existingUserOpt.get();
 
         // Update fields (add more as needed)
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setProfilePic(updatedUser.getProfilePic());
-        existingUser.setRole(updatedUser.getRole());
-        existingUser.setEmail(updatedUser.getEmail());
+        if (updatedUser.getUsername() != null) {
+            existingUser.setUsername(updatedUser.getUsername());
+        }
+        if (updatedUser.getProfilePic() != null) {
+            existingUser.setProfilePic(updatedUser.getProfilePic());
+        }
+        if (updatedUser.getRole() != null) {
+            existingUser.setRole(updatedUser.getRole());
+        }
+        if (updatedUser.getEmail() != null) {
+            existingUser.setEmail(updatedUser.getEmail());
+        }
+        if (updatedUser.getFirstName() != null) {
+            existingUser.setFirstName(updatedUser.getFirstName());
+        }
+        if (updatedUser.getLastName() != null) {
+            existingUser.setLastName(updatedUser.getLastName());
+        }
+
+        // Update the updated_at timestamp
+        existingUser.setUpdatedAt(java.time.LocalDateTime.now());
 
         // Save updated user
         User savedUser = userService.saveUser(existingUser);
