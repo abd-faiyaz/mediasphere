@@ -26,13 +26,9 @@ services:
   backend:
     build:
       context: ./MediaSphere_backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     image: abdfaiyaz/mediasphere-backend:dev
     container_name: mediasphere-dev-backend
-    volumes:
-      - ./MediaSphere_backend:/app
-      - /app/target
-    command: ["mvn", "spring-boot:run"]
     
     environment:
       - DB_HOST=postgres

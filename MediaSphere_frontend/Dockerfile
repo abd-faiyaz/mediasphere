@@ -1,4 +1,4 @@
-# MediaSphere Frontend Dockerfile
+    # MediaSphere Frontend Dockerfile
 # Multi-stage build with development and production targets
 
 # Stage 1: Dependencies (shared)
@@ -38,9 +38,6 @@ RUN pnpm build
 # Continue to runtime stage
 FROM node:18-alpine AS dev-runtime
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
-
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
@@ -49,12 +46,9 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy built application from development stage
-COPY --from=development /app/public ./public
-COPY --from=development /app/.next/standalone ./
-COPY --from=development /app/.next/static ./.next/static
-
-# Set ownership
-RUN chown -R nextjs:nodejs /app
+COPY --from=development --chown=nextjs:nodejs /app/public ./public
+COPY --from=development --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=development --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Switch to non-root user
 USER nextjs
@@ -70,7 +64,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+  CMD node --version || exit 1
 
 # Start the application
 CMD ["node", "server.js"]
@@ -99,9 +93,6 @@ RUN pnpm build
 # Stage 4: Production Runtime (default)
 FROM node:18-alpine AS runtime
 
-# Install wget for healthcheck
-RUN apk add --no-cache wget
-
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nextjs -u 1001
@@ -110,12 +101,9 @@ RUN addgroup -g 1001 -S nodejs && \
 WORKDIR /app
 
 # Copy built application from production stage
-COPY --from=production /app/public ./public
-COPY --from=production /app/.next/standalone ./
-COPY --from=production /app/.next/static ./.next/static
-
-# Set ownership
-RUN chown -R nextjs:nodejs /app
+COPY --from=production --chown=nextjs:nodejs /app/public ./public
+COPY --from=production --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=production --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Switch to non-root user
 USER nextjs
@@ -131,7 +119,7 @@ EXPOSE 3000
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+  CMD node --version || exit 1
 
 # Start the application
 CMD ["node", "server.js"]

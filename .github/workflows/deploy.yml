@@ -41,7 +41,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push backend image
       uses: docker/build-push-action@v5
@@ -62,7 +62,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push database image
       uses: docker/build-push-action@v5
@@ -83,14 +83,13 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
         context: ./MediaSphere_frontend
-        file: ./MediaSphere_frontend/Dockerfile
-        target: production
+        file: ./MediaSphere_frontend/Dockerfile.production
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
