@@ -26,13 +26,9 @@ services:
   backend:
     build:
       context: ./MediaSphere_backend
-      dockerfile: Dockerfile.dev
+      dockerfile: Dockerfile
     image: abdfaiyaz/mediasphere-backend:dev
     container_name: mediasphere-dev-backend
-    volumes:
-      - ./MediaSphere_backend:/app
-      - /app/target
-    command: ["mvn", "spring-boot:run"]
     
     environment:
       - DB_HOST=postgres
@@ -44,14 +40,7 @@ services:
     ports:
       - "8080:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 120s
+      - postgres
     networks:
       - mediasphere-dev
     restart: unless-stopped
@@ -60,6 +49,7 @@ services:
     build:
       context: ./MediaSphere_frontend
       dockerfile: Dockerfile
+      target: development
     image: abdfaiyaz/mediasphere-frontend:dev
     container_name: mediasphere-dev-frontend
     volumes:
@@ -76,8 +66,7 @@ services:
     ports:
       - "3000:3000"
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - mediasphere-dev
     restart: unless-stopped

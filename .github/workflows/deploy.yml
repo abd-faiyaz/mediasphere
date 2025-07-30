@@ -2,7 +2,8 @@ name: MediaSphere CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ sumon, main ]
+
   pull_request:
     branches: [ main ]
 
@@ -40,7 +41,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push backend image
       uses: docker/build-push-action@v5
@@ -61,7 +62,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push database image
       uses: docker/build-push-action@v5
@@ -82,23 +83,18 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
         context: ./MediaSphere_frontend
-        file: ./MediaSphere_frontend/Dockerfile
+        file: ./MediaSphere_frontend/Dockerfile.production
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
-        build-args: |
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
-          CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
-          NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
-          NEXT_PUBLIC_APP_URL=http://localhost:3000
 
   deploy:
     name: Deploy to Azure VM
@@ -118,11 +114,11 @@ jobs:
         echo "Username length: $(echo -n '${{ env.AZURE_VM_USER }}' | wc -c)"
 
     - name: Deploy to Azure VM
-      uses: appleboy/ssh-action@v0.1.7
+      uses: appleboy/ssh-action@v1
       with:
-        host: ${{ env.AZURE_VM_HOST }}
-        username: ${{ env.AZURE_VM_USER }}
-        key: ${{ env.AZURE_VM_SSH_KEY }}
+        host: ${{ secrets.AZURE_VM_IP }}
+        username: ${{ secrets.AZURE_VM_USERNAME }}
+        key: ${{ secrets.AZURE_VM_SSH_KEY }}
         script: |
           echo "Deploying to Azure VM..."
           cd /home/${{ env.AZURE_VM_USER }}/mediasphere || cd mediasphere

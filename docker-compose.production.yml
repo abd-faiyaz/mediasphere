@@ -15,12 +15,6 @@ services:
       - postgres_logs:/var/log/postgresql
     ports:
       - "${DB_PORT:-5432}:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
     networks:
       - mediasphere-network
     restart: unless-stopped
@@ -50,14 +44,7 @@ services:
     ports:
       - "${BACKEND_PORT:-8080}:8080"
     depends_on:
-      postgres:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+      - postgres
     networks:
       - mediasphere-network
     restart: unless-stopped
@@ -67,21 +54,18 @@ services:
     image: abdfaiyaz/mediasphere-frontend:latest
     container_name: mediasphere-frontend
     environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - HOSTNAME=0.0.0.0
+      - NEXT_TELEMETRY_DISABLED=1
       - NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=${CLERK_PUBLISHABLE_KEY:-pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ}
       - CLERK_SECRET_KEY=${CLERK_SECRET_KEY:-sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae}
-      - NEXT_PUBLIC_API_BASE_URL=http://${BACKEND_HOST:-localhost}:${BACKEND_PORT:-8080}
-      - NEXT_PUBLIC_APP_URL=http://${FRONTEND_HOST:-localhost}:${FRONTEND_PORT:-3000}
+      - NEXT_PUBLIC_API_BASE_URL=http://20.255.51.86:8080
+      - NEXT_PUBLIC_APP_URL=http://20.255.51.86:3000
     ports:
       - "${FRONTEND_PORT:-3000}:3000"
     depends_on:
-      backend:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1"]
-      interval: 30s
-      timeout: 10s
-      retries: 5
-      start_period: 30s
+      - backend
     networks:
       - mediasphere-network
     restart: unless-stopped
