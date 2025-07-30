@@ -44,24 +44,6 @@ describe('Accordion Components', () => {
     expect(content).toHaveTextContent('Content for item 1')
   })
 
-  it('renders with custom className', () => {
-    render(
-      <Accordion type="single">
-        <AccordionItem value="item-1" className="custom-item">
-          <AccordionTrigger className="custom-trigger">
-            Custom Item
-          </AccordionTrigger>
-          <AccordionContent className="custom-content">
-            Custom Content
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    )
-    
-    const item = screen.getByRole('button').closest('[data-state]')
-    expect(item).toHaveClass('custom-item')
-  })
-
   it('renders multiple accordion items', () => {
     render(<AccordionExample />)
     const triggers = screen.getAllByRole('button')

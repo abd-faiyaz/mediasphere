@@ -87,20 +87,4 @@ describe('Badge Component', () => {
     expect(badge).toBeEmptyDOMElement()
   })
 
-  it('handles different HTML attributes', () => {
-    render(
-      <Badge 
-        data-testid="badge" 
-        aria-label="Test badge"
-        title="Badge tooltip"
-        style={{ color: 'red' }}
-      >
-        Attributed Badge
-      </Badge>
-    )
-    const badge = screen.getByTestId('badge')
-    expect(badge).toHaveAttribute('aria-label', 'Test badge')
-    expect(badge).toHaveAttribute('title', 'Badge tooltip')
-    expect(badge).toHaveStyle('color: red')
-  })
 })

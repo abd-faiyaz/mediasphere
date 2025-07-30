@@ -1,5 +1,4 @@
-Yes, I can understand your Swagger/OpenAPI (in JSON-like, but pretty printed here) file!  
-Below is a clear, point-by-point list of your API endpoints, grouped by resource:
+
 
 ---
 

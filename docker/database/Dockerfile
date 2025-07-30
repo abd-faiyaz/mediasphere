@@ -25,8 +25,13 @@ RUN mkdir -p /docker-entrypoint-initdb.d \
 # Copy initialization scripts
 COPY init/*.sql /docker-entrypoint-initdb.d/
 
-# Use a simpler approach - just use default PostgreSQL config
-# Skip custom postgresql.conf and scripts for now to avoid errors
+# Set environment variables for consistent database setup
+ENV POSTGRES_DB=db_408
+ENV POSTGRES_USER=postgres
+ENV POSTGRES_PASSWORD=1234
+
+# Make initialization scripts executable
+RUN chmod -R 755 /docker-entrypoint-initdb.d/
 
 # Set proper ownership for directories we created
 RUN chown -R postgres:postgres /var/lib/postgresql/backup \

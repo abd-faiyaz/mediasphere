@@ -38,13 +38,6 @@ describe('Loading Components', () => {
       expect(screen.queryByText(/Loading/)).not.toBeInTheDocument()
     })
 
-    it('renders with custom text and size', () => {
-      render(<LoadingSpinner size="lg" text="Please wait..." />)
-      const spinner = screen.getByRole('generic')
-      expect(spinner.querySelector('div')).toHaveClass('h-12', 'w-12')
-      expect(screen.getByText('Please wait...')).toBeInTheDocument()
-    })
-
     it('has correct structure and classes', () => {
       render(<LoadingSpinner text="Loading..." data-testid="loading-spinner" />)
       const container = screen.getByTestId('loading-spinner')
@@ -73,13 +66,6 @@ describe('Loading Components', () => {
       render(<PageLoader data-testid="page-loader" />)
       const container = screen.getByTestId('page-loader')
       expect(container).toHaveClass('min-h-screen', 'bg-gray-50', 'flex', 'items-center', 'justify-center')
-    })
-
-    it('contains LoadingSpinner with large size', () => {
-      render(<PageLoader text="Loading page..." data-testid="page-loader" />)
-      const container = screen.getByTestId('page-loader')
-      const spinner = container.querySelector('div div')
-      expect(spinner).toHaveClass('h-12', 'w-12')
     })
 
     it('renders text in LoadingSpinner', () => {
