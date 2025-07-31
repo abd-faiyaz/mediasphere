@@ -17,4 +17,10 @@ public interface MediaRepository extends JpaRepository<Media, UUID> {
     
     @Query("SELECT m FROM Media m WHERE m.mediaType = :mediaType AND (LOWER(m.title) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(m.description) LIKE LOWER(CONCAT('%', :keyword, '%')))")
     List<Media> searchByMediaTypeAndKeyword(@Param("mediaType") MediaType mediaType, @Param("keyword") String keyword);
+    
+    // Simple filter methods
+    List<Media> findByGenreContainingIgnoreCase(String genre);
+    List<Media> findByAuthorContainingIgnoreCase(String author);
+    List<Media> findByReleaseYear(Integer releaseYear);
+    List<Media> findByReleaseYearBetween(Integer startYear, Integer endYear);
 }

@@ -57,6 +57,31 @@ public class UserService {
         return userRepository.findByEmail(email);
     }
 
+    // Safe user creation that handles duplicate email constraints
+    public User createUserSafely(User user) {
+        try {
+            return userRepository.save(user);
+        } catch (Exception ex) {
+            // Check if it's a duplicate email constraint violation
+            if (ex.getMessage() != null && ex.getMessage().contains("users_email_key")) {
+                throw new RuntimeException("User with email " + user.getEmail() + " already exists");
+            }
+            throw new RuntimeException("Failed to create user: " + ex.getMessage());
+        }
+    }
+
+    // Update user with duplicate email handling
+    public User updateUserSafely(User user) {
+        try {
+            return userRepository.save(user);
+        } catch (Exception ex) {
+            if (ex.getMessage() != null && ex.getMessage().contains("users_email_key")) {
+                throw new RuntimeException("Cannot update user: email " + user.getEmail() + " is already in use");
+            }
+            throw new RuntimeException("Failed to update user: " + ex.getMessage());
+        }
+    }
+
     // Get clubs the user is member of
     public List<Club> getUserClubs(UUID userId) {
         User user = userRepository.findById(userId)

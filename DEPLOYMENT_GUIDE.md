@@ -30,6 +30,12 @@
    # Or create them manually using the provided content
    ```
 
+
+
+
+
+
+
 3. **Configure environment:**
    ```bash
    cp .env.production .env

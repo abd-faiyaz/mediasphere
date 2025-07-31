@@ -1,7 +1,7 @@
 "use client"
 
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { useUser } from '@clerk/nextjs'
+import { useUser, useClerk } from '@clerk/nextjs'
 import { authService } from './auth-service'
 import { PageLoader } from '@/components/ui/loading'
 
@@ -15,16 +15,14 @@ interface AuthUser {
   profilePic?: string
   oauthProvider: string
   primaryAuthMethod: string
-  isClerkUser?: boolean
 }
 
 interface AuthContextType {
   user: AuthUser | null
   isLoading: boolean
   isAuthenticated: boolean
-  loginLocal: (email: string, password: string) => Promise<void>
-  registerLocal: (email: string, password: string, username: string) => Promise<void>
-  logout: () => void
+  isReady: boolean
+  logout: () => Promise<void>
   syncWithBackend: () => Promise<void>
 }
 
@@ -34,114 +32,87 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isMounted, setIsMounted] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+  const [authenticationComplete, setAuthenticationComplete] = useState(false)
   const { isLoaded, isSignedIn, user: clerkUser } = useUser()
+  const { signOut } = useClerk()
+
+  // Calculate derived state
+  const isAuthenticated = !!user && !!isSignedIn
+  const isReady = isMounted && isLoaded && authenticationComplete
 
   // Handle client-side mounting
   useEffect(() => {
     setIsMounted(true)
   }, [])
 
-  // Check authentication status on mount (only on client)
+  // Handle Clerk authentication - this is now the only auth method
   useEffect(() => {
-    if (isMounted) {
-      checkAuthStatus()
-    }
-  }, [isMounted])
+    if (!isMounted || !isLoaded || isLoggingOut) return
 
-  // Handle Clerk authentication
-  useEffect(() => {
-    if (isMounted && isLoaded && isSignedIn && clerkUser) {
+    if (isSignedIn && clerkUser) {
       handleClerkAuthentication()
-    } else if (isMounted && isLoaded && !isSignedIn) {
-      // User is not signed in with Clerk, check local auth
-      checkLocalAuth()
-    }
-  }, [isMounted, isLoaded, isSignedIn, clerkUser])
-
-  const checkAuthStatus = async () => {
-    setIsLoading(true)
-    try {
-      const localUser = await authService.getCurrentUser()
-      if (localUser) {
-        setUser({ ...localUser, isClerkUser: false })
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const checkLocalAuth = async () => {
-    try {
-      const localUser = await authService.getCurrentUser()
-      if (localUser) {
-        setUser({ ...localUser, isClerkUser: false })
-      } else {
-        setUser(null)
-      }
-    } catch (error) {
-      console.error('Local auth check failed:', error)
+    } else {
+      // User is not signed in with Clerk, clear any existing user data
       setUser(null)
-    } finally {
       setIsLoading(false)
+      setAuthenticationComplete(true)
     }
-  }
+  }, [isMounted, isLoaded, isSignedIn, clerkUser, isLoggingOut])
 
   const handleClerkAuthentication = async () => {
     if (!clerkUser) return
 
     try {
+      setIsLoading(true)
       const authResponse = await authService.authenticateWithClerk(clerkUser)
-      setUser({ 
-        ...authResponse.user, 
-        isClerkUser: true 
-      })
+      setUser(authResponse.user)
     } catch (error) {
       console.error('Clerk authentication failed:', error)
+      setUser(null)
     } finally {
       setIsLoading(false)
+      setAuthenticationComplete(true)
     }
   }
 
-  const loginLocal = async (email: string, password: string) => {
+  const logout = async () => {
     try {
-      const authResponse = await authService.loginLocal({ email, password })
-      setUser({ ...authResponse.user, isClerkUser: false })
+      // Set logout flag to prevent auto-authentication
+      setIsLoggingOut(true)
+      
+      // Clear all auth data immediately
+      authService.logout()
+      setUser(null)
+      setIsLoading(false)
+      
+      // Sign out from Clerk
+      if (isSignedIn) {
+        await signOut()
+      }
+      
+      // Navigate to sign-in page
+      if (typeof window !== 'undefined') {
+        window.location.replace('/sign-in')
+      }
     } catch (error) {
-      throw error
+      console.error('Logout error:', error)
+      // Even if there's an error, still navigate to sign-in
+      if (typeof window !== 'undefined') {
+        window.location.replace('/sign-in')
+      }
+    } finally {
+      // Reset logout flag after a delay to allow navigation
+      setTimeout(() => {
+        setIsLoggingOut(false)
+      }, 1000)
     }
-  }
-
-  const registerLocal = async (email: string, password: string, username: string) => {
-    try {
-      const authResponse = await authService.registerLocal({ email, password, username })
-      setUser({ ...authResponse.user, isClerkUser: false })
-    } catch (error) {
-      throw error
-    }
-  }
-
-  const logout = () => {
-    authService.logout()
-    setUser(null)
-    // If user is signed in with Clerk, we don't automatically sign them out
-    // They can choose to sign out of Clerk separately
   }
 
   const syncWithBackend = async () => {
     if (isSignedIn && clerkUser) {
       await handleClerkAuthentication()
-    } else {
-      await checkLocalAuth()
     }
-  }
-
-  const isAuthenticated = !!user
-
-  // Don't render children until we're mounted and have checked auth status
-  if (!isMounted || (isLoading && !isLoaded)) {
-    return <PageLoader text="Initializing Mediasphere..." />
   }
 
   return (
@@ -150,8 +121,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         user,
         isLoading: isLoading || !isLoaded,
         isAuthenticated,
-        loginLocal,
-        registerLocal,
+        isReady,
         logout,
         syncWithBackend,
       }}

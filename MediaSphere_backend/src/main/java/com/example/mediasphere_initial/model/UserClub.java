@@ -8,11 +8,11 @@ import java.util.UUID;
 
 // Import statements for JPA and other Java types
 import jakarta.persistence.Entity;             // Marks this class as a JPA entity
-import jakarta.persistence.Id;                // Marks the primary key field
+// import jakarta.persistence.Id;                // Marks the primary key field
 import jakarta.persistence.Column;            // Customizes column mappings
 import jakarta.persistence.Table;             // Maps to a specific table name
-import java.time.LocalDateTime;              // For created_at and updated_at timestamps
-import java.util.UUID;                       // For UUID type IDs
+// import java.time.LocalDateTime;              // For created_at and updated_at timestamps
+// import java.util.UUID;                       // For UUID type IDs
 
 @Entity
 @Table(name = "user_clubs")

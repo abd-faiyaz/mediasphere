@@ -2,13 +2,17 @@ name: MediaSphere CI/CD Pipeline
 
 on:
   push:
-    branches: [ main ]
+    branches: [ sumon, main ]
+
   pull_request:
     branches: [ main ]
 
 env:
   REGISTRY: docker.io
   REGISTRY_USER: abdfaiyaz
+  AZURE_VM_HOST: ${{ secrets.AZURE_VM_IP }}
+  AZURE_VM_USER: ${{ secrets.AZURE_VM_USERNAME }}
+  AZURE_VM_SSH_KEY: ${{ secrets.AZURE_VM_SSH_KEY }}
 
 jobs:
   build-and-push:
@@ -37,7 +41,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push backend image
       uses: docker/build-push-action@v5
@@ -58,7 +62,7 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push database image
       uses: docker/build-push-action@v5
@@ -79,13 +83,13 @@ jobs:
         tags: |
           type=ref,event=branch
           type=ref,event=pr
-          type=raw,value=latest,enable={{is_default_branch}}
+          type=raw,value=latest
 
     - name: Build and push frontend image
       uses: docker/build-push-action@v5
       with:
         context: ./MediaSphere_frontend
-        file: ./MediaSphere_frontend/Dockerfile
+        file: ./MediaSphere_frontend/Dockerfile.production
         push: true
         tags: ${{ steps.meta-frontend.outputs.tags }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
@@ -96,54 +100,60 @@ jobs:
     name: Deploy to Azure VM
     runs-on: ubuntu-latest
     needs: build-and-push
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/sumon') && github.event_name == 'push'
     
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
 
+    - name: Debug SSH Connection Info
+      run: |
+        echo "Host: ${{ env.AZURE_VM_HOST }}"
+        echo "Username: ${{ env.AZURE_VM_USER }}"
+        echo "Host length: $(echo -n '${{ env.AZURE_VM_HOST }}' | wc -c)"
+        echo "Username length: $(echo -n '${{ env.AZURE_VM_USER }}' | wc -c)"
+
     - name: Deploy to Azure VM
-      uses: appleboy/ssh-action@v1.0.3
+      uses: appleboy/ssh-action@v1
       with:
         host: ${{ secrets.AZURE_VM_IP }}
-        username: ${{ secrets.AZURE_VM_USER }}
+        username: ${{ secrets.AZURE_VM_USERNAME }}
         key: ${{ secrets.AZURE_VM_SSH_KEY }}
         script: |
-          echo "Starting deployment on Azure VM..."
+          echo "Deploying to Azure VM..."
+          cd /home/${{ env.AZURE_VM_USER }}/mediasphere || cd mediasphere
           
-          # Navigate to deployment directory
-          cd ~/mediasphere-deploy
+          # Stop existing containers
+          docker compose -f docker-compose.production.yml down
           
-          # Pull the latest images
-          echo "Pulling latest Docker images..."
-          sudo docker compose -f docker-compose.production.yml pull
+          # Create production environment file
+          cat > .env.production << EOF
+          POSTGRES_DB=mediaspheredb
+          POSTGRES_USER=mediasphere_user
+          POSTGRES_PASSWORD=mediasphere_password123
+          SPRING_PROFILES_ACTIVE=production
+          SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/mediaspheredb
+          SPRING_DATASOURCE_USERNAME=mediasphere_user
+          SPRING_DATASOURCE_PASSWORD=mediasphere_password123
+          GEMINI_API_KEY=AIzaSyDJMJt-rMWW3u55lPpwjsLU6Z8XCE6xhD8
+          AI_SERVICE_TYPE=gemini
+          AI_SERVICE_ENDPOINT=https://generativelanguage.googleapis.com/v1beta
+          AI_SERVICE_API_KEY=AIzaSyDJMJt-rMWW3u55lPpwjsLU6Z8XCE6xhD8
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
+          CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
+          NEXT_PUBLIC_API_BASE_URL=http://20.255.51.86:8080
+          NEXT_PUBLIC_APP_URL=http://20.255.51.86:3000
+          EOF
           
-          # Stop current services
-          echo "Stopping current services..."
-          sudo docker compose -f docker-compose.production.yml down
+          # Pull latest images
+          docker compose -f docker-compose.production.yml pull
           
-          # Start services with new images
-          echo "Starting services with updated images..."
-          sudo docker compose -f docker-compose.production.yml up -d
+          # Start services
+          docker compose -f docker-compose.production.yml up -d
           
-          # Wait a bit for services to start
-          echo "Waiting for services to start..."
-          sleep 30
-          
-          # Check service status
-          echo "Checking service status..."
-          sudo docker compose -f docker-compose.production.yml ps
-          
-          # Test backend health
-          echo "Testing backend health..."
-          curl -f http://localhost:8080/actuator/health || echo "Backend health check failed"
-          
-          # Test frontend
-          echo "Testing frontend..."
-          curl -f http://localhost:3000/ || echo "Frontend health check failed"
-          
-          echo "Deployment completed!"
-
+          # Show running containers
+          docker ps
+  
     - name: Deployment Status Notification
       if: always()
       run: |

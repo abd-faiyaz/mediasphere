@@ -1,21 +1,15 @@
 package com.example.mediasphere_initial.controller;
 
 import com.example.mediasphere_initial.service.AIService;
-import com.example.mediasphere_initial.dto.AIAnalysisRequest;
-import com.example.mediasphere_initial.dto.AIAnalysisResponse;
-import com.example.mediasphere_initial.dto.AIPromptRequest;
-import com.example.mediasphere_initial.dto.AIPromptResponse;
-import com.example.mediasphere_initial.dto.AIQuizRequest;
-import com.example.mediasphere_initial.dto.AIQuizResponse;
-import com.example.mediasphere_initial.dto.AISummaryRequest;
-import com.example.mediasphere_initial.dto.AISummaryResponse;
-import com.example.mediasphere_initial.dto.AIRecommendationResponse;
+import com.example.mediasphere_initial.dto.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.UUID;
+
 @RestController
-@RequestMapping("/ai")
+@RequestMapping("/api/ai")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AIController {
 
@@ -78,5 +72,33 @@ public class AIController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
+    }
+    
+    
+    @PostMapping("/gemini/test")
+    public ResponseEntity<BaseAIResponse> testGeminiAI(@RequestBody TestAIRequest request) {
+        try {
+            // This will be implemented in a future phase
+            BaseAIResponse aiResponse = new BaseAIResponse(true, "Gemini AI test endpoint available - Phase 2");
+            aiResponse.setRequestId(UUID.randomUUID().toString());
+            
+            return ResponseEntity.ok(aiResponse);
+            
+        } catch (Exception e) {
+            BaseAIResponse errorResponse = new BaseAIResponse(false, "Gemini AI test failed: " + e.getMessage());
+            return ResponseEntity.status(500).body(errorResponse);
+        }
+    }
+    
+    @GetMapping("/health")
+    public ResponseEntity<String> healthCheck() {
+        return ResponseEntity.ok("AI service is running - Phase 2 implementation with fixed dependencies");
+    }
+    
+    public static class TestAIRequest {
+        private String prompt;
+        
+        public String getPrompt() { return prompt; }
+        public void setPrompt(String prompt) { this.prompt = prompt; }
     }
 }

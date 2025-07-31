@@ -3,6 +3,7 @@ package com.example.mediasphere_initial.controller;
 import com.example.mediasphere_initial.model.Notification;
 import com.example.mediasphere_initial.model.User;
 import com.example.mediasphere_initial.service.NotificationService;
+import com.example.mediasphere_initial.service.NotificationStreamService;
 import com.example.mediasphere_initial.service.AuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 @RestController
 @RequestMapping("/notifications")
@@ -21,12 +23,41 @@ public class NotificationController {
     private NotificationService notificationService;
 
     @Autowired
+    private NotificationStreamService notificationStreamService;
+
+    @Autowired
     private AuthService authService;
+
+    // Server-Sent Events endpoint for real-time notifications
+    @GetMapping("/stream")
+    public SseEmitter streamNotifications(@RequestParam String token) {
+        try {
+            Optional<User> userOpt = getUserFromToken("Bearer " + token);
+            if (!userOpt.isPresent()) {
+                throw new RuntimeException("Authentication required");
+            }
+
+            SseEmitter emitter = new SseEmitter(Long.MAX_VALUE);
+            UUID userId = userOpt.get().getId();
+
+            // Add emitter to the service
+            notificationStreamService.addEmitter(userId, emitter);
+
+            // Handle connection completion and timeout
+            emitter.onCompletion(() -> notificationStreamService.removeEmitter(userId, emitter));
+            emitter.onTimeout(() -> notificationStreamService.removeEmitter(userId, emitter));
+            emitter.onError((ex) -> notificationStreamService.removeEmitter(userId, emitter));
+
+            return emitter;
+        } catch (RuntimeException e) {
+            throw new RuntimeException("Authentication failed");
+        }
+    }
 
     // Get user notifications
     @GetMapping("/")
     public ResponseEntity<?> getUserNotifications(@RequestHeader("Authorization") String authHeader,
-                                                  @RequestParam(required = false) Boolean unreadOnly) {
+            @RequestParam(required = false) Boolean unreadOnly) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -39,7 +70,7 @@ public class NotificationController {
             } else {
                 notifications = notificationService.getAllUserNotifications(userOpt.get());
             }
-            
+
             return ResponseEntity.ok(notifications);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
@@ -49,7 +80,7 @@ public class NotificationController {
     // Get notification details
     @GetMapping("/{id}")
     public ResponseEntity<?> getNotification(@PathVariable UUID id,
-                                           @RequestHeader("Authorization") String authHeader) {
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -70,8 +101,8 @@ public class NotificationController {
     // Update a notification (mark as read, update content)
     @PutMapping("/{id}")
     public ResponseEntity<?> updateNotification(@PathVariable UUID id,
-                                              @RequestBody Notification updatedNotification,
-                                              @RequestHeader("Authorization") String authHeader) {
+            @RequestBody Notification updatedNotification,
+            @RequestHeader("Authorization") String authHeader) {
         try {
             Optional<User> userOpt = getUserFromToken(authHeader);
             if (!userOpt.isPresent()) {
@@ -80,6 +111,34 @@ public class NotificationController {
 
             Notification notification = notificationService.updateNotification(id, updatedNotification, userOpt.get());
             return ResponseEntity.ok(notification);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // Delete a notification
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotification(@PathVariable UUID id,
+            @RequestHeader("Authorization") String authHeader) {
+        try {
+            Optional<User> userOpt = getUserFromToken(authHeader);
+            if (!userOpt.isPresent()) {
+                return ResponseEntity.status(401).body("Authentication required");
+            }
+
+            // Check if notification exists and belongs to the user
+            Optional<Notification> notificationOpt = notificationService.getNotificationById(id);
+            if (!notificationOpt.isPresent()) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Notification notification = notificationOpt.get();
+            if (!notification.getUser().getId().equals(userOpt.get().getId())) {
+                return ResponseEntity.status(403).body("Unauthorized to delete notification");
+            }
+
+            notificationService.deleteNotification(id);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }

@@ -32,8 +32,12 @@ public class Comment {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @Column(name = "like_count", nullable = false)
+    private int likeCount = 0;
+
     // Constructors
-    public Comment() {}
+    public Comment() {
+    }
 
     public Comment(UUID id, String content, Thread thread, User createdBy) {
         this.id = id;
@@ -98,5 +102,13 @@ public class Comment {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public int getLikeCount() {
+        return likeCount;
+    }
+
+    public void setLikeCount(int likeCount) {
+        this.likeCount = likeCount;
     }
 }

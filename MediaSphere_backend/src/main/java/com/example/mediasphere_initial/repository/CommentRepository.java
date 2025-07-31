@@ -10,6 +10,15 @@ import java.util.UUID;
 
 public interface CommentRepository extends JpaRepository<Comment, UUID> {
     List<Comment> findByThread(Thread thread);
+
     List<Comment> findByCreatedBy(User user);
+
     List<Comment> findByParentComment(Comment parentComment);
+
+    long countByCreatedBy(User user);
+    
+    // Additional methods for AI summary functionality
+    List<Comment> findByThreadIdOrderByCreatedAtAsc(UUID threadId);
+    
+    List<Comment> findByThreadOrderByCreatedAtAsc(Thread thread);
 }

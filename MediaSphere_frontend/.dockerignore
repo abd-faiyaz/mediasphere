@@ -59,9 +59,8 @@ cypress/
 # Clerk dev files
 .clerk/
 
-# Lock files (keep package-lock.json, ignore others)
+# Lock files (keep package-lock.json and pnpm-lock.yaml, ignore others)
 yarn.lock
-pnpm-lock.yaml
 
 # Build artifacts
 build/

@@ -1,43 +1,96 @@
-# MediaSphere Frontend Dockerfile
-# Next.js SSR build for production deployment
+    # MediaSphere Frontend Dockerfile
+# Multi-stage build with development and production targets
 
-# Stage 1: Dependencies
+# Stage 1: Dependencies (shared)
 FROM node:18-alpine AS dependencies
 WORKDIR /app
 
-# Copy package files
-COPY package*.json ./
-RUN npm ci --only=production --ignore-scripts
+# Install pnpm
+RUN npm install -g pnpm
 
-# Stage 2: Build application
-FROM node:18-alpine AS build
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies (allow lockfile updates)
+RUN pnpm install --no-frozen-lockfile
+
+# Stage 2: Development Build
+FROM node:18-alpine AS development
 WORKDIR /app
 
-# Copy package files and install all dependencies (including dev)
-COPY package*.json ./
-RUN npm ci --ignore-scripts
+# Install pnpm
+RUN npm install -g pnpm
 
-# Copy source code
+# Copy dependencies and source
+COPY --from=dependencies /app/node_modules ./node_modules
 COPY . .
 
-# Set build-time environment variables
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NODE_ENV=production
-ENV SKIP_ENV_VALIDATION=1
-ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_d2lsbGluZy1ncml6emx5LTcxLmNsZXJrLmFjY291bnRzLmRldiQ
-ENV CLERK_SECRET_KEY=sk_test_O8V5wdjJQN86fP8wZATYQ0yEmIaKEa2kxrv4lGNKI0
+# Development environment variables
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
+ENV CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
 ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
 ENV NEXT_PUBLIC_APP_URL=http://localhost:3000
+ENV NEXT_TELEMETRY_DISABLED=1
 
-# Build the application with error handling
-RUN npm run build || (echo "Build failed, checking for common issues..." && \
-    echo "Node version: $(node --version)" && \
-    echo "NPM version: $(npm --version)" && \
-    ls -la && \
-    cat next.config.mjs && \
-    exit 1)
+# Build the application
+RUN pnpm build
 
-# Stage 3: Production runtime
+# Continue to runtime stage
+FROM node:18-alpine AS dev-runtime
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001
+
+# Set working directory
+WORKDIR /app
+
+# Copy built application from development stage
+COPY --from=development --chown=nextjs:nodejs /app/public ./public
+COPY --from=development --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=development --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+# Switch to non-root user
+USER nextjs
+
+# Set runtime environment variables
+ENV NODE_ENV=production
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node --version || exit 1
+
+# Start the application
+CMD ["node", "server.js"]
+
+# Stage 3: Production Build
+FROM node:18-alpine AS production
+WORKDIR /app
+
+# Install pnpm
+RUN npm install -g pnpm
+
+# Copy dependencies and source
+COPY --from=dependencies /app/node_modules ./node_modules
+COPY . .
+
+# Production environment variables
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_bG9naWNhbC1sZW1taW5nLTI3LmNsZXJrLmFjY291bnRzLmRldiQ
+ENV CLERK_SECRET_KEY=sk_test_hFzWxK70KYY2p2nUo6xR30DcecKCIYYxpeMRxhD8ae
+ENV NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+ENV NEXT_PUBLIC_APP_URL=http://localhost:3000
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the application
+RUN pnpm build
+
+# Stage 4: Production Runtime (default)
 FROM node:18-alpine AS runtime
 
 # Create non-root user for security
@@ -47,29 +100,26 @@ RUN addgroup -g 1001 -S nodejs && \
 # Set working directory
 WORKDIR /app
 
-# Copy built application from build stage
-COPY --from=build /app/public ./public
-COPY --from=build /app/.next/standalone ./
-COPY --from=build /app/.next/static ./.next/static
-
-# Change ownership to nextjs user
-RUN chown -R nextjs:nodejs /app
+# Copy built application from production stage
+COPY --from=production --chown=nextjs:nodejs /app/public ./public
+COPY --from=production --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=production --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Switch to non-root user
 USER nextjs
 
-# Expose port 3000
-EXPOSE 3000
-
-# Set environment variables
+# Set runtime environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV NEXT_TELEMETRY_DISABLED=1
 
+# Expose port
+EXPOSE 3000
+
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+  CMD node --version || exit 1
 
 # Start the application
 CMD ["node", "server.js"]

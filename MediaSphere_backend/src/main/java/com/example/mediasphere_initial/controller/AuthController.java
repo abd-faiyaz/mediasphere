@@ -1,7 +1,5 @@
 package com.example.mediasphere_initial.controller;
 
-import com.example.mediasphere_initial.dto.LoginRequest;
-import com.example.mediasphere_initial.dto.RegisterRequest;
 import com.example.mediasphere_initial.dto.AuthResponse;
 import com.example.mediasphere_initial.dto.ClerkUserDto;
 import com.example.mediasphere_initial.model.User;
@@ -13,6 +11,10 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+/**
+ * Authentication controller for Clerk-based authentication.
+ * All authentication flows go through Clerk, no local auth supported.
+ */
 @RestController
 @RequestMapping("/auth")
 @CrossOrigin(origins = "http://localhost:3000") // Allow requests from frontend
@@ -21,28 +23,11 @@ public class AuthController {
     @Autowired
     private AuthService authService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
-        try {
-            AuthResponse response = authService.register(request);
-            return ResponseEntity.status(201).body(response);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ex.getMessage()));
-        }
-    }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
-        try {
-            AuthResponse response = authService.login(request);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse(ex.getMessage()));
-        }
-    }
 
+    /**
+     * Get current authenticated user from JWT token.
+     */
     @GetMapping("/me")
     public ResponseEntity<User> getCurrentUser(@RequestHeader("Authorization") String authHeader) {
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -55,35 +40,75 @@ public class AuthController {
         return ResponseEntity.status(401).build();
     }
 
-    // OAuth authentication endpoints
+    /**
+     * Primary authentication endpoint for Clerk users.
+     * Creates new user or authenticates existing user.
+     */
     @PostMapping("/oauth/clerk")
     public ResponseEntity<?> authenticateWithClerk(@RequestBody ClerkUserDto clerkUser) {
         try {
-            AuthResponse response = authService.authenticateOrCreateOAuthUser(clerkUser);
+            AuthResponse response = authService.authenticateOrCreateClerkUser(clerkUser);
             return ResponseEntity.ok(response);
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ex.getMessage()));
+            // Log the error for debugging
+            System.err.println("Authentication error: " + ex.getMessage());
+            ex.printStackTrace();
+            
+            // Return appropriate error response
+            String errorMessage = ex.getMessage();
+            if (errorMessage.contains("already exists") || errorMessage.contains("duplicate")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Account with this email already exists. Please try signing in instead."));
+            } else if (errorMessage.contains("required")) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse(errorMessage));
+            } else {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Authentication failed. Please try again."));
+            }
+        } catch (Exception ex) {
+            System.err.println("Unexpected authentication error: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Authentication failed. Please try again."));
         }
     }
 
+    /**
+     * Sync user profile with latest Clerk data.
+     * Requires valid JWT token.
+     */
     @PostMapping("/oauth/sync")
-    public ResponseEntity<?> syncOAuthProfile(@RequestBody ClerkUserDto clerkUser, 
+    public ResponseEntity<?> syncClerkProfile(@RequestBody ClerkUserDto clerkUser, 
                                              @RequestHeader("Authorization") String authHeader) {
         try {
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 Optional<User> userOpt = authService.getUserFromToken(token);
                 if (userOpt.isPresent()) {
-                    AuthResponse response = authService.authenticateOrCreateOAuthUser(clerkUser);
+                    AuthResponse response = authService.authenticateOrCreateClerkUser(clerkUser);
                     return ResponseEntity.ok(response);
                 }
             }
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(new ErrorResponse("Invalid token"));
+                .body(new ErrorResponse("Invalid or missing authentication token"));
         } catch (RuntimeException ex) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(new ErrorResponse(ex.getMessage()));
+            System.err.println("Profile sync error: " + ex.getMessage());
+            ex.printStackTrace();
+            
+            String errorMessage = ex.getMessage();
+            if (errorMessage.contains("already exists") || errorMessage.contains("duplicate")) {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(new ErrorResponse("Account linking failed. Please contact support."));
+            } else {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(new ErrorResponse("Profile sync failed: " + errorMessage));
+            }
+        } catch (Exception ex) {
+            System.err.println("Unexpected sync error: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new ErrorResponse("Profile sync failed. Please try again."));
         }
     }
 }
