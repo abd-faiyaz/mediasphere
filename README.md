@@ -2,7 +2,7 @@
 
 A modern full-stack social platform for media enthusiasts to create communities, engage in discussions, and discover content through AI-powered features.
 
-![MediaSphere Banner](https://via.placeholder.com/800x300/4F46E5/FFFFFF?text=MediaSphere)
+![MediaSphere Banner](https://j.top4top.io/p_34982d9241.png)
 
 ## 🌟 Features
 
