@@ -1,42 +1,42 @@
 # MediaSphere
 
-A modern full-stack social platform for media enthusiasts to create communities, engage in discussions, and discover content through AI-powered features.
+A full-stack social platform for creating communities, posting threads, and discussing content, with AI-powered features via the Gemini API.
 
 ![MediaSphere Banner](https://j.top4top.io/p_34982d9241.png)
 
-## 🌟 Features
+## Features
 
-### 🏘️ Community Management
-- **Club Creation & Management**: Create and manage topic-based communities
-- **Member Management**: Advanced member roles and permissions
-- **Club Discovery**: Find communities based on interests and preferences
+### Community Management
+- Club creation and management
+- Member roles and permissions
+- Club discovery by interest
 
-### 💬 Discussion Platform
-- **Thread-based Discussions**: Organized conversations within clubs
-- **Rich Media Support**: Share images, videos, and documents
-- **Real-time Interactions**: Live comments and engagement
-- **Moderation Tools**: Advanced content moderation and management
+### Discussion Platform
+- Thread-based discussions within clubs
+- Image, video, and document sharing
+- Comments
+- Content moderation
 
-### 🤖 AI-Powered Services
-- **Content Summarization**: AI-generated summaries of long discussions
-- **Quiz Generation**: Interactive quizzes from any content
-- **Sentiment Analysis**: Analyze discussion tone and engagement
-- **Smart Recommendations**: Personalized content and club suggestions
-- **Topic Analysis**: Extract key themes and insights from conversations
+### AI Services
+- Content summarization
+- Quiz generation from content
+- Sentiment analysis
+- Content and club recommendations
+- Topic and theme extraction
 
-### 🔐 Authentication & Security
-- **Multi-Auth Support**: Local authentication and OAuth integration
-- **JWT Token Management**: Secure session handling
-- **Role-based Access Control**: Granular permissions system
-- **OAuth Providers**: Integration with Clerk and other providers
+### Authentication & Security
+- Local authentication and OAuth
+- JWT session handling
+- Role-based access control
+- Clerk OAuth integration
 
-### 📱 Modern User Experience
-- **Responsive Design**: Mobile-first responsive interface
-- **Real-time Updates**: Live notifications and updates
-- **Dark/Light Theme**: Customizable user interface
-- **Progressive Web App**: PWA capabilities for mobile experience
+### User Interface
+- Responsive layout
+- Real-time notifications
+- Dark/Light theme toggle
+- PWA support
 
-## 🏗️ Architecture
+## Architecture
 
 ### Tech Stack
 
@@ -44,7 +44,7 @@ A modern full-stack social platform for media enthusiasts to create communities,
 - **Framework**: Next.js 15.2.4 with React 18.3.1
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS with Radix UI components
-- **Authentication**: Clerk integration
+- **Authentication**: Clerk
 - **State Management**: React hooks and context
 - **Testing**: Jest with React Testing Library
 - **Animations**: Framer Motion
@@ -68,9 +68,9 @@ A modern full-stack social platform for media enthusiasts to create communities,
 - **Containerization**: Docker with Docker Compose
 - **Environments**: Development and Production configurations
 - **Database Management**: Automated scripts and health checks
-- **Cloud Deployment**: Azure VM ready
+- **Cloud**: Azure VM
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Node.js 18+ and npm/pnpm
@@ -114,19 +114,17 @@ A modern full-stack social platform for media enthusiasts to create communities,
 
 ### Docker Deployment
 
-**Development Environment:**
+**Development:**
 ```bash
 docker-compose -f docker-compose.dev.yml up -d
 ```
 
-**Production Environment:**
+**Production:**
 ```bash
 docker-compose -f docker-compose.production.yml up -d
 ```
 
-## 📊 API Documentation
-
-The backend provides a comprehensive REST API with the following endpoints:
+## API Documentation
 
 ### Authentication
 - `POST /auth/register` - User registration
@@ -153,18 +151,18 @@ The backend provides a comprehensive REST API with the following endpoints:
 ### AI Services
 - `POST /ai/analyze` - Content analysis (sentiment, themes, characters)
 - `POST /ai/summarize` - Generate content summaries
-- `POST /ai/quiz` - Generate interactive quizzes
-- `GET /ai/recommendations` - Get personalized recommendations
+- `POST /ai/quiz` - Generate quizzes
+- `GET /ai/recommendations` - Get recommendations
 - `POST /ai/prompts` - Generate discussion prompts
 
 ### Media & Search
 - `POST /media/upload` - Upload media files
-- `GET /search` - Global search functionality
+- `GET /search` - Global search
 - `GET /notifications` - User notifications
 
-## 🧪 Testing
+## Testing
 
-### Frontend Testing
+### Frontend
 ```bash
 cd MediaSphere_frontend
 npm run test                # Run all tests
@@ -172,19 +170,19 @@ npm run test:watch         # Watch mode
 npm run test:coverage      # Generate coverage report
 ```
 
-**Test Coverage**: 213 passing tests with comprehensive component and integration testing.
+213 passing tests.
 
-### Backend Testing
+### Backend
 ```bash
 cd MediaSphere_backend
-mvn test                   # Run unit tests
-mvn test -Dtest=ClubServiceTest  # Run specific test class
-./run-unit-tests.sh       # Run with script
+mvn test                          # Run unit tests
+mvn test -Dtest=ClubServiceTest   # Run specific test class
+./run-unit-tests.sh               # Run with script
 ```
 
-**Test Framework**: JUnit 5 with Mockito for comprehensive service layer testing.
+JUnit 5 with Mockito.
 
-## 🗂️ Project Structure
+## Project Structure
 
 ```
 mediasphere/
@@ -208,7 +206,7 @@ mediasphere/
 └── SQL_files/                     # Database migrations
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -227,64 +225,33 @@ spring.datasource.password=your_password
 spring.jpa.hibernate.ddl-auto=update
 ```
 
-## 🚀 Deployment
+## Deployment
 
-### Azure Cloud Deployment
-The project includes Azure VM deployment configurations:
-
-- **VM Configuration**: Ubuntu 24.04 LTS, B2ts_v2 (2 vCPUs, 1 GiB RAM)
-- **Public IP**: Configured with load balancing
+### Azure
+- **VM**: Ubuntu 24.04 LTS, B2ts_v2 (2 vCPUs, 1 GiB RAM)
+- **Network**: Public IP with load balancing
 - **Security**: SSH key authentication, firewall rules
 - **Monitoring**: Azure monitoring and health checks
 
 ### Deployment Scripts
 - `./scripts/vm-setup.sh` - Initial VM setup
-- `./rebuild-frontend.sh` - Frontend rebuild script
+- `./rebuild-frontend.sh` - Frontend rebuild
 - `./update-frontend-vm.sh` - Update frontend on VM
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
+2. Create a feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
 5. Open a Pull Request
 
 ### Development Guidelines
 - Follow TypeScript/Java coding standards
-- Write comprehensive tests for new features
-- Update documentation for API changes
+- Write tests for new features
+- Update API documentation for API changes
 - Use conventional commit messages
 
-## 📝 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🔗 Links
-
-- **Live Demo**: [Coming Soon]
-- **API Documentation**: [Swagger UI when running locally]
-- **Issue Tracker**: [GitHub Issues]
-- **Documentation**: [Project Wiki]
-
-## 👥 Team
-
-- **Development**: Full-stack development team
-- **UI/UX**: Modern responsive design
-- **DevOps**: Cloud deployment and CI/CD
-- **AI Integration**: Gemini API and content analysis
-
-## 📈 Roadmap
-
-- [ ] Real-time chat functionality
-- [ ] Advanced AI content moderation
-- [ ] Mobile app development
-- [ ] Advanced analytics dashboard
-- [ ] Third-party integrations
-- [ ] Multilingual support
-
----
-
-**Built with ❤️ by the MediaSphere team**
-
-*A platform where communities thrive and conversations matter.*
+MIT License — see [LICENSE](LICENSE) for details.
